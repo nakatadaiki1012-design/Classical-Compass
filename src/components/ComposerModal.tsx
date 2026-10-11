@@ -73,9 +73,17 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 showOrnateBorder={true}
                 className="shadow-2xl ring-4 ring-[#c99738]/40"
               />
-              <span className="text-[11px] text-[#7d7366] italic mt-3 text-center">
-                パブリックドメイン肖像画
-              </span>
+              <div className="mt-3 text-center max-w-[200px] bg-[#1a1714] border border-[#332a20] rounded-lg p-2">
+                <span className="text-[10px] font-semibold text-[#c99738] block">
+                  著作権フリー（パブリックドメイン）
+                </span>
+                <span className="text-[10px] text-[#9c9388] block mt-0.5">
+                  {composer.portraitPainter || '歴史的肖像画（18〜19世紀原画）'}
+                </span>
+                <span className="text-[9px] text-[#7d7366] block">
+                  {composer.portraitAttribution || '没後70年以上経過・公有財産'}
+                </span>
+              </div>
             </div>
 
             {/* Name, Bio highlights */}

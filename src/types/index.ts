@@ -70,6 +70,9 @@ export interface Composer {
   nationalityJa: string;
   flag: string;
   portraitUrl: string;
+  portraitPainter?: string;
+  portraitYear?: string;
+  portraitAttribution?: string;
   biography: string;
   musicalStyle: string;
   keyFeatures: string[];

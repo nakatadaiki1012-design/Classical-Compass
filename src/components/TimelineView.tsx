@@ -16,9 +16,8 @@ import {
   Compass,
   Layers,
   ChevronRight,
-  Sliders,
-  ChevronLeft,
-  Maximize2
+  Maximize2,
+  Info
 } from 'lucide-react';
 
 interface TimelineViewProps {
@@ -56,10 +55,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   // View style
   const [viewStyle, setViewStyle] = useState<'3d-bundle' | 'panorama'>('3d-bundle');
 
-  // Zoom scale (pixels per year): increased to 12.0 by default, up to 35px/year for fine granularity!
+  // Zoom scale (pixels per year): default 12.0px/year
   const [zoomScale, setZoomScale] = useState<number>(12.0);
   const [rotationAngle, setRotationAngle] = useState<number>(0);
-  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(true); // Auto-rotating active by default so 3D bundle visibly spins smoothly!
+
+  // Auto-rotating set to FALSE by default so it doesn't spin arbitrarily without scrolling ("勝手に回転はしなくてよい")
+  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(false);
 
   // User adjustable cylinder radius (default 165px for a broad, readable 3D bundle!)
   const [cylinderRadius, setCylinderRadius] = useState<number>(165);
@@ -68,7 +69,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focalYear, setFocalYear] = useState<number>(1787);
 
-  // Partial episode modal for single-tap on composition points
+  // Episode modal for single-tap on composition points
   const [focusedEpisodeWork, setFocusedEpisodeWork] = useState<{
     work: Composition;
     composer: Composer;
@@ -85,7 +86,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   const lastMousePosRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
   const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
 
-  const horizontalPadding = 500; // ample space so needle can reach 1650 and 1960
+  const horizontalPadding = 500; // ample space for edge needle positioning
   const timelineTotalWidth = TOTAL_YEARS * zoomScale;
 
   // Filter composers
@@ -180,14 +181,40 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
         const clamped = Math.max(MIN_YEAR, Math.min(MAX_YEAR, currentYear));
         setFocalYear(clamped);
 
-        // 3. 3D cylindrical twist & continuous rotation
+        // 3. SYNCHRONIZED CYLINDER ROTATION:
+        // Automatically rotate cylinder during horizontal scroll so that active composers for focalYear come to the front/top!
         if (viewStyle === '3d-bundle') {
-          if (isAutoRotating) {
-            rotAngleRef.current += 0.018; // smooth auto-orbit rotation
-            setRotationAngle(rotAngleRef.current);
-          } else if (!isDraggingRef.current) {
-            // subtle living drift so the bundle always feels 3D and dynamic
-            rotAngleRef.current += 0.005;
+          const count = filteredComposers.length;
+          if (count > 0) {
+            if (isAutoRotating) {
+              // Manual continuous spinning option if explicitly toggled on
+              rotAngleRef.current += 0.012;
+            } else if (!isDraggingRef.current) {
+              // Compute target rotation angle to align focalYear composers to top/front
+              const activeIndices: number[] = [];
+              filteredComposers.forEach((c, idx) => {
+                if (c.birthYear <= clamped && clamped <= c.deathYear) {
+                  activeIndices.push(idx);
+                }
+              });
+
+              if (activeIndices.length > 0) {
+                let sumSin = 0;
+                let sumCos = 0;
+                activeIndices.forEach(idx => {
+                  const baseAngle = (idx / count) * Math.PI * 2;
+                  sumSin += Math.sin(baseAngle);
+                  sumCos += Math.cos(baseAngle);
+                });
+                const avgBaseAngle = Math.atan2(sumSin, sumCos);
+                // Bring active composers to top-front (-PI/4)
+                const desiredRotation = -avgBaseAngle - Math.PI / 4;
+
+                let delta = desiredRotation - rotAngleRef.current;
+                delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+                rotAngleRef.current += delta * 0.1; // smooth rotation response to horizontal scroll
+              }
+            }
             setRotationAngle(rotAngleRef.current);
           }
         }
@@ -198,14 +225,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
 
     animId = requestAnimationFrame(renderLoop);
     return () => cancelAnimationFrame(animId);
-  }, [zoomScale, horizontalPadding, isAutoRotating, viewStyle]);
+  }, [zoomScale, horizontalPadding, isAutoRotating, viewStyle, filteredComposers]);
 
   // Compute 3D strand layout and active proximity bubbles
   const { bundle3DData, activeNearComposer } = useMemo<{
     bundle3DData: StrandItem[];
     activeNearComposer: ActiveNearItem | null;
   }>(() => {
-    const centerY = 230; // Center offset for expanded 500px container
+    const centerY = 230; // Center offset for expanded 520px container
     const count = filteredComposers.length;
 
     let nearest: ActiveNearItem | null = null;
@@ -223,7 +250,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
 
       const depthNorm = (z + cylinderRadius) / (cylinderRadius * 2);
       const opacity = 0.35 + depthNorm * 0.65;
-      // Prominent, thick 3D ribbons (16px to 38px thick!)
       const strokeThickness = Math.max(16, 18 + depthNorm * 20);
       const isForeground = z > -15;
 
@@ -295,7 +321,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-130px)] select-none bg-[#090807] overflow-hidden font-sans">
+    <div className="flex flex-col h-[calc(100vh-65px)] select-none bg-[#090807] overflow-hidden font-sans">
       {/* Top Controls Toolbar */}
       <div className="bg-[#14100c]/95 backdrop-blur-xl border-b border-[#302519] px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 z-30 shrink-0 shadow-lg">
         {/* Left Controls */}
@@ -386,8 +412,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                 className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-all shadow ${
                   isAutoRotating ? 'bg-[#c99738] text-black' : 'text-[#a89b8c] hover:text-white bg-[#2b2118]'
                 }`}
+                title="スクロールで自動回転します。連続回転を切り替えます"
               >
-                {isAutoRotating ? '回転停止' : '自動回転'}
+                {isAutoRotating ? '連動停止' : '連続回転'}
               </button>
             </div>
           )}
@@ -457,7 +484,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
         className="flex-1 overflow-x-auto overflow-y-hidden timeline-grab relative bg-[#0b0907]"
       >
         <div
-          className="relative h-full min-h-[500px]"
+          className="relative h-full min-h-[520px]"
           style={{ width: `${timelineTotalWidth + horizontalPadding * 2}px` }}
         >
           {/* Center Golden Focal Needle */}
@@ -543,7 +570,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                   />
                   <span
                     className={`text-[10px] font-mono -translate-x-1/2 ${
-                      is50 ? 'text-[#f5ebd9] font-extrabold' : 'text-[#9c8e7e]'
+                      is50 ? 'text-[#f5ebd9] font-extrabold' : 'text-[#9c9388]'
                     }`}
                   >
                     {t.label}
@@ -664,7 +691,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                       </div>
                     </div>
 
-                    {/* Works & Milestones Markers along the strand */}
+                    {/* Major Composition Works & Milestones Markers along the strand */}
                     {isForeground && (
                       <div
                         className="absolute pointer-events-auto"
@@ -674,7 +701,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                           zIndex: 15 + Math.round(item.depthNorm * 12)
                         }}
                       >
-                        {/* Render Major Works along the years */}
+                        {/* Render Major Works (作曲年ポイント/点) along the lifespan */}
                         {composer.works.map(w => {
                           const workOffsetX = (w.year - composer.birthYear) * zoomScale;
                           return (
@@ -705,14 +732,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                               style={{ left: `${workOffsetX}px` }}
                               title={`${w.year}年 作曲: ${w.title} (${w.city})\nシングルタップ: エピソード解説\nダブルタップ: 作曲家詳細`}
                             >
-                              <div className="w-4 h-4 rounded-full bg-[#16120e] border-2 border-[#c99738] flex items-center justify-center text-[8px] font-bold text-[#c99738] group-hover/work:scale-150 transition-all shadow-md">
+                              <div className="w-4 h-4 rounded-full bg-[#16120e] border-2 border-[#e6b95c] flex items-center justify-center text-[8px] font-bold text-[#e6b95c] group-hover/work:scale-150 transition-all shadow-lg ring-2 ring-[#c99738]/50">
                                 ♪
                               </div>
                               {/* Hover Tooltip displaying composition title + year */}
                               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#16120e]/95 border border-[#c99738] rounded-lg p-2.5 w-52 shadow-2xl backdrop-blur-md pointer-events-none z-50">
                                 <span className="text-[11px] font-bold text-white truncate">{w.title}</span>
                                 <span className="text-[9px] text-[#c99738] font-mono mt-0.5">{w.year}年 作曲 · {w.city}</span>
-                                <span className="text-[8px] text-[#a89b8c] mt-0.5">タップ: 解説 / ダブルタップ: 詳細</span>
+                                <span className="text-[8px] text-[#a89b8c] mt-0.5">タップ: エピソード解説 / ダブルタップ: 名鑑</span>
                               </div>
                             </div>
                           );
@@ -732,7 +759,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                               style={{ left: `${mOffsetX}px` }}
                               title={`${m.year}年: ${m.event}`}
                             >
-                              <div className="w-2.5 h-2.5 rounded-full bg-white/80 border border-[#16120e] hover:bg-[#c99738] hover:scale-150 transition-all shadow-sm" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-white/90 border border-[#16120e] hover:bg-[#c99738] hover:scale-150 transition-all shadow-sm" />
                               <div className="absolute top-4 left-1/2 -translate-x-1/2 hidden group-hover/mile:flex flex-col bg-[#16120e]/95 border border-[#382f25] rounded-lg p-2 w-48 shadow-2xl backdrop-blur-md pointer-events-none z-50">
                                 <span className="text-[10px] font-bold text-[#c99738]">{m.year}年:</span>
                                 <span className="text-[9px] text-[#e8dec8] leading-tight">{m.event}</span>
@@ -745,118 +772,63 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                   </React.Fragment>
                 );
               })}
-
-              {/* Compact Proximity Balloon for Focal Composer */}
-              {activeNearComposer && (
-                <div
-                  onClick={() => onSelectComposer(activeNearComposer.composer.id)}
-                  className="absolute pointer-events-auto cursor-pointer z-50 transition-all duration-150 -translate-x-1/2 -translate-y-12"
-                  style={{
-                    left: `${activeNearComposer.x}px`,
-                    top: `${Math.max(60, Math.min(380, activeNearComposer.y))}px`
-                  }}
-                >
-                  <div
-                    className="bg-[#18130e]/95 border-2 rounded-xl p-2.5 shadow-2xl flex items-center gap-3 backdrop-blur-md w-48 transition-all hover:scale-105"
-                    style={{
-                      borderColor: getEraById(activeNearComposer.composer.era).accentColor,
-                      boxShadow: `0 6px 20px rgba(0,0,0,0.85), 0 0 16px ${getEraById(activeNearComposer.composer.era).color}66`
-                    }}
-                  >
-                    <div className="relative shrink-0">
-                      <ComposerPortrait
-                        composer={activeNearComposer.composer}
-                        size="sm"
-                        showOrnateBorder={true}
-                        className="ring-2 ring-[#c99738]"
-                      />
-                    </div>
-
-                    <div className="min-w-0 flex-1 text-left">
-                      <span
-                        className="text-[8px] font-extrabold px-1.5 py-0.2 rounded text-black inline-block uppercase"
-                        style={{ backgroundColor: getEraById(activeNearComposer.composer.era).accentColor }}
-                      >
-                        {activeNearComposer.composer.birthYear}年 誕生
-                      </span>
-                      <h4 className="text-xs font-bold text-white truncate leading-tight mt-0.5">
-                        {activeNearComposer.composer.shortName}
-                      </h4>
-                      {activeNearComposer.composer.works[0] && (
-                        <div className="mt-1 flex items-center gap-1 text-[9px] text-[#c99738] px-1.5 py-0.5 rounded bg-[#241c14] border border-[#c99738]/30">
-                          <span className="truncate max-w-[120px]">
-                            代表作: {activeNearComposer.composer.works[0].title}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div
-                    className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] mx-auto"
-                    style={{ borderTopColor: getEraById(activeNearComposer.composer.era).accentColor }}
-                  />
-                  <div
-                    className="w-3 h-3 rounded-full border-2 border-white mx-auto animate-ping"
-                    style={{ backgroundColor: getEraById(activeNearComposer.composer.era).color }}
-                  />
-                </div>
-              )}
             </div>
           )}
 
           {/* ========================================================
-              MODE 2: PANORAMA EXPANDED VIEW (パノラマ詳細年表)
+              MODE 2: PANORAMA DETAIL TIMELINE (パノラマ詳細年表)
              ======================================================== */}
           {viewStyle === 'panorama' && (
-            <div className="relative pt-3 pb-16 divide-y divide-[#1f1811] overflow-y-auto max-h-[500px]">
+            <div className="pt-12 pb-16 space-y-3">
               {filteredComposers.map(composer => {
                 const era = getEraById(composer.era);
                 const birthX = (composer.birthYear - MIN_YEAR) * zoomScale + horizontalPadding;
-                const width = (composer.deathYear - composer.birthYear) * zoomScale;
-                const age = composer.deathYear - composer.birthYear;
+                const deathX = (composer.deathYear - MIN_YEAR) * zoomScale + horizontalPadding;
+                const width = Math.max(60, deathX - birthX);
 
                 return (
                   <div
                     key={composer.id}
-                    className="flex items-center h-16 hover:bg-[#16110c] transition-colors relative group"
+                    className="relative h-10 flex items-center group/pano"
+                    style={{ left: `${birthX}px`, width: `${width}px` }}
                   >
+                    {/* Ribbon Bar */}
                     <div
                       onClick={() => onSelectComposer(composer.id)}
-                      className="absolute h-8 rounded-lg cursor-pointer transition-all hover:brightness-125 flex items-center px-2.5 shadow-md overflow-visible"
+                      className="absolute inset-y-1 left-0 right-0 rounded-lg cursor-pointer flex items-center px-3 border border-white/20 transition-all hover:brightness-125 shadow-md"
                       style={{
-                        left: `${birthX}px`,
-                        width: `${Math.max(48, width)}px`,
-                        backgroundColor: era.color,
-                        background: `linear-gradient(90deg, ${era.accentColor}, ${era.color})`
+                        background: `linear-gradient(90deg, ${era.color}, ${era.accentColor})`
                       }}
                     >
-                      <div className="flex items-center gap-2 mr-2 shrink-0">
-                        <ComposerPortrait composer={composer} size="xs" />
-                        <span className="text-xs font-bold text-white drop-shadow truncate">
-                          {composer.shortName} ({age}歳)
-                        </span>
-                      </div>
-
-                      {/* Milestones */}
-                      {composer.milestones?.map((m, mIdx) => {
-                        const mOffsetX = (m.year - composer.birthYear) * zoomScale;
-                        return (
-                          <div
-                            key={mIdx}
-                            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 group/m cursor-pointer"
-                            style={{ left: `${mOffsetX}px` }}
-                            title={`${m.year}年: ${m.event}`}
-                          >
-                            <div className="w-2 h-2 rounded-full bg-white shadow-md hover:scale-150 transition-transform" />
-                            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group/m:flex flex-col bg-[#16120e] border border-[#382f25] rounded-lg p-1.5 w-40 shadow-xl z-30 pointer-events-none">
-                              <span className="text-[9px] font-bold text-[#c99738]">{m.year}年</span>
-                              <span className="text-[8px] text-white leading-tight">{m.event}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      <ComposerPortrait composer={composer} size="xs" className="shrink-0 mr-2" />
+                      <span className="text-xs font-bold text-white drop-shadow truncate">
+                        {composer.name}
+                      </span>
+                      <span className="text-[10px] font-mono text-white/80 ml-auto shrink-0 font-semibold">
+                        {composer.birthYear}〜{composer.deathYear}
+                      </span>
                     </div>
+
+                    {/* Composition Dots along Panorama Line */}
+                    {composer.works.map(w => {
+                      const workOffsetX = (w.year - composer.birthYear) * zoomScale;
+                      return (
+                        <div
+                          key={w.id}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setFocusedEpisodeWork({ work: w, composer });
+                          }}
+                          className="absolute -translate-x-1/2 cursor-pointer z-20 group/panodot"
+                          style={{ left: `${workOffsetX}px` }}
+                          title={`${w.year}年: ${w.title}`}
+                        >
+                          <div className="w-3.5 h-3.5 rounded-full bg-[#120e0b] border border-[#f0d48d] text-[#f0d48d] text-[7px] font-bold flex items-center justify-center hover:scale-150 transition-transform shadow-md">
+                            ♪
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -865,37 +837,34 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
         </div>
       </div>
 
-      {/* Partial Episode & Composition Modal (Single-Tap Action) */}
+      {/* Partial Episode Modal (Single-Tap Action on composition points) */}
       {focusedEpisodeWork && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setFocusedEpisodeWork(null)}
         >
           <div
-            className="bg-[#18130e] border-2 border-[#c99738] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-left relative overflow-hidden"
+            className="bg-[#181512] border border-[#c99738] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-[#f5ebd9] space-y-4"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-[#33281c] pb-4">
+            <div className="flex items-start justify-between gap-3 border-b border-[#2e261e] pb-3">
               <div className="flex items-center gap-3">
-                <ComposerPortrait composer={focusedEpisodeWork.composer} size="md" showOrnateBorder={true} />
+                <ComposerPortrait composer={focusedEpisodeWork.composer} size="sm" />
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-[#c99738]">
-                      {focusedEpisodeWork.composer.name}
-                    </span>
-                    <span className="text-xs">{focusedEpisodeWork.composer.flag}</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mt-0.5">
+                  <span className="text-[11px] text-[#c99738] font-bold">
+                    {focusedEpisodeWork.composer.name}
+                  </span>
+                  <h3 className="text-base font-bold text-white">
                     {focusedEpisodeWork.work.title}
                   </h3>
-                  <p className="text-xs text-[#a89b8c] font-mono">
+                  <p className="text-xs text-[#9c9388] font-mono">
                     {focusedEpisodeWork.work.originalTitle}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setFocusedEpisodeWork(null)}
-                className="text-[#a89b8c] hover:text-white p-1 rounded-full text-xl leading-none transition-colors"
+                className="text-[#9c9388] hover:text-white p-1 rounded-full text-lg leading-none"
               >
                 ✕
               </button>
@@ -903,52 +872,67 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
 
             {/* Quick Metadata Badges */}
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className="px-3 py-1 rounded-lg bg-[#261e16] text-[#c99738] border border-[#c99738]/40 font-mono font-bold">
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono font-bold">
                 作曲年: {focusedEpisodeWork.work.year}年
               </span>
-              <span className="px-3 py-1 rounded-lg bg-[#261e16] text-[#e8dec8] border border-[#3d3021]">
-                都市: {focusedEpisodeWork.work.city}
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
+                作曲都市: {focusedEpisodeWork.work.city}
               </span>
-              <span className="px-3 py-1 rounded-lg bg-[#261e16] text-[#e8dec8] border border-[#3d3021]">
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
                 ジャンル: {focusedEpisodeWork.work.genreJa}
               </span>
             </div>
 
+            {/* Audio Snippet Preview */}
+            <div className="bg-[#110f0d] p-3 rounded-lg border border-[#2e251c] flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => playTrack(focusedEpisodeWork.work, focusedEpisodeWork.composer)}
+                  className="w-8 h-8 rounded-full bg-[#c99738] text-black flex items-center justify-center font-bold shadow hover:bg-[#e6b95c] transition-colors"
+                >
+                  {isPlaying && currentTrack?.work.id === focusedEpisodeWork.work.id ? (
+                    <Pause className="w-4 h-4 fill-current" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                  )}
+                </button>
+                <div className="text-xs">
+                  <span className="font-bold text-[#f5ebd9] block">試聴・フレーズ再生</span>
+                  <span className="text-[10px] text-[#9c9388]">Web Audio API リアルタイムシンセ</span>
+                </div>
+              </div>
+            </div>
+
             {/* Detailed Episode Text */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                楽曲・エピソードの解説
+                作品誕生のエピソード・時代背景
               </h4>
-              <p className="text-xs text-[#d1c6b6] leading-relaxed bg-[#110e0b] p-4 rounded-xl border border-[#2b2118]">
+              <p className="text-xs text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]">
                 {focusedEpisodeWork.work.description}
               </p>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-[#2b2118]">
-              <span className="text-[11px] text-[#a89b8c]">
-                ヒント: ポイントやStrandをダブルタップすると作曲家ページを開きます
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setFocusedEpisodeWork(null)}
-                  className="px-3 py-1.5 rounded-lg text-xs text-[#a89b8c] hover:text-[#f5ebd9] transition-colors"
-                >
-                  閉じる
-                </button>
-                <button
-                  onClick={() => {
-                    const compId = focusedEpisodeWork.composer.id;
-                    setFocusedEpisodeWork(null);
-                    onSelectComposer(compId);
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#c99738] via-[#e6b95c] to-[#9e7220] text-black font-extrabold text-xs hover:brightness-110 transition-all shadow-lg"
-                >
-                  <span>「{focusedEpisodeWork.composer.shortName}」の全人生ページを開く</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setFocusedEpisodeWork(null)}
+                className="px-4 py-2 rounded text-xs text-[#9c9388] hover:text-[#f5ebd9] transition-colors"
+              >
+                閉じる
+              </button>
+              <button
+                onClick={() => {
+                  const compId = focusedEpisodeWork.composer.id;
+                  setFocusedEpisodeWork(null);
+                  onSelectComposer(compId);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#c99738] text-black font-bold text-xs hover:bg-[#dbaa44] transition-all shadow-lg"
+              >
+                <span>作曲家「{focusedEpisodeWork.composer.shortName}」の全名鑑を開く</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

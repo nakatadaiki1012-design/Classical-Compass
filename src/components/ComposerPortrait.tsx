@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
+import { getAssetUrl } from '../utils/assets';
 
 interface ComposerPortraitProps {
   composer: Composer;
@@ -56,7 +57,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
       } ${className}`}
     >
       <img
-        src={composer.portraitUrl}
+        src={getAssetUrl(composer.portraitUrl)}
         alt={composer.name}
         referrerPolicy="no-referrer"
         loading="lazy"

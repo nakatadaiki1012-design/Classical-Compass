@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: "Cormorant Garamond", "Shippori Mincho", Georgia, serif;
+    --font-display: "Cinzel", "Shippori Mincho", serif;
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  }
+}
+
+.font-classical-display {
+  font-family: var(--font-display);
+}
+
+.font-classical-serif {
+  font-family: var(--font-serif);
+}
+
+.font-classical-sans {
+  font-family: var(--font-sans);
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(20, 18, 16, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 151, 56, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 151, 56, 0.55);
+}
+
+/* Smooth timeline drag & gestures */
+.timeline-grab {
+  cursor: grab;
+}
+
+.timeline-grab:active {
+  cursor: grabbing;
+}

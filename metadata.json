@@ -1,0 +1,6 @@
+{
+  "name": "Classical Compass - クラシック作曲家年表＆音楽地図",
+  "description": "クラシック音楽の巨匠たちの生涯年表、主要作品、試聴プレーヤー、およびヨーロッパ年代別作曲マップを探索できるインタラクティブ音楽史アーカイブ。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

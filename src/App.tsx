@@ -75,9 +75,6 @@ function ClassicalAppContent() {
         onClose={handleCloseModal}
         onSelectComposer={handleSelectComposer}
       />
-
-      {/* Persistent Bottom Classical Audio Player Bar */}
-      <AudioPlayerBar onOpenComposer={handleSelectComposer} />
     </div>
   );
 }

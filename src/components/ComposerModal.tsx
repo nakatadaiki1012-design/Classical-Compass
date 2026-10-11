@@ -158,28 +158,10 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                         </p>
                       </div>
 
-                      {/* Play/Pause Button */}
-                      <button
-                        onClick={() => {
-                          if (isCurrent && isPlaying) {
-                            togglePlay();
-                          } else {
-                            playTrack(work, composer);
-                          }
-                        }}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow-md ${
-                          isCurrent && isPlaying
-                            ? 'bg-[#dba844] text-[#121110]'
-                            : 'bg-[#c99738] hover:bg-[#dba844] text-[#121110]'
-                        }`}
-                        title="試聴"
-                      >
-                        {isCurrent && isPlaying ? (
-                          <Pause className="w-4 h-4 fill-current" />
-                        ) : (
-                          <Play className="w-4 h-4 fill-current translate-x-0.5" />
-                        )}
-                      </button>
+                      {/* Composition Year Badge */}
+                      <span className="px-2.5 py-1 rounded bg-[#241e19] border border-[#c99738]/40 text-[#c99738] font-mono font-bold text-xs shrink-0">
+                        {work.year}年 作曲
+                      </span>
                     </div>
 
                     <p className="text-xs text-[#a39888] mt-3 leading-relaxed">
@@ -191,8 +173,8 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                         <MapPin className="w-3 h-3 text-[#c99738]" />
                         <span>作曲地: {work.city}</span>
                       </span>
-                      <span className="font-mono text-[10px]">
-                        Web Audio 高音質合成音源
+                      <span className="font-mono text-[10px] text-[#c99738]">
+                        ジャンル: {work.genreJa}
                       </span>
                     </div>
                   </div>

@@ -48,8 +48,8 @@ interface StrandItem {
 export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
 
-  const MIN_YEAR = 1650;
-  const MAX_YEAR = 1960;
+  const MIN_YEAR = 1300;
+  const MAX_YEAR = 1990;
   const TOTAL_YEARS = MAX_YEAR - MIN_YEAR;
 
   // View style
@@ -276,7 +276,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
       label?: string;
     }[] = [];
 
-    for (let yr = 1650; yr <= 1950; yr++) {
+    for (let yr = 1300; yr <= 1990; yr++) {
       const x = (yr - MIN_YEAR) * zoomScale + horizontalPadding;
 
       if (yr % 50 === 0) {
@@ -293,20 +293,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
     return ticks;
   }, [zoomScale, horizontalPadding]);
 
-  // Quick jump historical milestones
+  // Quick jump historical milestones across 700 years
   const iconicComposers = [
+    { id: 'machaut', name: 'マショー', year: 1300 },
+    { id: 'josquin', name: 'ジョスカン', year: 1450 },
+    { id: 'monteverdi', name: 'モンテヴェルディ', year: 1567 },
     { id: 'vivaldi', name: 'ヴィヴァルディ', year: 1678 },
     { id: 'bach', name: 'バッハ', year: 1685 },
-    { id: 'handel', name: 'ヘンデル', year: 1685 },
-    { id: 'haydn', name: 'ハイドン', year: 1732 },
     { id: 'mozart', name: 'モーツァルト', year: 1756 },
     { id: 'beethoven', name: 'ベートーヴェン', year: 1770 },
-    { id: 'schubert', name: 'シューベルト', year: 1797 },
     { id: 'chopin', name: 'ショパン', year: 1810 },
-    { id: 'liszt', name: 'リスト', year: 1811 },
     { id: 'tchaikovsky', name: 'チャイコフスキー', year: 1840 },
     { id: 'debussy', name: 'ドビュッシー', year: 1862 },
-    { id: 'stravinsky', name: 'ストラヴィンスキー', year: 1882 }
+    { id: 'stravinsky', name: 'ストラヴィンスキー', year: 1882 },
+    { id: 'takemitsu', name: '武満徹', year: 1930 }
   ];
 
   return (
@@ -659,19 +659,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                               key={w.id}
                               onClick={e => {
                                 e.stopPropagation();
-                                playTrack(w, composer);
+                                onSelectComposer(composer.id);
                               }}
                               className="absolute -translate-x-1/2 -translate-y-1/2 group/work cursor-pointer"
                               style={{ left: `${workOffsetX}px` }}
-                              title={`${w.year}年: ${w.title} (${w.city})`}
+                              title={`${w.year}年 作曲: ${w.title} (${w.city})`}
                             >
                               <div className="w-3.5 h-3.5 rounded-full bg-[#161310] border border-[#c99738] flex items-center justify-center text-[7px] text-[#c99738] group-hover/work:scale-125 transition-transform shadow">
                                 ♪
                               </div>
-                              {/* Hover Tooltip */}
-                              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#161310] border border-[#382f25] rounded p-1.5 w-40 shadow-xl pointer-events-none z-50">
+                              {/* Hover Tooltip displaying composition title + year */}
+                              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#161310] border border-[#c99738] rounded-md p-2 w-44 shadow-2xl pointer-events-none z-50">
                                 <span className="text-[10px] font-bold text-white truncate">{w.title}</span>
-                                <span className="text-[9px] text-[#c99738]">{w.year}年 · {w.city}</span>
+                                <span className="text-[9px] text-[#c99738] font-mono mt-0.5">{w.year}年 作曲 · {w.city}</span>
                               </div>
                             </div>
                           );
@@ -747,19 +747,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                         {activeNearComposer.composer.shortName}
                       </h4>
                       {activeNearComposer.composer.works[0] && (
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            playTrack(activeNearComposer.composer.works[0], activeNearComposer.composer);
-                          }}
-                          className="mt-1 flex items-center gap-1 text-[9px] text-[#c99738] hover:text-[#fff] px-1.5 py-0.5 rounded bg-[#241e17] border border-[#c99738]/30 transition-colors"
-                          title="試聴"
-                        >
-                          <Play className="w-2 h-2 fill-current" />
-                          <span className="truncate max-w-[85px]">
-                            {activeNearComposer.composer.works[0].title}
+                        <div className="mt-1 flex items-center gap-1 text-[9px] text-[#c99738] px-1.5 py-0.5 rounded bg-[#241e17] border border-[#c99738]/30">
+                          <span className="truncate max-w-[110px]">
+                            代表作: {activeNearComposer.composer.works[0].title} ({activeNearComposer.composer.works[0].year}年)
                           </span>
-                        </button>
+                        </div>
                       )}
                     </div>
                   </div>

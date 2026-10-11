@@ -62,11 +62,11 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange, onRan
         {/* Zone 3: 1 primary action */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={onRandomPlay}
+            onClick={() => onViewChange('map')}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded bg-[#2b241c] hover:bg-[#382f23] border border-[#c99738]/40 hover:border-[#c99738] text-[#e8dec8] hover:text-[#fff] text-xs font-medium transition-all shadow-sm whitespace-nowrap"
           >
-            <Music2 className="w-3.5 h-3.5 text-[#c99738]" />
-            <span>名曲をランダム試聴</span>
+            <Compass className="w-3.5 h-3.5 text-[#c99738]" />
+            <span>音楽地図を開く</span>
           </button>
         </div>
       </div>

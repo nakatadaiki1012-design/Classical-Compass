@@ -3,17 +3,17 @@ import { COMPOSERS } from '../data/composers';
 import { EUROPEAN_CITIES } from '../data/cities';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
-import { useAudio } from '../context/AudioContext';
 import {
   Play,
   Pause,
   RotateCcw,
   MapPin,
-  Music,
   Calendar,
   Sparkles,
   ChevronRight,
-  Info
+  Info,
+  Compass,
+  Layers
 } from 'lucide-react';
 import { Composer, Composition } from '../types';
 
@@ -21,17 +21,16 @@ interface EuropeMapViewProps {
   onSelectComposer: (composerId: string) => void;
 }
 
-// Projection: Longitude (-10 to 40) and Latitude (36 to 62) to SVG coordinates [1000 x 750]
+// Projection: Longitude (-10 to 42) and Latitude (35 to 62) to SVG coordinates [960 x 640]
 const projectGeoToSvg = (lon: number, lat: number): [number, number] => {
   const minLon = -10;
-  const maxLon = 38;
-  const minLat = 37;
-  const maxLat = 61;
+  const maxLon = 42;
+  const minLat = 35;
+  const maxLat = 62;
 
-  const svgWidth = 920;
+  const svgWidth = 960;
   const svgHeight = 640;
 
-  // Simple Mercator-like normalized mapping
   const x = ((lon - minLon) / (maxLon - minLon)) * svgWidth;
   const y = ((maxLat - lat) / (maxLat - minLat)) * svgHeight;
 
@@ -39,23 +38,27 @@ const projectGeoToSvg = (lon: number, lat: number): [number, number] => {
 };
 
 export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }) => {
-  const { playTrack, currentTrack } = useAudio();
-
   const [currentYear, setCurrentYear] = useState<number>(1787); // Default to Mozart's iconic year
   const [isPlayingTimeTravel, setIsPlayingTimeTravel] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [selectedCityId, setSelectedCityId] = useState<string | null>('vienna');
+  const [hoveredComposerId, setHoveredComposerId] = useState<string | null>(null);
+  const [selectedComposerId, setSelectedComposerId] = useState<string | null>('mozart');
+  const [hoveredWork, setHoveredWork] = useState<{ title: string; year: number; composerName: string } | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Notable historical milestones for quick jump
+  // Notable historical milestones for quick jump across 700 years of music history!
   const milestones = [
-    { year: 1723, title: 'バッハがライプツィヒへ & ヴィヴァルディ『四季』', era: 'baroque' },
+    { year: 1365, title: 'マショー『ノートルダム・ミサ曲』(中世)', era: 'medieval' },
+    { year: 1502, title: 'ジョスカン『アヴェ・マリア』(ルネサンス)', era: 'renaissance' },
+    { year: 1607, title: 'モンテヴェルディ歌劇『オルフェオ』(バロック)', era: 'baroque' },
+    { year: 1723, title: 'バッハ ライプツィヒ就任 & ヴィヴァルディ『四季』', era: 'baroque' },
     { year: 1787, title: 'モーツァルト『ドン・ジョヴァンニ』&『アイネ・クライネ』', era: 'classical' },
     { year: 1808, title: 'ベートーヴェン『運命』ウィーン初演', era: 'classical' },
     { year: 1838, title: 'ショパン パリでのノクターン傑作群', era: 'romantic' },
     { year: 1876, title: 'チャイコフスキー『白鳥の湖』& ワーグナー バイロイト開場', era: 'late-romantic' },
-    { year: 1893, title: 'ドヴォルザーク『新世界より』& チャイコフスキー『悲愴』', era: 'late-romantic' },
-    { year: 1913, title: 'ストラヴィンスキー『春の祭典』パリ初演大暴動', era: 'modern' }
+    { year: 1893, title: 'ドヴォルザーク『新世界より』', era: 'late-romantic' },
+    { year: 1913, title: 'ストラヴィンスキー『春の祭典』初演', era: 'modern' },
+    { year: 1967, title: '武満徹『ノヴェンバー・ステップス』(現代)', era: 'modern' }
   ];
 
   // Auto time travel slideshow
@@ -63,9 +66,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     if (isPlayingTimeTravel) {
       timerRef.current = window.setInterval(() => {
         setCurrentYear(prev => {
-          if (prev >= 1950) {
+          if (prev >= 1990) {
             setIsPlayingTimeTravel(false);
-            return 1950;
+            return 1990;
           }
           return prev + 1;
         });
@@ -81,7 +84,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
   // Current era based on year
   const currentEra = useMemo(() => {
-    return ERAS.find(e => currentYear >= e.startYear && currentYear <= e.endYear) || ERAS[1];
+    return ERAS.find(e => currentYear >= e.startYear && currentYear <= e.endYear) || ERAS[2];
   }, [currentYear]);
 
   // Active composers living in currentYear
@@ -89,83 +92,82 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     return COMPOSERS.filter(c => currentYear >= c.birthYear && currentYear <= c.deathYear);
   }, [currentYear]);
 
-  // Works composed around currentYear (within ±2 years window)
-  const nearbyWorks = useMemo(() => {
-    const list: { work: Composition; composer: Composer }[] = [];
-    COMPOSERS.forEach(composer => {
-      composer.works.forEach(work => {
-        if (Math.abs(work.year - currentYear) <= 2) {
-          list.push({ work, composer });
-        }
-      });
-    });
-    return list;
-  }, [currentYear]);
+  // Active composer pins mapped to European map coordinates with collision offset logic!
+  const composerPins = useMemo(() => {
+    const pins: {
+      composer: Composer;
+      cityStay?: Composer['cities'][0];
+      x: number;
+      y: number;
+      cityNameJa: string;
+      isActiveInYear: boolean;
+    }[] = [];
 
-  // Map of active cities and who is residing/working there in currentYear
-  const cityActivities = useMemo(() => {
-    const record: Record<
-      string,
-      {
-        city: (typeof EUROPEAN_CITIES)[string];
-        composers: { composer: Composer; role: string; event: string }[];
-        works: { work: Composition; composer: Composer }[];
-      }
-    > = {};
+    // Group active composers by city to prevent pin overlap (collision fan-out)
+    const cityGroups: Record<string, Composer[]> = {};
 
-    Object.values(EUROPEAN_CITIES).forEach(city => {
-      record[city.id] = {
-        city,
-        composers: [],
-        works: []
-      };
-    });
-
-    // Match composers
     activeComposers.forEach(composer => {
-      composer.cities.forEach(stay => {
-        const cityKey = Object.keys(EUROPEAN_CITIES).find(
-          k => EUROPEAN_CITIES[k].name.toLowerCase() === stay.cityName.toLowerCase()
-        );
-        if (cityKey && currentYear >= stay.startYear && currentYear <= stay.endYear) {
-          if (!record[cityKey]) {
-            record[cityKey] = { city: EUROPEAN_CITIES[cityKey], composers: [], works: [] };
-          }
-          record[cityKey].composers.push({
-            composer,
-            role: stay.role,
-            event: stay.notableEvent
-          });
+      // Find where composer is staying in currentYear
+      const currentStay = composer.cities.find(
+        s => currentYear >= s.startYear && currentYear <= s.endYear
+      ) || composer.cities[0];
+
+      const cityName = currentStay?.cityName.toLowerCase() || 'vienna';
+      if (!cityGroups[cityName]) cityGroups[cityName] = [];
+      cityGroups[cityName].push(composer);
+    });
+
+    // Calculate positions with radial fan-out for multiple composers in same city
+    Object.entries(cityGroups).forEach(([cityNameKey, group]) => {
+      const cityData = Object.values(EUROPEAN_CITIES).find(
+        c => c.name.toLowerCase() === cityNameKey || c.id === cityNameKey
+      ) || EUROPEAN_CITIES['vienna'];
+
+      const [baseX, baseY] = projectGeoToSvg(cityData.coordinates[0], cityData.coordinates[1]);
+      const groupSize = group.length;
+
+      group.forEach((composer, index) => {
+        let x = baseX;
+        let y = baseY;
+
+        // Smart radial offset if 2+ composers share a city!
+        if (groupSize > 1) {
+          const angle = (index / groupSize) * Math.PI * 2 - Math.PI / 2;
+          const radius = Math.min(32, 18 + groupSize * 4);
+          x = baseX + Math.cos(angle) * radius;
+          y = baseY + Math.sin(angle) * radius;
         }
+
+        const currentStay = composer.cities.find(
+          s => currentYear >= s.startYear && currentYear <= s.endYear
+        ) || composer.cities[0];
+
+        pins.push({
+          composer,
+          cityStay: currentStay,
+          x: Math.round(x),
+          y: Math.round(y),
+          cityNameJa: currentStay?.cityNameJa || cityData.nameJa,
+          isActiveInYear: true
+        });
       });
     });
 
-    // Match works around this year
-    nearbyWorks.forEach(item => {
-      const cityKey = Object.keys(EUROPEAN_CITIES).find(
-        k => EUROPEAN_CITIES[k].name.toLowerCase() === item.work.city.toLowerCase()
-      );
-      if (cityKey) {
-        if (!record[cityKey]) {
-          record[cityKey] = { city: EUROPEAN_CITIES[cityKey], composers: [], works: [] };
-        }
-        record[cityKey].works.push(item);
-      }
-    });
+    return pins;
+  }, [activeComposers, currentYear]);
 
-    return record;
-  }, [activeComposers, nearbyWorks, currentYear]);
-
-  const selectedCityData = selectedCityId ? cityActivities[selectedCityId] : null;
+  const selectedComposer = useMemo(() => {
+    return COMPOSERS.find(c => c.id === selectedComposerId) || activeComposers[0] || COMPOSERS[0];
+  }, [selectedComposerId, activeComposers]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-130px)] bg-[#121110] overflow-hidden select-none">
-      {/* Left/Main Column: Time Travel Controls & European Vector Map */}
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-65px)] bg-[#121110] overflow-hidden select-none">
+      {/* Left/Main Column: Europe Map Base with Interactive Composer Pins */}
       <div className="flex-1 flex flex-col min-w-0 border-r border-[#2e2924] relative">
-        {/* Time Travel Year Controller Bar */}
-        <div className="bg-[#191613] border-b border-[#2e2924] px-4 md:px-8 py-3 flex flex-col gap-2.5">
+        {/* Top Time Travel Year Controller Bar */}
+        <div className="bg-[#191613] border-b border-[#2e2924] px-4 md:px-8 py-3 flex flex-col gap-2.5 z-20 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Year & Era display */}
+            {/* Year & Era badge */}
             <div className="flex items-center gap-3">
               <span className="font-classical-display font-bold text-2xl md:text-3xl text-[#f5ebd9] tracking-wider font-mono">
                 {currentYear}年
@@ -178,7 +180,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 <span className="opacity-75 text-[10px]">({currentEra.nameEn})</span>
               </div>
               <span className="text-xs text-[#9c9388] hidden sm:inline">
-                存命の巨匠: <strong className="text-[#f5ebd9]">{activeComposers.length}名</strong>
+                欧州存命の巨匠: <strong className="text-[#f5ebd9]">{activeComposers.length}名</strong>
               </span>
             </div>
 
@@ -196,12 +198,11 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 fill-current text-[#c99738]" />
-                    <span>歴史年代を巡る</span>
+                    <span>年代を自動巡行</span>
                   </>
                 )}
               </button>
 
-              {/* Speed toggle */}
               <div className="flex items-center bg-[#241f19] border border-[#3d362e] rounded p-0.5 text-[11px]">
                 {[1, 2, 4].map(spd => (
                   <button
@@ -228,29 +229,29 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </div>
           </div>
 
-          {/* Interactive Year Slider */}
+          {/* Interactive Timeline Slider */}
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-mono text-[#7d7366]">1650</span>
+            <span className="text-[11px] font-mono text-[#7d7366]">1300年</span>
             <input
               type="range"
-              min={1650}
-              max={1950}
+              min={1300}
+              max={1990}
               value={currentYear}
               onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
               className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
             />
-            <span className="text-[11px] font-mono text-[#7d7366]">1950</span>
+            <span className="text-[11px] font-mono text-[#7d7366]">1990年</span>
           </div>
 
-          {/* Quick Era Jump Badges */}
+          {/* Quick Era Jump Milestones */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
-            <span className="text-[#7d7366] text-[10px] shrink-0 mr-1">主な画期:</span>
+            <span className="text-[#7d7366] text-[10px] shrink-0 mr-1">歴史的画期:</span>
             {milestones.map(m => (
               <button
                 key={m.year}
                 onClick={() => setCurrentYear(m.year)}
                 className={`px-2 py-0.5 rounded border whitespace-nowrap transition-colors ${
-                  Math.abs(currentYear - m.year) <= 1
+                  Math.abs(currentYear - m.year) <= 2
                     ? 'bg-[#c99738]/20 border-[#c99738] text-[#f5ebd9]'
                     : 'bg-[#1e1b18] border-[#332c24] text-[#9c9388] hover:text-[#f5ebd9]'
                 }`}
@@ -261,378 +262,408 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           </div>
         </div>
 
-        {/* Vector Map Canvas */}
-        <div className="flex-1 relative overflow-auto bg-[#100e0c] flex items-center justify-center p-2">
-          {/* Subtle Map Backing Grid & Continent Vector Art */}
+        {/* Map Canvas with European Base & Composer Portrait Pins */}
+        <div className="flex-1 relative overflow-hidden bg-[#0e0c0a] flex items-center justify-center p-2">
+          {/* Work Year Tooltip Display */}
+          {hoveredWork && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-[#191511]/95 border border-[#c99738] px-4 py-2 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-2 text-xs text-[#f5ebd9]">
+              <Sparkles className="w-4 h-4 text-[#c99738] animate-pulse" />
+              <span className="font-bold text-[#c99738]">{hoveredWork.composerName}</span>
+              <span>『{hoveredWork.title}』</span>
+              <span className="font-mono bg-[#c99738] text-black font-bold px-1.5 py-0.2 rounded text-[11px]">
+                {hoveredWork.year}年 作曲
+              </span>
+            </div>
+          )}
+
           <svg
-            viewBox="0 0 920 640"
-            className="w-full h-full max-h-[600px] object-contain drop-shadow-2xl select-none"
+            viewBox="0 0 960 640"
+            className="w-full h-full max-h-[620px] object-contain drop-shadow-2xl select-none"
           >
             <defs>
-              <radialGradient id="waterGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#1a1815" />
-                <stop offset="100%" stopColor="#0d0c0a" />
+              <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#1a1714" />
+                <stop offset="100%" stopColor="#0b0a08" />
               </radialGradient>
-              <filter id="cityGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+              <filter id="pinShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.8" />
               </filter>
             </defs>
 
-            {/* Ocean / Landmass Backing */}
-            <rect width="920" height="640" fill="url(#waterGlow)" />
+            {/* Ocean / Background */}
+            <rect width="960" height="640" fill="url(#oceanGlow)" />
 
-            {/* Stylized European Landmass Outlines */}
+            {/* Stylized European Landmass Paths */}
             {/* British Isles */}
             <path
-              d="M 180 240 Q 170 210 200 180 Q 230 160 215 190 Q 210 230 235 250 Q 210 280 180 260 Z"
-              fill="#1d1915"
-              stroke="#2e2720"
+              d="M 190 230 Q 180 200 210 170 Q 240 150 225 180 Q 220 220 245 240 Q 220 270 190 250 Z"
+              fill="#1e1914"
+              stroke="#2f261e"
               strokeWidth="1.5"
             />
-            {/* Scandinavia */}
+            {/* Scandinavia & Nordic */}
             <path
-              d="M 280 70 Q 340 50 380 90 Q 420 130 360 200 Q 320 220 300 170 Q 280 120 280 70 Z"
-              fill="#1d1915"
-              stroke="#2e2720"
+              d="M 290 60 Q 350 40 390 80 Q 430 120 370 190 Q 330 210 310 160 Q 290 110 290 60 Z"
+              fill="#1e1914"
+              stroke="#2f261e"
               strokeWidth="1.5"
             />
-            {/* Continental Europe & Mediterranean */}
+            {/* Continental Europe */}
             <path
-              d="M 170 340 Q 200 320 260 300 Q 330 280 420 290 Q 560 280 720 250 Q 820 280 840 450 Q 750 490 620 500 Q 500 480 430 450 Q 380 490 320 520 Q 240 540 180 500 Q 140 450 170 340 Z"
-              fill="#1f1b16"
-              stroke="#352e26"
+              d="M 180 330 Q 210 310 270 290 Q 340 270 430 280 Q 570 270 730 240 Q 830 270 850 440 Q 760 480 630 490 Q 510 470 440 440 Q 390 480 330 510 Q 250 530 190 490 Q 150 440 180 330 Z"
+              fill="#201b15"
+              stroke="#382d22"
               strokeWidth="1.5"
             />
             {/* Italian Peninsula */}
             <path
-              d="M 370 420 Q 400 450 430 490 Q 460 540 430 550 Q 400 520 370 470 Z"
-              fill="#1f1b16"
-              stroke="#352e26"
+              d="M 380 410 Q 410 440 440 480 Q 470 530 440 540 Q 410 510 380 460 Z"
+              fill="#201b15"
+              stroke="#382d22"
               strokeWidth="1.5"
             />
             {/* Iberian Peninsula */}
             <path
-              d="M 70 440 Q 150 430 170 470 Q 150 550 90 540 Q 60 500 70 440 Z"
-              fill="#1c1814"
-              stroke="#2d261e"
+              d="M 80 430 Q 160 420 180 460 Q 160 540 100 530 Q 70 490 80 430 Z"
+              fill="#1d1813"
+              stroke="#30261d"
               strokeWidth="1.5"
             />
 
-            {/* Major European Rivers / Aesthetics Lines */}
-            {/* Rhine & Danube stylized paths */}
-            <path
-              d="M 280 300 Q 320 340 310 400"
-              fill="none"
-              stroke="#151310"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-            />
-            <path
-              d="M 340 390 Q 420 390 530 420 Q 640 430 720 440"
-              fill="none"
-              stroke="#151310"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-            />
+            {/* Inset Box for Japan (Takemitsu and modern Asian connection) */}
+            <g transform="translate(810, 380)">
+              <rect
+                x="-10"
+                y="-10"
+                width="140"
+                height="110"
+                rx="8"
+                fill="#161310"
+                stroke="#3d3328"
+                strokeWidth="1"
+              />
+              <text x="60" y="10" fill="#c99738" fontSize="10" textAnchor="middle" fontWeight="bold">
+                日本 (Japan)
+              </text>
+            </g>
 
-            {/* Latitude/Longitude Subtle Grid */}
-            <line x1="0" y1="180" x2="920" y2="180" stroke="#181512" strokeWidth="1" strokeDasharray="2 4" />
-            <line x1="0" y1="340" x2="920" y2="340" stroke="#181512" strokeWidth="1" strokeDasharray="2 4" />
-            <line x1="0" y1="500" x2="920" y2="500" stroke="#181512" strokeWidth="1" strokeDasharray="2 4" />
-            <line x1="260" y1="0" x2="260" y2="640" stroke="#181512" strokeWidth="1" strokeDasharray="2 4" />
-            <line x1="520" y1="0" x2="520" y2="640" stroke="#181512" strokeWidth="1" strokeDasharray="2 4" />
+            {/* Latitude/Longitude Aesthetic Grid Lines */}
+            <line x1="0" y1="170" x2="960" y2="170" stroke="#181410" strokeWidth="1" strokeDasharray="3 5" />
+            <line x1="0" y1="330" x2="960" y2="330" stroke="#181410" strokeWidth="1" strokeDasharray="3 5" />
+            <line x1="0" y1="490" x2="960" y2="490" stroke="#181410" strokeWidth="1" strokeDasharray="3 5" />
+            <line x1="270" y1="0" x2="270" y2="640" stroke="#181410" strokeWidth="1" strokeDasharray="3 5" />
+            <line x1="540" y1="0" x2="540" y2="640" stroke="#181410" strokeWidth="1" strokeDasharray="3 5" />
 
-            {/* Render European Music Hubs / Cities */}
+            {/* European Cities Reference Dots & Names */}
             {Object.values(EUROPEAN_CITIES).map(city => {
               const [cx, cy] = projectGeoToSvg(city.coordinates[0], city.coordinates[1]);
-              const activity = cityActivities[city.id];
-              const composerCount = activity?.composers.length || 0;
-              const hasWorks = (activity?.works.length || 0) > 0;
-              const isSelected = selectedCityId === city.id;
-
               return (
-                <g
-                  key={city.id}
-                  onClick={() => setSelectedCityId(city.id)}
-                  className="cursor-pointer group"
-                >
-                  {/* Glowing active halo if works were composed here this year */}
-                  {hasWorks && (
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r="18"
-                      fill="#c99738"
-                      opacity="0.2"
-                      className="animate-ping"
-                    />
-                  )}
-
-                  {/* Outer circle */}
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={isSelected ? 10 : composerCount > 0 ? 7 : 4}
-                    fill={
-                      isSelected
-                        ? '#f5ebd9'
-                        : composerCount > 0
-                        ? '#c99738'
-                        : '#5e5447'
-                    }
-                    stroke="#121110"
-                    strokeWidth={isSelected ? 3 : 2}
-                    className="transition-all duration-300 group-hover:scale-125"
-                  />
-
-                  {/* Composer presence indicator dot */}
-                  {composerCount > 0 && (
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r="3"
-                      fill="#121110"
-                    />
-                  )}
-
-                  {/* Musical note marker if landmark composition in this era */}
-                  {hasWorks && (
-                    <g transform={`translate(${cx + 4}, ${cy - 16})`}>
-                      <rect
-                        x="-3"
-                        y="-10"
-                        width="18"
-                        height="14"
-                        rx="3"
-                        fill="#c99738"
-                        stroke="#121110"
-                        strokeWidth="1"
-                      />
-                      <text
-                        x="6"
-                        y="0"
-                        fontSize="9"
-                        fontWeight="bold"
-                        fill="#121110"
-                        textAnchor="middle"
-                      >
-                        ♪
-                      </text>
-                    </g>
-                  )}
-
-                  {/* City Label */}
+                <g key={city.id} className="opacity-40 pointer-events-none">
+                  <circle cx={cx} cy={cy} r="2.5" fill="#7a6e5f" />
                   <text
                     x={cx}
-                    y={cy + (isSelected ? 16 : 14)}
+                    y={cy + 10}
                     textAnchor="middle"
-                    fontSize={isSelected ? '12' : composerCount > 0 ? '11' : '9'}
-                    fontWeight={composerCount > 0 ? '600' : '400'}
-                    fill={isSelected ? '#ffffff' : composerCount > 0 ? '#f5ebd9' : '#85786a'}
-                    className="pointer-events-none drop-shadow font-sans transition-all"
+                    fontSize="8"
+                    fill="#7a6e5f"
+                    fontFamily="sans-serif"
                   >
                     {city.nameJa}
                   </text>
                 </g>
               );
             })}
+
+            {/* RENDER ACTIVE COMPOSER PORTRAIT PINS ON MAP FOR CURRENT YEAR */}
+            {composerPins.map(pin => {
+              const { composer, cityStay, x, y, cityNameJa } = pin;
+              const era = getEraById(composer.era);
+              const isSelected = selectedComposerId === composer.id;
+              const isHovered = hoveredComposerId === composer.id;
+
+              return (
+                <g
+                  key={composer.id}
+                  onClick={() => setSelectedComposerId(composer.id)}
+                  onMouseEnter={() => setHoveredComposerId(composer.id)}
+                  onMouseLeave={() => setHoveredComposerId(null)}
+                  className="cursor-pointer group"
+                  filter="url(#pinShadow)"
+                >
+                  {/* Pulsating Era Glow Ring */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isSelected ? 26 : 20}
+                    fill={era.color}
+                    opacity={isSelected ? 0.35 : isHovered ? 0.25 : 0.15}
+                    className="animate-pulse transition-all duration-300"
+                  />
+
+                  {/* Pin Stem line pointing to ground */}
+                  <line
+                    x1={x}
+                    y1={y}
+                    x2={x}
+                    y2={y + 18}
+                    stroke={era.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Ground Pin Dot */}
+                  <circle cx={x} cy={y + 18} r="3" fill="#ffffff" stroke={era.color} strokeWidth="1.5" />
+
+                  {/* Portrait Avatar Circle Marker */}
+                  <foreignObject
+                    x={x - (isSelected ? 20 : 16)}
+                    y={y - (isSelected ? 20 : 16)}
+                    width={isSelected ? 40 : 32}
+                    height={isSelected ? 40 : 32}
+                    className="overflow-visible"
+                  >
+                    <div
+                      className={`w-full h-full rounded-full transition-all duration-300 flex items-center justify-center shadow-2xl ${
+                        isSelected
+                          ? 'ring-2 ring-white ring-offset-2 ring-offset-[#121110] scale-110 z-30'
+                          : isHovered
+                          ? 'ring-2 ring-[#c99738] scale-105 z-20'
+                          : 'ring-1 ring-[#c99738]/60 hover:ring-[#c99738]'
+                      }`}
+                      style={{ backgroundColor: era.color }}
+                    >
+                      <ComposerPortrait
+                        composer={composer}
+                        size="sm"
+                        showOrnateBorder={false}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  </foreignObject>
+
+                  {/* Composer Name & City Label Below Pin */}
+                  <g transform={`translate(${x}, ${y + 28})`}>
+                    <rect
+                      x="-42"
+                      y="-1"
+                      width="84"
+                      height="16"
+                      rx="8"
+                      fill="#14110e"
+                      stroke={isSelected ? '#ffffff' : era.color}
+                      strokeWidth="1"
+                      opacity="0.9"
+                    />
+                    <text
+                      x="0"
+                      y="11"
+                      textAnchor="middle"
+                      fontSize="9"
+                      fontWeight="bold"
+                      fill={isSelected ? '#ffffff' : '#f5ebd9'}
+                    >
+                      {composer.shortName}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
           </svg>
 
           {/* Floating Map Legend */}
-          <div className="absolute bottom-4 left-4 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg p-2.5 text-[11px] text-[#9c9388] shadow-xl space-y-1">
+          <div className="absolute bottom-4 left-4 bg-[#181512]/95 backdrop-blur-md border border-[#332c24] rounded-lg p-3 text-[11px] text-[#9c9388] shadow-2xl space-y-1.5 z-20">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#c99738]" />
-              <span className="text-[#f5ebd9]">巨匠が活動・滞在中の都市</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#c99738] animate-ping" />
+              <span className="text-[#f5ebd9] font-medium">{currentYear}年 在住の作曲家肖像ピン</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-3 rounded bg-[#c99738] text-[8px] text-[#121110] font-bold inline-flex items-center justify-center">♪</span>
-              <span className="text-[#f5ebd9]">この年代に代表作を作曲</span>
+            <div className="text-[10px] text-[#82776a]">
+              ピンをタップすると作品と解説カードが表示されます
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Column: Selected City & Composer Chronicle Inspector */}
-      <div className="w-full lg:w-96 bg-[#161412] flex flex-col overflow-y-auto divide-y divide-[#241f19]">
-        {/* City Header */}
-        {selectedCityData ? (
-          <div className="p-4 md:p-5 bg-[#1a1714]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#c99738]" />
-                <h3 className="font-classical-display font-bold text-lg text-[#f5ebd9]">
-                  {selectedCityData.city.nameJa}
-                </h3>
-                <span className="text-xs text-[#9c9388]">({selectedCityData.city.name})</span>
+      {/* Right Column: Selected Composer & Masterworks Inspector */}
+      <div className="w-full lg:w-96 bg-[#161412] flex flex-col overflow-y-auto divide-y divide-[#241f19] shrink-0">
+        {selectedComposer ? (
+          <>
+            {/* Header profile banner */}
+            <div
+              className="p-5 relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${getEraById(selectedComposer.era).color}33, #161412)`
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3">
+                  <ComposerPortrait composer={selectedComposer} size="lg" showOrnateBorder={true} />
+                  <div>
+                    <span
+                      className="text-[10px] font-bold px-2 py-0.5 rounded text-white inline-block mb-1 shadow-sm"
+                      style={{ backgroundColor: getEraById(selectedComposer.era).color }}
+                    >
+                      {getEraById(selectedComposer.era).name}
+                    </span>
+                    <h2 className="font-classical-display font-bold text-lg text-[#f5ebd9] leading-tight">
+                      {selectedComposer.name}
+                    </h2>
+                    <p className="text-xs text-[#9c9388] mt-0.5 font-mono">
+                      {selectedComposer.birthYear} 〜 {selectedComposer.deathYear}年 ({selectedComposer.nationalityJa})
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onSelectComposer(selectedComposer.id)}
+                  className="px-2.5 py-1 rounded bg-[#2b241c] hover:bg-[#3d3327] border border-[#c99738]/50 text-[#c99738] text-xs font-bold transition-all shrink-0 flex items-center gap-1 shadow"
+                  title="全詳細プロフィール"
+                >
+                  <span>名鑑</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#241f19] border border-[#332c24] text-[#c99738]">
-                {selectedCityData.city.countryJa}
-              </span>
-            </div>
-            <p className="text-xs text-[#9c9388] mt-2 leading-relaxed">
-              {selectedCityData.city.description}
-            </p>
-          </div>
-        ) : (
-          <div className="p-5 text-center text-xs text-[#7d7366]">
-            地図上の都市ピンをクリックすると、滞在作曲家と作曲された作品が表示されます
-          </div>
-        )}
 
-        {/* Landmark Compositions in this city around this year */}
-        {selectedCityData && selectedCityData.works.length > 0 && (
-          <div className="p-4 md:p-5 bg-[#1c1814] space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#c99738] flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5" />
-                {currentYear}年前後にここで作曲された名曲
-              </span>
-              <span className="text-[10px] text-[#9c9388] font-mono">
-                {selectedCityData.works.length}曲
-              </span>
+              {/* Biography snippet */}
+              <p className="text-xs text-[#d1c6b6] mt-3 leading-relaxed line-clamp-3">
+                {selectedComposer.biography}
+              </p>
             </div>
 
-            <div className="space-y-2">
-              {selectedCityData.works.map(({ work, composer }) => {
-                const isCurrent = currentTrack?.work.id === work.id;
-                return (
+            {/* Composer Bar with Composition Masterworks Points (代表曲の作曲年) */}
+            <div className="p-5 space-y-3 bg-[#191613]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  生涯バー & 代表曲の作曲年ポイント
+                </h3>
+                <span className="text-[10px] text-[#9c9388] font-mono">
+                  {selectedComposer.works.length}曲
+                </span>
+              </div>
+
+              {/* Visual Lifespan Timeline Bar with Composition Dots */}
+              <div className="bg-[#12100e] border border-[#302820] rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-mono text-[#8a7e70]">
+                  <span>{selectedComposer.birthYear}年 (誕生)</span>
+                  <span>{selectedComposer.deathYear}年 (没)</span>
+                </div>
+
+                {/* The Lifespan Bar Container */}
+                <div
+                  className="relative h-6 rounded-full overflow-visible flex items-center px-2"
+                  style={{
+                    background: `linear-gradient(90deg, ${getEraById(selectedComposer.era).color}ee, ${getEraById(selectedComposer.era).color}77)`
+                  }}
+                >
+                  <span className="text-[10px] font-bold text-white drop-shadow z-10 pointer-events-none">
+                    {selectedComposer.shortName}
+                  </span>
+
+                  {/* Composition Nodes / Points along the bar */}
+                  {selectedComposer.works.map(work => {
+                    const lifespan = Math.max(1, selectedComposer.deathYear - selectedComposer.birthYear);
+                    const pct = Math.max(5, Math.min(95, ((work.year - selectedComposer.birthYear) / lifespan) * 100));
+
+                    return (
+                      <div
+                        key={work.id}
+                        onMouseEnter={() =>
+                          setHoveredWork({
+                            title: work.title,
+                            year: work.year,
+                            composerName: selectedComposer.shortName
+                          })
+                        }
+                        onMouseLeave={() => setHoveredWork(null)}
+                        className="absolute -translate-x-1/2 cursor-pointer group/dot"
+                        style={{ left: `${pct}%` }}
+                      >
+                        {/* Interactive Dot */}
+                        <div className="w-4 h-4 rounded-full bg-[#161310] border-2 border-[#ffffff] text-[#c99738] flex items-center justify-center text-[8px] font-bold group-hover/dot:scale-125 transition-transform shadow-lg">
+                          ♪
+                        </div>
+
+                        {/* Hover Tooltip displaying composition title + year */}
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover/dot:flex flex-col bg-[#161310] border border-[#c99738] rounded-md p-2 w-48 shadow-2xl z-50 pointer-events-none text-left">
+                          <span className="text-[10px] font-bold text-white truncate">
+                            {work.title}
+                          </span>
+                          <span className="text-[9px] text-[#c99738] font-mono mt-0.5">
+                            作曲年: {work.year}年 ({work.city})
+                          </span>
+                          <span className="text-[9px] text-[#9c9388] mt-1 line-clamp-2 leading-tight">
+                            {work.description}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-[10px] text-[#7a6e5f] text-center italic pt-1">
+                  バー上の「♪」ポイントにカーソルを置くと、代表曲の作曲年が表示されます
+                </div>
+              </div>
+            </div>
+
+            {/* List of Works with Composition Years */}
+            <div className="p-5 space-y-3 flex-1 bg-[#141210]">
+              <span className="text-xs font-bold text-[#f5ebd9] block">
+                代表的傑作リスト ({selectedComposer.works.length}作品)
+              </span>
+
+              <div className="space-y-2.5">
+                {selectedComposer.works.map(work => (
                   <div
                     key={work.id}
-                    className="p-2.5 rounded bg-[#241f19] border border-[#383025] hover:border-[#c99738]/60 transition-colors"
+                    className="p-3 rounded-lg bg-[#1b1815] border border-[#2e2720] hover:border-[#c99738]/60 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#f5ebd9] truncate">
+                      <div>
+                        <span className="text-[10px] font-mono font-bold text-[#c99738] bg-[#29221b] px-1.5 py-0.5 rounded">
+                          {work.year}年 作曲
+                        </span>
+                        <h4 className="text-xs font-bold text-[#f5ebd9] mt-1">
                           {work.title}
-                        </p>
-                        <p className="text-[11px] text-[#c99738] mt-0.5 flex items-center gap-1.5">
-                          <span>{composer.name}</span>
-                          <span>·</span>
-                          <span>{work.year}年</span>
+                        </h4>
+                        <p className="text-[11px] text-[#9c9388] font-mono mt-0.5">
+                          {work.originalTitle} · {work.city}
                         </p>
                       </div>
-                      <button
-                        onClick={() => playTrack(work, composer)}
-                        className="w-7 h-7 rounded-full bg-[#c99738] hover:bg-[#dba844] text-[#121110] flex items-center justify-center shrink-0 transition-transform hover:scale-105 shadow"
-                        title="試聴"
-                      >
-                        <Play className="w-3 h-3 fill-current translate-x-0.5" />
-                      </button>
                     </div>
-                    <p className="text-[11px] text-[#9c9388] mt-2 line-clamp-2 leading-relaxed">
+                    <p className="text-[11px] text-[#9c9388] mt-2 leading-relaxed">
                       {work.description}
                     </p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Composers active in this city around this year */}
-        {selectedCityData && (
-          <div className="p-4 md:p-5 flex-1 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#f5ebd9] flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#c99738]" />
-                {currentYear}年にこの都市で活動中の作曲家
-              </span>
-              <span className="text-[10px] text-[#9c9388]">
-                {selectedCityData.composers.length}名
-              </span>
+                ))}
+              </div>
             </div>
 
-            {selectedCityData.composers.length === 0 ? (
-              <p className="text-xs text-[#7d7366] italic py-3">
-                この年（{currentYear}年）には、記録された常駐作曲家はいません。年代スライダーを動かしてみてください。
-              </p>
-            ) : (
-              <div className="space-y-2.5">
-                {selectedCityData.composers.map(({ composer, role, event }) => {
-                  const era = getEraById(composer.era);
-                  return (
-                    <div
-                      key={composer.id}
-                      className="p-3 rounded-lg bg-[#1f1a15] border border-[#302820] hover:border-[#c99738]/40 transition-colors"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          onClick={() => onSelectComposer(composer.id)}
-                          className="flex items-center gap-2.5 text-left group"
-                        >
-                          <ComposerPortrait composer={composer} size="sm" />
-                          <div>
-                            <span className="text-xs font-bold text-[#f5ebd9] group-hover:text-[#c99738] transition-colors">
-                              {composer.name}
-                            </span>
-                            <span className="text-[10px] text-[#9c9388] block font-mono">
-                              {composer.birthYear}〜{composer.deathYear}年
-                            </span>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => onSelectComposer(composer.id)}
-                          className="text-[#9c9388] hover:text-[#f5ebd9] p-1"
-                          title="詳細プロフィール"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="mt-2 text-[11px] text-[#9c9388] space-y-0.5 bg-[#171310] p-2 rounded">
-                        <p><strong className="text-[#c99738]">役割:</strong> {role}</p>
-                        <p><strong className="text-[#c99738]">出来事:</strong> {event}</p>
-                      </div>
-
-                      {/* Instant Play Composer Works */}
-                      {composer.works[0] && (
-                        <div className="mt-2 flex items-center justify-between pt-1 border-t border-[#262019]">
-                          <span className="text-[10px] text-[#7d7366] truncate max-w-[180px]">
-                            代表作: {composer.works[0].title}
-                          </span>
-                          <button
-                            onClick={() => playTrack(composer.works[0], composer)}
-                            className="flex items-center gap-1 text-[10px] text-[#c99738] hover:underline"
-                          >
-                            <Play className="w-2.5 h-2.5 fill-current" />
-                            <span>試聴する</span>
-                          </button>
-                        </div>
-                      )}
+            {/* Major Life Milestones */}
+            {selectedComposer.milestones && selectedComposer.milestones.length > 0 && (
+              <div className="p-5 bg-[#12100e]">
+                <span className="text-xs font-bold text-[#c99738] block mb-2">
+                  生涯の主な出来事・足跡
+                </span>
+                <div className="space-y-1.5 text-xs text-[#b8ad9e]">
+                  {selectedComposer.milestones.map((m, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] text-[#c99738] font-bold w-12 shrink-0">
+                        {m.year}年
+                      </span>
+                      <span className="text-xs">{m.event}</span>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
+          </>
+        ) : (
+          <div className="p-8 text-center text-xs text-[#7d7366]">
+            地図上の作曲家ピンを選択してください
           </div>
         )}
-
-        {/* Contemporaries across Europe during currentYear */}
-        <div className="p-4 md:p-5 bg-[#141210]">
-          <span className="text-xs font-semibold text-[#f5ebd9] block mb-2">
-            {currentYear}年 当時の全欧州の存命音楽家 ({activeComposers.length}名)
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {activeComposers.map(c => {
-              const era = getEraById(c.era);
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => onSelectComposer(c.id)}
-                  className="px-2 py-1 rounded bg-[#1e1b18] hover:bg-[#28231e] border border-[#332b22] text-[11px] text-[#e8dec8] hover:text-white flex items-center gap-1.5 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: era.color }} />
-                  <span>{c.shortName}</span>
-                  <span className="text-[9px] text-[#7d7366] font-mono">
-                    ({currentYear - c.birthYear}歳)
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </div>
   );

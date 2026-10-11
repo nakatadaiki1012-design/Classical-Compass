@@ -2,6 +2,30 @@ import { Era } from '../types';
 
 export const ERAS: Era[] = [
   {
+    id: 'medieval',
+    name: '中世西洋音楽',
+    nameEn: 'Medieval',
+    startYear: 1100,
+    endYear: 1400,
+    color: '#8B5CF6', // Royal Purple
+    accentColor: '#A78BFA',
+    bgLight: 'rgba(139, 92, 246, 0.15)',
+    description: '単旋律のグレゴリオ聖歌から多声部（ポリフォニー）のノートルダム楽派、そしてアルス・ノーヴァの高度なリズム表記への発展の時代。',
+    musicalFeatures: ['単旋律聖歌（グレゴリオ聖歌）', '初期ポリフォニー（オルガヌム）', 'アルス・ノーヴァのリズム表現', '吟遊詩人（トルバドゥール）の世俗歌曲']
+  },
+  {
+    id: 'renaissance',
+    name: 'ルネサンス音楽',
+    nameEn: 'Renaissance',
+    startYear: 1400,
+    endYear: 1600,
+    color: '#10B981', // Emerald Renaissance Green
+    accentColor: '#34D399',
+    bgLight: 'rgba(16, 185, 129, 0.15)',
+    description: 'フランコ・フランドル楽派とイタリア・パレストリーナ様式が頂点に達した人文書の時代。均整の取れた模倣対位法とマドリガーレが開花。',
+    musicalFeatures: ['通模倣様式（Imitative Counterpoint）', '無伴奏無声合唱（ア・カペラ）', '世俗歌曲マドリガーレの隆盛', '調和と不協和音の厳格な制御']
+  },
+  {
     id: 'baroque',
     name: 'バロック音楽',
     nameEn: 'Baroque',

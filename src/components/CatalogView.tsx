@@ -150,36 +150,25 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                 </p>
               </div>
 
-              {/* Bottom Card Actions: Quick Play & Full Details */}
+              {/* Bottom Card Actions: Representative work title & composition year + Full Details */}
               <div className="mt-5 pt-3 border-t border-[#241e18] flex items-center justify-between gap-2">
                 {firstWork ? (
-                  <button
-                    onClick={() => {
-                      if (isThisTrackActive && isPlaying) {
-                        togglePlay();
-                      } else {
-                        playTrack(firstWork, composer);
-                      }
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#241e18] hover:bg-[#302820] text-[#f5ebd9] text-xs font-medium transition-colors border border-[#383025] hover:border-[#c99738]/50 truncate min-w-0"
-                    title={`試聴: ${firstWork.title}`}
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#201a15] text-[#c99738] text-xs font-medium border border-[#30271e] truncate min-w-0"
+                    title={`代表作: ${firstWork.title} (${firstWork.year}年)`}
                   >
-                    {isThisTrackActive && isPlaying ? (
-                      <Pause className="w-3.5 h-3.5 fill-current text-[#c99738] shrink-0" />
-                    ) : (
-                      <Play className="w-3.5 h-3.5 fill-current text-[#c99738] shrink-0 translate-x-0.5" />
-                    )}
-                    <span className="truncate">{firstWork.title}</span>
-                  </button>
+                    <Sparkles className="w-3 h-3 text-[#c99738] shrink-0" />
+                    <span className="truncate">{firstWork.title} ({firstWork.year}年)</span>
+                  </div>
                 ) : (
                   <span />
                 )}
 
                 <button
                   onClick={() => onSelectComposer(composer.id)}
-                  className="p-1.5 rounded text-[#9c9388] hover:text-[#f5ebd9] hover:bg-[#241e18] transition-colors shrink-0 flex items-center text-xs gap-1"
+                  className="px-2 py-1 rounded text-[#9c9388] hover:text-[#f5ebd9] hover:bg-[#241e18] transition-colors shrink-0 flex items-center text-xs gap-1 font-bold"
                 >
-                  <span>詳細</span>
+                  <span>名鑑詳細</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>

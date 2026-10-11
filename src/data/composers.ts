@@ -2114,6 +2114,230 @@ export const COMPOSERS: Composer[] = [
         }
       }
     ]
+  },
+
+  // --- MEDIEVAL & RENAISSANCE ---
+  {
+    id: 'machaut',
+    name: 'ギョーム・ド・マショー',
+    originalName: 'Guillaume de Machaut',
+    shortName: 'マショー',
+    birthYear: 1300,
+    deathYear: 1377,
+    era: 'medieval',
+    country: 'フランス',
+    nationalityJa: 'フランス',
+    flag: '🇫🇷',
+    portraitUrl: '/portraits/machaut.jpg',
+    portraitPainter: '14世紀アルス・ノーヴァ写本挿絵（ランス大聖堂）',
+    portraitAttribution: 'パブリックドメイン',
+    biography: '14世紀中世フランスを代表する詩人・作曲家。アルス・ノーヴァ（新芸術）運動の頂点に立ち、単一の作曲家によって通して作られた西洋音楽史上初の4声部ミサ曲『ノートルダム・ミサ曲』を遺した。',
+    musicalStyle: '複雑で緻密なアイソリズム、洗練されたポリフォニー、宮廷愛の繊細な抒情。',
+    keyFeatures: ['史上初の通体4声ミサ曲『ノートルダム・ミサ曲』', 'アルス・ノーヴァの記譜法革命', '詩歌と音楽の一体化'],
+    historicalQuote: '「詩なき音楽は空虚であり、音楽なき詩は言葉に過ぎない」',
+    contemporaries: ['フランチェスコ・ランディーニ', 'フィリップ・ド・ヴィトリ'],
+    cities: [
+      {
+        cityName: 'Reims',
+        cityNameJa: 'ランス',
+        country: 'フランス',
+        coordinates: [4.0317, 49.2583],
+        startYear: 1330,
+        endYear: 1377,
+        role: 'ランスノートルダム大聖堂 聖歌隊長・カノニクス',
+        notableEvent: '『ノートルダム・ミサ曲』の作曲と大聖堂初演'
+      }
+    ],
+    milestones: [
+      { year: 1323, event: 'ボヘミア王ヨハン・フォン・ルクセンブルクの宮廷秘書に就任' },
+      { year: 1365, event: '名作『ノートルダム・ミサ曲』完成' }
+    ],
+    works: [
+      {
+        id: 'machaut-messe',
+        title: '『ノートルダム・ミサ曲』よりキリエ',
+        originalTitle: 'Messe de Nostre Dame: Kyrie',
+        year: 1365,
+        genre: 'Choral',
+        genreJa: '合唱曲/ミサ曲',
+        city: 'Reims',
+        cityCoordinates: [4.0317, 49.2583],
+        description: '4部合唱による中世ポリフォニーの最高金字塔。厳かかつ神聖な美しさを誇る。',
+        audioSnippet: { type: 'synth', instrument: 'flute', tempo: 72, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'josquin',
+    name: 'ジョスカン・デ・プレ',
+    originalName: 'Josquin des Prez',
+    shortName: 'ジョスカン',
+    birthYear: 1450,
+    deathYear: 1521,
+    era: 'renaissance',
+    country: 'フランコ・フランドル',
+    nationalityJa: 'フランドル',
+    flag: '🇧🇪',
+    portraitUrl: '/portraits/josquin.jpg',
+    portraitPainter: '16世紀木版画（教皇庁礼拝堂所蔵）',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'ルネサンス音楽最大の巨匠。「音楽家の主（マスター）」と賞賛され、マルティン・ルターから「音を意のままに操る唯一の天才」と評された。通模倣様式を完成させ、声楽ポリフォニーに感情と歌詞の詩情を吹き込んだ。',
+    musicalStyle: '厳密な模倣対位法、歌詞の意味を音に映す「言葉の絵画化」、天上の美しさを誇る声楽アンサンブル。',
+    keyFeatures: ['通模倣ポリフォニー様式の完成', '感情豊かなモチーフの掛け合い', 'ミサ曲・モテットの最高峰'],
+    historicalQuote: '「他の作曲家は音に支配されるが、ジョスカンだけが音を支配する」— マルティン・ルター',
+    contemporaries: ['ハインリヒ・アイザック', 'ピエール・ド・ラ＝リュー'],
+    cities: [
+      {
+        cityName: 'Rome',
+        cityNameJa: 'ローマ',
+        country: 'イタリア',
+        coordinates: [12.4964, 41.9028],
+        startYear: 1489,
+        endYear: 1495,
+        role: 'バチカン教皇庁礼拝堂聖歌隊員',
+        notableEvent: '教皇礼拝堂のために数々のモテットを作曲'
+      },
+      {
+        cityName: 'Tournai',
+        cityNameJa: 'コンデ',
+        country: 'フランコ・フランドル',
+        coordinates: [3.3883, 50.6056],
+        startYear: 1504,
+        endYear: 1521,
+        role: 'ノートルダム聖堂参事会長',
+        notableEvent: '晩年の名作モテットの作曲'
+      }
+    ],
+    milestones: [
+      { year: 1489, event: 'バチカン教皇庁聖歌隊に就任' },
+      { year: 1502, event: 'モテット『アヴェ・マリア』完成' }
+    ],
+    works: [
+      {
+        id: 'josquin-avemaria',
+        title: 'モテット『アヴェ・マリア』',
+        originalTitle: 'Ave Maria ... Virgo serena',
+        year: 1502,
+        genre: 'Choral',
+        genreJa: '合唱曲/モテット',
+        city: 'Rome',
+        cityCoordinates: [12.4964, 41.9028],
+        description: '4声の美しい模倣対位法が天上の調和を生み出すルネサンス聖楽の至宝。',
+        audioSnippet: { type: 'synth', instrument: 'flute', tempo: 80, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'monteverdi',
+    name: 'クラウディオ・モンテヴェルディ',
+    originalName: 'Claudio Monteverdi',
+    shortName: 'モンテヴェルディ',
+    birthYear: 1567,
+    deathYear: 1643,
+    era: 'baroque',
+    country: 'イタリア',
+    nationalityJa: 'イタリア',
+    flag: '🇮🇹',
+    portraitUrl: '/portraits/monteverdi.jpg',
+    portraitPainter: 'ベルナルド・ストロッツィ画（1630年頃、ヴェネツィア）',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'ルネサンスからバロックへの架け橋を架けた「オペラの父」。『オルフェオ』をはじめ、近代的な劇音楽と和声の情感表現（第2実作）を生み出し、ヴェネツィア・サン・マルコ大聖堂楽長として西洋音楽史を新時代へ導いた。',
+    musicalStyle: '感情（情念）を描く劇的な和声、モノディ様式、劇的なオペラアリア。',
+    keyFeatures: ['近代オペラの確立『オルフェオ』', '「第2実作」による情感優先の和声技法', '聖マルコ大聖堂楽長'],
+    historicalQuote: '「音楽の主たる目的は、聴く者の魂に情熱を呼び覚ますことである」',
+    contemporaries: ['ジョヴァンニ・ガブリエリ', 'ハインリヒ・シュッツ'],
+    cities: [
+      {
+        cityName: 'Venice',
+        cityNameJa: 'ヴェネツィア',
+        country: 'イタリア',
+        coordinates: [12.3155, 45.4408],
+        startYear: 1613,
+        endYear: 1643,
+        role: 'サン・マルコ大聖堂楽長',
+        notableEvent: '『聖母マリアの夕べの祈り』『ポッペーアの戴冠』初演'
+      }
+    ],
+    milestones: [
+      { year: 1607, event: '歌劇『オルフェオ』初演' },
+      { year: 1613, event: 'サン・マルコ大聖堂楽長に就任' }
+    ],
+    works: [
+      {
+        id: 'monteverdi-orfeo',
+        title: '歌劇『オルフェオ』プロローグ',
+        originalTitle: 'L’Orfeo: Toccata & Prologue',
+        year: 1607,
+        genre: 'Opera',
+        genreJa: '歌劇',
+        city: 'Venice',
+        cityCoordinates: [12.3155, 45.4408],
+        description: '音楽史上に輝く最古のオペラ傑作。ファンファーレと劇的な叙情詩。',
+        audioSnippet: { type: 'synth', instrument: 'organ', tempo: 100, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'takemitsu',
+    name: '武満 徹',
+    originalName: 'Toru Takemitsu',
+    shortName: '武満徹',
+    birthYear: 1930,
+    deathYear: 1996,
+    era: 'modern',
+    country: '日本',
+    nationalityJa: '日本',
+    flag: '🇯🇵',
+    portraitUrl: '/portraits/takemitsu.jpg',
+    portraitPainter: '現代写真肖像',
+    portraitAttribution: '著作権フリー肖像データ',
+    biography: '戦後日本の現代音楽を世界の頂点へと導いた偉大な作曲家。独学で音楽を学び、ストラヴィンスキーから絶賛された『弦楽のためのレクイエム』や、琵琶・尺八と西洋オーケストラが融合する『ノヴェンバー・ステップス』で世界を感嘆させた。「音のタペストリー」と称される静寂と余白の美学で世界的評価を一身に集めた。',
+    musicalStyle: '静寂と余白の美学、伝統邦楽器（琵琶・尺八）とオーケストラの奇跡的融合、タケミツ・トーン（神秘的かつ豊かな音彩）。',
+    keyFeatures: ['『ノヴェンバー・ステップス』による東西音楽の融合', 'ストラヴィンスキー絶賛の『弦楽のためのレクイエム』', '「静寂」を音楽の一部とする日本的美学'],
+    historicalQuote: '「音とは、静寂という大海原から救い上げられたひとしずくの水である」',
+    contemporaries: ['ジョン・ケージ', 'オリヴィエ・メシアン', 'ジョン・ウィリアムズ'],
+    cities: [
+      {
+        cityName: 'Tokyo',
+        cityNameJa: '東京',
+        country: '日本',
+        coordinates: [38.5, 42.0],
+        startYear: 1930,
+        endYear: 1996,
+        role: '現代音楽作曲家・実験工房',
+        notableEvent: '『ノヴェンバー・ステップス』ニューヨーク・フィル初演世界的大成功'
+      }
+    ],
+    milestones: [
+      { year: 1957, event: '『弦楽のためのレクイエム』完成、ストラヴィンスキーが大絶賛' },
+      { year: 1967, event: 'ニューヨーク・フィル125周年委嘱『ノヴェンバー・ステップス』世界初演' }
+    ],
+    works: [
+      {
+        id: 'takemitsu-november',
+        title: '『ノヴェンバー・ステップス』',
+        originalTitle: 'November Steps',
+        year: 1967,
+        genre: 'Concerto',
+        genreJa: '邦楽・管弦楽曲',
+        city: 'Tokyo',
+        cityCoordinates: [38.5, 42.0],
+        description: '琵琶・尺八の日本伝統楽器と西洋オーケストラが美しく交わる現代音楽至高の金字塔。',
+        audioSnippet: { type: 'synth', instrument: 'flute', tempo: 60, notes: [] }
+      },
+      {
+        id: 'takemitsu-requiem',
+        title: '『弦楽のためのレクイエム』',
+        originalTitle: 'Requiem for Strings',
+        year: 1957,
+        genre: 'Chamber',
+        genreJa: '弦楽合奏曲',
+        city: 'Tokyo',
+        cityCoordinates: [38.5, 42.0],
+        description: 'ストラヴィンスキーが「全曲に溢れる情熱に深く感動した」と激賞した不朽の名作。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 50, notes: [] }
+      }
+    ]
   }
 ];
 

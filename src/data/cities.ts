@@ -152,5 +152,29 @@ export const EUROPEAN_CITIES: Record<string, EuropeanCity> = {
     countryJa: 'フィンランド',
     coordinates: [24.9384, 60.1699],
     description: 'ジャン・シベリウスが愛国交響詩『フィンランディア』で国民を鼓舞した北欧の都。'
+  },
+  reims: {
+    id: 'reims',
+    name: 'Reims',
+    nameJa: 'ランス',
+    countryJa: 'フランス',
+    coordinates: [4.0317, 49.2583],
+    description: 'ノートルダム大聖堂で知られる中世フランス音楽の聖地。ギョーム・ド・マショーが聖歌隊長を務めた。'
+  },
+  tournai: {
+    id: 'tournai',
+    name: 'Condé / Tournai',
+    nameJa: 'コンデ / トゥルネー',
+    countryJa: 'フランコ・フランドル',
+    coordinates: [3.3883, 50.6056],
+    description: 'ルネサンス音楽の奇跡ジョスカン・デ・プレが活動し最期を迎えたフランドル楽派の拠点。'
+  },
+  tokyo: {
+    id: 'tokyo',
+    name: 'Tokyo',
+    nameJa: '東京',
+    countryJa: '日本',
+    coordinates: [38.5, 42.0], // Positioned elegantly on map edge inset for Japanese composers
+    description: '武満徹が東洋と西洋の感性を融合させ『ノヴェンバー・ステップス』など世界の現代音楽史に不滅の足跡を残した都。'
   }
 };

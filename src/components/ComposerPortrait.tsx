@@ -5,7 +5,7 @@ import { getAssetUrl } from '../utils/assets';
 
 interface ComposerPortraitProps {
   composer: Composer;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   showOrnateBorder?: boolean;
 }
@@ -20,6 +20,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
   const era = getEraById(composer.era);
 
   const sizeClasses = {
+    xs: 'w-6 h-6',
     sm: 'w-10 h-10',
     md: 'w-16 h-16',
     lg: 'w-24 h-24 md:w-28 md:h-28',

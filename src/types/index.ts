@@ -83,6 +83,10 @@ export interface Composer {
   cities: CityStay[];
   works: Composition[];
   milestones?: { year: number; event: string; isMajor?: boolean }[];
+  birthPlace?: string;
+  deathPlace?: string;
+  birthEpisode?: string; // どのように生まれたか・生い立ちのエピソード
+  deathEpisode?: string; // どのように亡くなったか・最期のエピソード
 }
 
 export interface EuropeanCity {

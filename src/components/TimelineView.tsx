@@ -17,7 +17,8 @@ import {
   Layers,
   ChevronRight,
   Maximize2,
-  Info
+  Info,
+  SlidersHorizontal
 } from 'lucide-react';
 
 interface TimelineViewProps {
@@ -104,12 +105,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
     }).sort((a, b) => a.birthYear - b.birthYear);
   }, [selectedEra, searchQuery]);
 
+  // Current era based on focal year
+  const currentEra = useMemo(() => {
+    return ERAS.find(e => focalYear >= e.startYear && focalYear <= e.endYear) || ERAS[2];
+  }, [focalYear]);
+
   // Jump to specific year smoothly
   const scrollToYear = useCallback((targetYear: number) => {
     if (!containerRef.current) return;
     const clientWidth = containerRef.current.clientWidth;
     const targetPixel = (targetYear - MIN_YEAR) * zoomScale + horizontalPadding - clientWidth / 2;
     targetScrollPosRef.current = Math.max(0, targetPixel);
+    scrollPosRef.current = Math.max(0, targetPixel);
+    containerRef.current.scrollLeft = Math.max(0, targetPixel);
+    setFocalYear(targetYear);
   }, [zoomScale, horizontalPadding]);
 
   // Initial center on 1787 (Mozart / Classical peak)
@@ -446,6 +455,71 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
               <RotateCcw className="w-3 h-3" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Interactive Timeline Scrubber Knob ("年表もツマミでスクロール") */}
+      <div className="bg-[#120e0a] border-b border-[#292015] px-4 md:px-6 py-2 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 z-25 shadow-md">
+        {/* Left: Focal Year & Era badge */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>年代ツマミ:</span>
+          </span>
+          <span className="font-classical-display font-mono font-bold text-lg md:text-xl text-[#f5ebd9] bg-[#1a140f] px-3 py-0.5 rounded-md border border-[#382d1f]">
+            {focalYear}年
+          </span>
+          {currentEra && (
+            <span
+              className="px-2.5 py-0.5 rounded text-[11px] font-bold text-white shadow-sm flex items-center gap-1"
+              style={{ backgroundColor: currentEra.color }}
+            >
+              <span>{currentEra.name}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Center: The Slider / Knob itself with Step Buttons */}
+        <div className="flex-1 flex items-center gap-2.5 w-full max-w-3xl">
+          <button
+            onClick={() => scrollToYear(Math.max(MIN_YEAR, focalYear - 10))}
+            className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#a89b8c] hover:text-[#f5ebd9] text-[11px] font-mono transition-colors shrink-0"
+            title="10年戻る"
+          >
+            -10年
+          </button>
+
+          <div className="flex-1 flex flex-col gap-1">
+            <input
+              type="range"
+              min={MIN_YEAR}
+              max={MAX_YEAR}
+              value={focalYear}
+              onChange={e => {
+                const yr = parseInt(e.target.value, 10);
+                scrollToYear(yr);
+              }}
+              className="w-full h-2.5 bg-[#1f1812] accent-[#c99738] rounded-lg cursor-pointer transition-all shadow-inner"
+            />
+            {/* Era Indicator Ticks below slider */}
+            <div className="flex justify-between text-[9px] font-mono text-[#807262] px-0.5 select-none">
+              <span>1300年 (中世)</span>
+              <span className="hidden sm:inline">1500年 (ルネサンス)</span>
+              <span>1600年 (バロック)</span>
+              <span className="hidden sm:inline">1750年 (古典派)</span>
+              <span>1820年 (ロマン派)</span>
+              <span>1900年 (近代)</span>
+              <span>1990年</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => scrollToYear(Math.min(MAX_YEAR, focalYear + 10))}
+            className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#a89b8c] hover:text-[#f5ebd9] text-[11px] font-mono transition-colors shrink-0"
+            title="10年進む"
+          >
+            +10年
+          </button>
         </div>
       </div>
 
@@ -874,6 +948,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono font-bold">
                 作曲年: {focusedEpisodeWork.work.year}年
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono">
+                生没年: {focusedEpisodeWork.composer.birthYear}〜{focusedEpisodeWork.composer.deathYear}年 (享年{focusedEpisodeWork.composer.deathYear - focusedEpisodeWork.composer.birthYear}歳)
               </span>
               <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
                 作曲都市: {focusedEpisodeWork.work.city}

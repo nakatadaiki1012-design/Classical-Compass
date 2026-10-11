@@ -16,7 +16,9 @@ import {
   Volume2,
   Calendar,
   Filter,
-  UserCheck
+  UserCheck,
+  Heart,
+  Flame
 } from 'lucide-react';
 import { Composer, Composition } from '../types';
 
@@ -166,75 +168,56 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     return pins;
   }, [activeComposers, currentYear]);
 
-  // Composition Episodes list for currentYear
-  const compositionEpisodes = useMemo(() => {
-    const list: {
-      composer: Composer;
-      work: Composition;
-      cityStay: Composer['cities'][0];
-      cityNameJa: string;
-      isExactYear: boolean;
-    }[] = [];
-
-    activeComposers.forEach(composer => {
+  // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
+  const composerLifeStories = useMemo(() => {
+    return activeComposers.map(composer => {
       const currentStay = composer.cities.find(
         s => currentYear >= s.startYear && currentYear <= s.endYear
       ) || composer.cities[0];
 
-      // Exact year compositions
-      const exactWorks = composer.works.filter(w => w.year === currentYear);
-      exactWorks.forEach(work => {
-        list.push({
-          composer,
-          work,
-          cityStay: currentStay,
-          cityNameJa: currentStay?.cityNameJa || work.city,
-          isExactYear: true
-        });
-      });
+      // Exact or nearby works
+      const exactWork = composer.works.find(w => w.year === currentYear);
+      const nearbyWork = composer.works.find(w => Math.abs(w.year - currentYear) <= 2);
+      const fallbackWork = composer.works[0];
 
-      // Nearby year compositions (+/- 2 years) if no exact match
-      if (exactWorks.length === 0) {
-        const nearbyWorks = composer.works.filter(w => Math.abs(w.year - currentYear) <= 2);
-        nearbyWorks.forEach(work => {
-          list.push({
-            composer,
-            work,
-            cityStay: currentStay,
-            cityNameJa: currentStay?.cityNameJa || work.city,
-            isExactYear: false
-          });
-        });
-      }
+      const work = exactWork || nearbyWork || fallbackWork;
+      const isExactYear = exactWork !== undefined;
+
+      return {
+        composer,
+        work,
+        cityStay: currentStay,
+        cityNameJa: currentStay?.cityNameJa || work?.city || composer.country,
+        isExactYear,
+        ageInYear: currentYear - composer.birthYear,
+        lifespan: composer.deathYear - composer.birthYear
+      };
     });
-
-    return list;
   }, [activeComposers, currentYear]);
 
-  // Filtered episodes if a specific composer is selected on map
-  const displayedEpisodes = useMemo(() => {
+  // Filtered stories if a specific composer is selected on map
+  const displayedStories = useMemo(() => {
     if (selectedComposerId) {
-      const filtered = compositionEpisodes.filter(e => e.composer.id === selectedComposerId);
+      const filtered = composerLifeStories.filter(s => s.composer.id === selectedComposerId);
       if (filtered.length > 0) return filtered;
 
-      // Fallback: if no work in currentYear for selected composer, show all their works
+      // Fallback if composer not in active list (e.g. historical jump)
       const comp = COMPOSERS.find(c => c.id === selectedComposerId);
       if (comp) {
-        const currentStay = comp.cities.find(
-          s => currentYear >= s.startYear && currentYear <= s.endYear
-        ) || comp.cities[0];
-
-        return comp.works.map(work => ({
+        const currentStay = comp.cities[0];
+        return [{
           composer: comp,
-          work,
+          work: comp.works[0],
           cityStay: currentStay,
-          cityNameJa: currentStay?.cityNameJa || work.city,
-          isExactYear: work.year === currentYear
-        }));
+          cityNameJa: currentStay?.cityNameJa || comp.country,
+          isExactYear: comp.works.some(w => w.year === currentYear),
+          ageInYear: currentYear - comp.birthYear,
+          lifespan: comp.deathYear - comp.birthYear
+        }];
       }
     }
-    return compositionEpisodes;
-  }, [compositionEpisodes, selectedComposerId, currentYear]);
+    return composerLifeStories;
+  }, [composerLifeStories, selectedComposerId, currentYear]);
 
   const handlePinClick = (composerId: string) => {
     if (selectedComposerId === composerId) {
@@ -249,7 +232,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121110] text-[#f5ebd9] select-none pb-12">
+    <div className="flex flex-col min-h-screen bg-[#121110] text-[#f5ebd9] select-none pb-16">
       {/* 1. Top Year Controller & Milestone Bar */}
       <div className="bg-[#191613] border-b border-[#2e2924] px-4 md:px-8 py-3.5 flex flex-col gap-3 shadow-lg sticky top-0 z-30 backdrop-blur-md">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -357,7 +340,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         </div>
       </div>
 
-      {/* 2. Main SVG Europe Map Canvas (地図のほう: その年の作曲を表示) */}
+      {/* 2. Main SVG Europe Map Canvas (地図のほう: 生没年＆その年の作曲を表示) */}
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
         <div className="w-full max-w-6xl relative">
           <svg
@@ -423,7 +406,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               );
             })}
 
-            {/* MAP COMPOSER PINS WITH INTEGRATED COMPOSITION TAGS (その年の作曲を地図上に明記) */}
+            {/* MAP COMPOSER PINS WITH LIFESPAN & COMPOSITION (生没年＆作曲を地図上に明記) */}
             {composerMapData.map(pin => {
               const { composer, cityStay, x, y, cityNameJa, activeWorksInYear } = pin;
               const era = getEraById(composer.era);
@@ -489,17 +472,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     </div>
                   </foreignObject>
 
-                  {/* ON-MAP COMPOSITION BADGE (地図上の作曲表示: クリーンで邪魔にならないタグ) */}
+                  {/* ON-MAP COMPOSITION & LIFESPAN BADGE (生没年と作曲を記載したクリーンなタグ) */}
                   <g transform={`translate(${x}, ${y + 24})`}>
                     {topWork ? (
-                      /* Highlighted composition tag if piece composed in/near currentYear */
+                      /* Tag with Composer Name, Lifespan and Composition Title */
                       <g>
                         <rect
-                          x="-65"
+                          x="-80"
                           y="0"
-                          width="130"
-                          height="20"
-                          rx="10"
+                          width="160"
+                          height="22"
+                          rx="11"
                           fill="#181410"
                           stroke={isSelected ? '#ffffff' : '#c99738'}
                           strokeWidth="1.2"
@@ -508,24 +491,24 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         />
                         <text
                           x="0"
-                          y="13"
+                          y="14"
                           textAnchor="middle"
-                          fontSize="9.5"
+                          fontSize="9"
                           fontWeight="bold"
                           fill="#ffffff"
                         >
-                          {composer.shortName}: 『{topWork.title.length > 10 ? topWork.title.substring(0, 9) + '…' : topWork.title}』
+                          {composer.shortName} ({composer.birthYear}〜{composer.deathYear}): 『{topWork.title.length > 7 ? topWork.title.substring(0, 6) + '…' : topWork.title}』
                         </text>
                       </g>
                     ) : (
-                      /* Regular city stay tag */
+                      /* Tag with Composer Name, Lifespan and Current City */
                       <g>
                         <rect
-                          x="-45"
+                          x="-65"
                           y="0"
-                          width="90"
-                          height="16"
-                          rx="8"
+                          width="130"
+                          height="18"
+                          rx="9"
                           fill="#14110e"
                           stroke={isSelected ? '#ffffff' : era.color}
                           strokeWidth="1"
@@ -533,13 +516,13 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         />
                         <text
                           x="0"
-                          y="11"
+                          y="12"
                           textAnchor="middle"
-                          fontSize="9"
+                          fontSize="8.5"
                           fontWeight="bold"
                           fill={isSelected ? '#ffffff' : '#f5ebd9'}
                         >
-                          {composer.shortName} ({cityNameJa})
+                          {composer.shortName} ({composer.birthYear}〜{composer.deathYear}) · {cityNameJa}
                         </text>
                       </g>
                     )}
@@ -552,12 +535,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           {/* Map Status Bar */}
           <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#9c9388] flex items-center gap-2 shadow-xl">
             <span className="w-2 h-2 rounded-full bg-[#c99738] animate-ping" />
-            <span>地図上のピンをタップすると、下の「作曲エピソード」が絞り込まれます</span>
+            <span>地図上のピンをタップすると、下の「生没エピソード & 作曲ストーリー」に絞り込まれます</span>
           </div>
         </div>
       </div>
 
-      {/* 3. Bottom Composition Episode Section (下には作曲のエピソードが出るように) */}
+      {/* 3. Bottom Section: 生没年・生誕＆最期のエピソード & 作曲秘話 */}
       <div
         ref={episodeSectionRef}
         className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-8 space-y-6"
@@ -567,12 +550,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-[#c99738] uppercase tracking-widest">
               <Sparkles className="w-4 h-4" />
-              <span>{currentYear}年の欧州音楽史</span>
+              <span>{currentYear}年 巨匠たちの生没年・生涯の物語 & 作曲背景</span>
             </div>
             <h2 className="text-xl md:text-2xl font-classical-display font-bold text-[#f5ebd9] mt-1 flex items-center gap-2">
-              <span>作曲のエピソード & 誕生秘話</span>
+              <span>生誕・最期のエピソード & 代表曲</span>
               <span className="text-xs font-mono font-normal text-[#9c9388] bg-[#241f19] px-2.5 py-0.5 rounded-full border border-[#382f25]">
-                {displayedEpisodes.length}件のエピソード
+                {displayedStories.length}名の物語
               </span>
             </h2>
           </div>
@@ -589,21 +572,21 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           )}
         </div>
 
-        {/* Composition Episode Cards Grid */}
-        {displayedEpisodes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {displayedEpisodes.map(({ composer, work, cityStay, cityNameJa, isExactYear }) => {
+        {/* Composer Life & Composition Story Cards Grid */}
+        {displayedStories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {displayedStories.map(({ composer, work, cityStay, cityNameJa, isExactYear, ageInYear, lifespan }) => {
               const era = getEraById(composer.era);
-              const isCurrentPlaying = isPlaying && currentTrack?.work.id === work.id;
+              const isCurrentPlaying = work ? (isPlaying && currentTrack?.work.id === work.id) : false;
 
               return (
                 <div
-                  key={`${composer.id}-${work.id}`}
-                  className="bg-[#181512] border border-[#332b22] hover:border-[#c99738]/80 rounded-2xl p-5 shadow-xl transition-all flex flex-col justify-between space-y-4 group"
+                  key={composer.id}
+                  className="bg-[#181512] border border-[#332b22] hover:border-[#c99738]/80 rounded-2xl p-5 shadow-2xl transition-all flex flex-col justify-between space-y-5 group"
                 >
-                  {/* Card Top: Composer Identity & Location */}
-                  <div className="flex items-start justify-between gap-3 border-b border-[#29221b] pb-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                  {/* Card Header: Composer Portrait, Name, Lifespan Badge */}
+                  <div className="flex items-start justify-between gap-3 border-b border-[#29221b] pb-3.5">
+                    <div className="flex items-center gap-3.5 min-w-0">
                       <ComposerPortrait
                         composer={composer}
                         size="md"
@@ -612,74 +595,103 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{composer.flag}</span>
-                          <span className="text-xs font-bold text-[#f5ebd9] truncate">
+                          <span className="text-base">{composer.flag}</span>
+                          <span className="text-sm font-bold text-[#f5ebd9] truncate font-classical-display">
                             {composer.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#9c9388] font-mono">
-                          <span className="text-[#c99738] font-bold">
-                            📍 {cityNameJa}
+
+                        {/* 生没年 (Birth - Death Years) & Current Year Age */}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs">
+                          <span className="bg-[#292117] text-[#c99738] border border-[#c99738]/40 px-2 py-0.5 rounded font-mono font-bold text-[11px]">
+                            生没年: {composer.birthYear}年 〜 {composer.deathYear}年（享年{lifespan}歳）
                           </span>
-                          <span>·</span>
-                          <span>{work.year}年 作曲</span>
-                          {isExactYear && (
-                            <span className="bg-[#c99738]/20 text-[#c99738] border border-[#c99738]/40 px-1.5 py-0.2 rounded text-[10px] font-bold">
-                              {currentYear}年 誕生!
-                            </span>
+                          <span className="bg-[#1f1a14] text-[#a89b8c] px-2 py-0.5 rounded font-mono text-[10px]">
+                            {currentYear}年当時は{ageInYear}歳
+                          </span>
+                        </div>
+
+                        {/* Birthplace & Deathplace */}
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-[#9c9388]">
+                          {composer.birthPlace && (
+                            <span>誕生地: <strong className="text-[#d1c6b6]">{composer.birthPlace}</strong></span>
+                          )}
+                          {composer.deathPlace && (
+                            <span>· 没地: <strong className="text-[#d1c6b6]">{composer.deathPlace}</strong></span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Audio Play Button */}
-                    <button
-                      onClick={() => playTrack(work, composer)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg transition-all shrink-0 ${
-                        isCurrentPlaying
-                          ? 'bg-white text-black scale-105 ring-2 ring-[#c99738]'
-                          : 'bg-[#c99738] text-black hover:bg-[#dbaa44] hover:scale-105'
-                      }`}
-                      title={isCurrentPlaying ? '一時停止' : 'フレーズ試聴'}
-                    >
-                      {isCurrentPlaying ? (
-                        <Pause className="w-5 h-5 fill-current" />
-                      ) : (
-                        <Play className="w-5 h-5 fill-current ml-0.5" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Work Title & Genre */}
-                  <div>
-                    <span className="text-[10px] font-mono text-[#c99738] font-bold uppercase tracking-wider block">
-                      {work.genreJa} · {work.city}
-                    </span>
-                    <h3 className="text-base font-bold text-white mt-0.5 group-hover:text-[#c99738] transition-colors">
-                      『{work.title}』
-                    </h3>
-                    <p className="text-xs text-[#9c9388] font-mono">
-                      {work.originalTitle}
-                    </p>
-                  </div>
-
-                  {/* COMPOSITION EPISODE NARRATIVE (作曲のエピソード) */}
-                  <div className="bg-[#110f0d] border border-[#272019] rounded-xl p-3.5 space-y-1.5">
-                    <span className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>{work.year}年 作曲エピソード & 背景</span>
-                    </span>
-                    <p className="text-xs text-[#d1c6b6] leading-relaxed">
-                      {work.description}
-                    </p>
-                    {cityStay?.notableEvent && (
-                      <p className="text-[11px] text-[#9c9388] border-t border-[#221c16] pt-1.5 mt-1.5 italic">
-                        💡 当時の滞在エピソード: {cityStay.notableEvent}
-                      </p>
+                    {/* Audio Play Button (if work available) */}
+                    {work && (
+                      <button
+                        onClick={() => playTrack(work, composer)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg transition-all shrink-0 ${
+                          isCurrentPlaying
+                            ? 'bg-white text-black scale-105 ring-2 ring-[#c99738]'
+                            : 'bg-[#c99738] text-black hover:bg-[#dbaa44] hover:scale-105'
+                        }`}
+                        title={isCurrentPlaying ? '一時停止' : 'フレーズ試聴'}
+                      >
+                        {isCurrentPlaying ? (
+                          <Pause className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Play className="w-5 h-5 fill-current ml-0.5" />
+                        )}
+                      </button>
                     )}
                   </div>
 
-                  {/* Card Bottom Action: SEPARATE BUTTON TO OPEN COMPOSER PROFILE (作曲者自体の紹介は別ボタンで飛ぶようにして) */}
+                  {/* 1. 生誕・生い立ちのエピソード (どのように生まれたか) */}
+                  <div className="bg-[#13110e] border border-[#2d251c] rounded-xl p-3.5 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#86efac]">
+                      <span>🌱</span>
+                      <span>生誕・生い立ちのエピソード（どのように生まれたか）</span>
+                    </div>
+                    <p className="text-xs text-[#d1c6b6] leading-relaxed">
+                      {composer.birthEpisode || `${composer.birthYear}年、${composer.birthPlace || composer.country}にて誕生。幼少期より類稀なる音楽的才能を開花させた。`}
+                    </p>
+                  </div>
+
+                  {/* 2. 最期・逝去のエピソード (どのように亡くなったか) */}
+                  <div className="bg-[#13110e] border border-[#2d251c] rounded-xl p-3.5 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#fbcfe8]">
+                      <span>🕯️</span>
+                      <span>最期・逝去のエピソード（どのように亡くなったか）</span>
+                    </div>
+                    <p className="text-xs text-[#d1c6b6] leading-relaxed">
+                      {composer.deathEpisode || `${composer.deathYear}年、${composer.deathPlace || composer.country}にて${lifespan}歳で永眠。その音楽的遺産は後世に大きな影響を与え続けている。`}
+                    </p>
+                  </div>
+
+                  {/* 3. 作曲・滞在エピソード ({currentYear}年) */}
+                  {work && (
+                    <div className="bg-[#15120e] border border-[#382d20] rounded-xl p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>当時の作曲・活動エピソード</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-[#c99738] bg-[#292015] px-2 py-0.5 rounded">
+                          {work.year}年 作曲 · 📍 {cityNameJa}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-white mt-1">
+                        『{work.title}』
+                      </h4>
+                      <p className="text-xs text-[#d1c6b6] leading-relaxed">
+                        {work.description}
+                      </p>
+                      {cityStay?.notableEvent && (
+                        <p className="text-[11px] text-[#9c9388] border-t border-[#261f17] pt-1.5 mt-1 italic">
+                          💡 当時の滞在背景: {cityStay.notableEvent}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Card Bottom: 作曲者の紹介は別ボタンで飛ぶようにして */}
                   <div className="pt-2 border-t border-[#29221b] flex items-center justify-end">
                     <button
                       onClick={() => onSelectComposer(composer.id)}
@@ -697,7 +709,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         ) : (
           <div className="bg-[#181512] border border-[#2e2820] rounded-2xl p-12 text-center space-y-3">
             <p className="text-sm text-[#9c9388]">
-              {currentYear}年における対象作曲家・作品のエピソードは登録されていません。
+              {currentYear}年において存命の対象作曲家は登録されていません。
             </p>
             <button
               onClick={() => setSelectedComposerId(null)}

@@ -80,6 +80,7 @@ export interface Composer {
   contemporaries: string[];
   cities: CityStay[];
   works: Composition[];
+  milestones?: { year: number; event: string; isMajor?: boolean }[];
 }
 
 export interface EuropeanCity {

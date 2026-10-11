@@ -169,6 +169,30 @@ export const EUROPEAN_CITIES: Record<string, EuropeanCity> = {
     coordinates: [3.3883, 50.6056],
     description: 'ルネサンス音楽の奇跡ジョスカン・デ・プレが活動し最期を迎えたフランドル楽派の拠点。'
   },
+  dresden: {
+    id: 'dresden',
+    name: 'Dresden',
+    nameJa: 'ドレスデン',
+    countryJa: 'ドイツ',
+    coordinates: [13.7373, 51.0504],
+    description: 'ザクセン選帝侯宮廷の音楽の都。シューマンやワーグナー、ウェーバーが活躍したエルベ河畔の古都。'
+  },
+  madrid: {
+    id: 'madrid',
+    name: 'Madrid',
+    nameJa: 'マドリード',
+    countryJa: 'スペイン',
+    coordinates: [-3.7038, 40.4168],
+    description: 'スペイン王室宮廷を擁し、スカルラッティやボッケリーニが南欧の情熱を鍵盤と室内楽に注いだ都。'
+  },
+  eisenach: {
+    id: 'eisenach',
+    name: 'Eisenach',
+    nameJa: 'アイゼナハ',
+    countryJa: 'ドイツ',
+    coordinates: [10.3204, 50.9753],
+    description: 'バッハの生誕地であり、ヴァルトブルク城を臨むチューリンゲンの歴史的聖地。'
+  },
   tokyo: {
     id: 'tokyo',
     name: 'Tokyo',

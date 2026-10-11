@@ -58,13 +58,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   // Zoom scale (pixels per year): increased to 12.0 by default, up to 35px/year for fine granularity!
   const [zoomScale, setZoomScale] = useState<number>(12.0);
   const [rotationAngle, setRotationAngle] = useState<number>(0);
-  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(false);
+  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(true); // Auto-rotating active by default so 3D bundle visibly spins smoothly!
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focalYear, setFocalYear] = useState<number>(1787);
 
+  // Partial episode modal for single-tap on composition points
+  const [focusedEpisodeWork, setFocusedEpisodeWork] = useState<{
+    work: Composition;
+    composer: Composer;
+  } | null>(null);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Smooth scroll & dragging state with inertia
   const scrollPosRef = useRef<number>(0);
@@ -191,14 +198,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
         const clamped = Math.max(MIN_YEAR, Math.min(MAX_YEAR, currentYear));
         setFocalYear(clamped);
 
-        // 3. Auto rotation or scroll rotation
-        if (isAutoRotating && viewStyle === '3d-bundle') {
-          rotAngleRef.current += 0.015;
-          setRotationAngle(rotAngleRef.current);
-        } else if (!isDraggingRef.current && viewStyle === '3d-bundle') {
-          // slight helical twist as user moves along years
-          rotAngleRef.current = (scrollPosRef.current * 0.0006) % (Math.PI * 2);
-          setRotationAngle(rotAngleRef.current);
+        // 3. 3D cylindrical twist & continuous rotation
+        if (viewStyle === '3d-bundle') {
+          if (isAutoRotating) {
+            rotAngleRef.current += 0.018; // smooth auto-orbit rotation
+            setRotationAngle(rotAngleRef.current);
+          } else if (!isDraggingRef.current) {
+            // subtle living drift so the bundle always feels 3D and dynamic
+            rotAngleRef.current += 0.005;
+            setRotationAngle(rotAngleRef.current);
+          }
         }
       }
 
@@ -659,19 +668,39 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                               key={w.id}
                               onClick={e => {
                                 e.stopPropagation();
+                                if (clickTimeoutRef.current) {
+                                  clearTimeout(clickTimeoutRef.current);
+                                  clickTimeoutRef.current = null;
+                                  // Double click -> open full composer modal
+                                  onSelectComposer(composer.id);
+                                } else {
+                                  clickTimeoutRef.current = setTimeout(() => {
+                                    clickTimeoutRef.current = null;
+                                    // Single click -> open partial episode modal
+                                    setFocusedEpisodeWork({ work: w, composer });
+                                  }, 250);
+                                }
+                              }}
+                              onDoubleClick={e => {
+                                e.stopPropagation();
+                                if (clickTimeoutRef.current) {
+                                  clearTimeout(clickTimeoutRef.current);
+                                  clickTimeoutRef.current = null;
+                                }
                                 onSelectComposer(composer.id);
                               }}
                               className="absolute -translate-x-1/2 -translate-y-1/2 group/work cursor-pointer"
                               style={{ left: `${workOffsetX}px` }}
-                              title={`${w.year}年 作曲: ${w.title} (${w.city})`}
+                              title={`${w.year}年 作曲: ${w.title} (${w.city})\nシングルタップ: エピソード解説\nダブルタップ: 作曲家詳細`}
                             >
                               <div className="w-3.5 h-3.5 rounded-full bg-[#161310] border border-[#c99738] flex items-center justify-center text-[7px] text-[#c99738] group-hover/work:scale-125 transition-transform shadow">
                                 ♪
                               </div>
                               {/* Hover Tooltip displaying composition title + year */}
-                              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#161310] border border-[#c99738] rounded-md p-2 w-44 shadow-2xl pointer-events-none z-50">
+                              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#161310] border border-[#c99738] rounded-md p-2 w-48 shadow-2xl pointer-events-none z-50">
                                 <span className="text-[10px] font-bold text-white truncate">{w.title}</span>
                                 <span className="text-[9px] text-[#c99738] font-mono mt-0.5">{w.year}年 作曲 · {w.city}</span>
+                                <span className="text-[8px] text-[#8a7e70] mt-0.5">タップ: 解説 / ダブルタップ: 詳細</span>
                               </div>
                             </div>
                           );
@@ -829,6 +858,87 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
           )}
         </div>
       </div>
+
+      {/* Partial Episode & Composition Modal (Single-Tap Action on Timeline Nodes) */}
+      {focusedEpisodeWork && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setFocusedEpisodeWork(null)}
+        >
+          <div
+            className="bg-[#181512] border border-[#c99738] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-[#f5ebd9] space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-[#2e261e] pb-3">
+              <div className="flex items-center gap-3">
+                <ComposerPortrait composer={focusedEpisodeWork.composer} size="sm" />
+                <div>
+                  <span className="text-[11px] text-[#c99738] font-bold">
+                    {focusedEpisodeWork.composer.name}
+                  </span>
+                  <h3 className="text-base font-bold text-white">
+                    {focusedEpisodeWork.work.title}
+                  </h3>
+                  <p className="text-xs text-[#9c9388] font-mono">
+                    {focusedEpisodeWork.work.originalTitle}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setFocusedEpisodeWork(null)}
+                className="text-[#9c9388] hover:text-white p-1 rounded-full text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick Metadata Badges */}
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono font-bold">
+                作曲年: {focusedEpisodeWork.work.year}年
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
+                作曲都市: {focusedEpisodeWork.work.city}
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
+                ジャンル: {focusedEpisodeWork.work.genreJa}
+              </span>
+            </div>
+
+            {/* Detailed Episode Text */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                楽曲・エピソードの解説
+              </h4>
+              <p className="text-xs text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]">
+                {focusedEpisodeWork.work.description}
+              </p>
+            </div>
+
+            {/* Actions: View Composer Full Page */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setFocusedEpisodeWork(null)}
+                className="px-4 py-2 rounded text-xs text-[#9c9388] hover:text-[#f5ebd9] transition-colors"
+              >
+                閉じる
+              </button>
+              <button
+                onClick={() => {
+                  const compId = focusedEpisodeWork.composer.id;
+                  setFocusedEpisodeWork(null);
+                  onSelectComposer(compId);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#c99738] text-black font-bold text-xs hover:bg-[#dbaa44] transition-all shadow-lg"
+              >
+                <span>作曲家「{focusedEpisodeWork.composer.shortName}」の詳しいページを開く</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

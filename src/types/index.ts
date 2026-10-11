@@ -21,7 +21,7 @@ export interface Era {
   musicalFeatures: string[];
 }
 
-export type InstrumentType = 'piano' | 'strings' | 'organ' | 'harpsichord' | 'flute';
+export type InstrumentType = 'piano' | 'strings' | 'organ' | 'harpsichord' | 'flute' | 'orchestra' | 'vocal' | 'choral';
 
 export interface NoteEvent {
   note: string; // e.g., 'C4', 'D#4', 'Eb4', 'R' (rest)
@@ -41,7 +41,7 @@ export interface Composition {
   title: string;
   originalTitle: string;
   year: number;
-  genre: 'Symphony' | 'Concerto' | 'Piano' | 'Chamber' | 'Opera' | 'Choral' | 'Solo';
+  genre: 'Symphony' | 'Concerto' | 'Piano' | 'Chamber' | 'Opera' | 'Choral' | 'Solo' | 'Orchestral' | 'Keyboard' | 'Symphonic Poem' | 'Ballet';
   genreJa: string;
   city: string;
   cityCoordinates: [number, number]; // [longitude, latitude]

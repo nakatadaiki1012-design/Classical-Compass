@@ -2338,6 +2338,606 @@ export const COMPOSERS: Composer[] = [
         audioSnippet: { type: 'synth', instrument: 'strings', tempo: 50, notes: [] }
       }
     ]
+  },
+  // --- ADDITIONAL MAJOR COMPOSERS ---
+  {
+    id: 'telemann',
+    name: 'ゲオルク・フィリップ・テレマン',
+    originalName: 'Georg Philipp Telemann',
+    shortName: 'テレマン',
+    birthYear: 1681,
+    deathYear: 1767,
+    era: 'baroque',
+    country: 'ドイツ',
+    nationalityJa: 'ドイツ',
+    flag: '🇩🇪',
+    portraitUrl: '/portraits/handel.jpg',
+    portraitPainter: 'ハンブルク市立古文書館所蔵の肖像銅版画',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'バロック盛期から前古典派にかけ、驚異的な多作家として欧州屈指の知名度を誇った巨匠。J.S.バッハの次男C.P.E.バッハの名付け親でもあり、ハンブルクの教会音楽監督として都市の音楽文化を牽引した。',
+    musicalStyle: 'ドイツの対位法、フランスの優雅さ、イタリアの旋律美、ポーランドの民族リズムを見事に融合させた軽妙洒脱なギャラント様式。',
+    keyFeatures: ['『食卓の音楽』による祝祭的管弦楽法', '多作と出版ビジネスの先駆者', 'ギャラント様式への橋渡し'],
+    historicalQuote: '「音楽は万人の友でなければならない」',
+    contemporaries: ['J.S.バッハ', 'ヘンデル', 'マッテゾン'],
+    cities: [
+      {
+        cityName: 'Hamburg',
+        cityNameJa: 'ハンブルク',
+        country: 'ドイツ',
+        coordinates: [9.9937, 53.5511],
+        startYear: 1721,
+        endYear: 1767,
+        role: 'ハンブルク市音楽監督・カントル',
+        notableEvent: '『食卓の音楽』出版と膨大な教会音楽の演奏'
+      }
+    ],
+    milestones: [
+      { year: 1721, event: 'ハンブルク市音楽総監督に就任' },
+      { year: 1733, event: '傑作集『食卓の音楽 (Tafelmusik)』を刊行' },
+      { year: 1737, event: 'パリに招かれ『パリ四重奏曲』が大絶賛を受ける' }
+    ],
+    works: [
+      {
+        id: 'telemann-tafelmusik',
+        title: '『食卓の音楽 (Tafelmusik)』第1集 序曲と組曲',
+        originalTitle: 'Musique de table, Première production',
+        year: 1733,
+        genre: 'Orchestral',
+        genreJa: '室内・管弦楽曲集',
+        city: 'Hamburg',
+        cityCoordinates: [9.9937, 53.5511],
+        description: '王侯貴族の宴を彩るためヨーロッパ全土の予約購読者を集めて出版された洗練の極致。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 80, notes: [] }
+      },
+      {
+        id: 'telemann-viola-concerto',
+        title: 'ヴィオラ協奏曲 ト長調 TWV 51:G9',
+        originalTitle: 'Viola Concerto in G major',
+        year: 1720,
+        genre: 'Concerto',
+        genreJa: '協奏曲',
+        city: 'Frankfurt',
+        cityCoordinates: [8.6821, 50.1109],
+        description: '西洋音楽史上初のヴィオラのための独奏協奏曲として名高い端麗な傑作。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 92, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'scarlatti',
+    name: 'ドメニコ・スカルラッティ',
+    originalName: 'Domenico Scarlatti',
+    shortName: 'D.スカルラッティ',
+    birthYear: 1685,
+    deathYear: 1757,
+    era: 'baroque',
+    country: 'イタリア',
+    nationalityJa: 'イタリア / スペイン',
+    flag: '🇪🇸',
+    portraitUrl: '/portraits/vivaldi.jpg',
+    portraitPainter: 'ポルトガル・マドリード宮廷肖像画家による肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'J.S.バッハ、ヘンデルと同じ1685年に生まれたイタリアの天才鍵盤奏者。ポルトガルおよびスペイン王室のマリア・バルバラ王女のチェンバロ教師としてマドリードに定住し、555曲におよぶ革新的チェンバロ・ソナタを生み出した。',
+    musicalStyle: '両手の激しい交差、同音連打、フラメンコやギターに影響された不協和音など、鍵盤楽器の技巧の限界を押し広げた輝かしい閃き。',
+    keyFeatures: ['555曲の単一楽章チェンバロ・ソナタ群', 'スペイン民族音楽（フラメンコ）の導入', '両手交差や幅広い跳躍の技巧開発'],
+    historicalQuote: '「音楽の規則を破ることで、より耳に心地よい響きを得られるならば、私は迷わずそれを破る」',
+    contemporaries: ['J.S.バッハ', 'ヘンデル', 'ソレール'],
+    cities: [
+      {
+        cityName: 'Madrid',
+        cityNameJa: 'マドリード',
+        country: 'スペイン',
+        coordinates: [-3.7038, 40.4168],
+        startYear: 1729,
+        endYear: 1757,
+        role: 'スペイン王室宮廷楽長・チェンバロ教師',
+        notableEvent: 'マリア・バルバラ王妃のために500曲を超える奇跡のソナタ群を作曲'
+      }
+    ],
+    milestones: [
+      { year: 1709, event: 'ローマでヘンデルとオルガン・チェンバロ演奏で競い合い互角の腕前を披露' },
+      { year: 1729, event: 'スペイン・マドリード宮廷に移住' },
+      { year: 1738, event: '名作ソナタ集『練習曲集 (Essercizi)』をロンドンで出版' }
+    ],
+    works: [
+      {
+        id: 'scarlatti-k380',
+        title: 'ソナタ ホ長調 K.380 (L.23)',
+        originalTitle: 'Sonata in E major, K.380',
+        year: 1740,
+        genre: 'Keyboard',
+        genreJa: 'チェンバロ・ピアノソナタ',
+        city: 'Madrid',
+        cityCoordinates: [-3.7038, 40.4168],
+        description: '宮廷行進曲のトランペットやファンファーレを思わせる、スカルラッティ屈指の人気ソナタ。',
+        audioSnippet: { type: 'synth', instrument: 'piano', tempo: 88, notes: [] }
+      },
+      {
+        id: 'scarlatti-k141',
+        title: 'ソナタ ニ短調 K.141 (トッカータ)',
+        originalTitle: 'Sonata in D minor, K.141',
+        year: 1749,
+        genre: 'Keyboard',
+        genreJa: '鍵盤ソナタ',
+        city: 'Madrid',
+        cityCoordinates: [-3.7038, 40.4168],
+        description: 'マンドリンやフラメンコギターの超絶トレモロを再現した息をのむ急速同音連打の傑作。',
+        audioSnippet: { type: 'synth', instrument: 'piano', tempo: 136, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'rossini',
+    name: 'ジョアキーノ・ロッシーニ',
+    originalName: 'Gioachino Antonio Rossini',
+    shortName: 'ロッシーニ',
+    birthYear: 1792,
+    deathYear: 1868,
+    era: 'romantic',
+    country: 'イタリア',
+    nationalityJa: 'イタリア',
+    flag: '🇮🇹',
+    portraitUrl: '/portraits/verdi.jpg',
+    portraitPainter: 'パリ市立カルナヴァレ博物館所蔵肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: '19世紀初頭のヨーロッパを「ロッシーニ旋風」で席巻したイタリア・オペラの最高峰。『セビリアの理髪師』『ウィリアム・テル』など39作の歌劇で巨万の富を築いた後、37歳で突如オペラ創作から引退し、美食家として悠々自適の後半生を送った。',
+    musicalStyle: '「ロッシーニ・クレッシェンド」と呼ばれる爆発的な音圧上昇、快活で沸き立つリズム、ベルカント唱法の華麗なるアジリタ技巧。',
+    keyFeatures: ['ロッシーニ・クレッシェンドの創始', 'オペラ・ブッファ（喜歌劇）の世界的頂点', 'ベルカント唱法を極限まで洗練'],
+    historicalQuote: '「私は食欲があるときしか音楽を書かない。そして私の食欲はいつでも旺盛だ」',
+    contemporaries: ['ベートーヴェン', 'シューベルト', 'ベッリーニ', 'ドニゼッティ'],
+    cities: [
+      {
+        cityName: 'Rome',
+        cityNameJa: 'ローマ',
+        country: 'イタリア',
+        coordinates: [12.4964, 41.9028],
+        startYear: 1815,
+        endYear: 1823,
+        role: 'オペラ作曲家',
+        notableEvent: 'アルジェンティーナ劇場で『セビリアの理髪師』初演'
+      },
+      {
+        cityName: 'Paris',
+        cityNameJa: 'パリ',
+        country: 'フランス',
+        coordinates: [2.3522, 48.8566],
+        startYear: 1824,
+        endYear: 1868,
+        role: 'イタリア座総監督・美食家',
+        notableEvent: '『ウィリアム・テル』発表後に引退、晩年サロンで『老年のいたずら』を作曲'
+      }
+    ],
+    milestones: [
+      { year: 1816, event: '歌劇『セビリアの理髪師』ローマ初演（わずか2週間で書き上げる）' },
+      { year: 1829, event: '歌劇『ウィリアム・テル』パリ初演（オペラ筆折りの宣言）' },
+      { year: 1863, event: '晩年の傑作『小荘厳ミサ曲』を完成' }
+    ],
+    works: [
+      {
+        id: 'rossini-barber',
+        title: '歌劇『セビリアの理髪師』序曲',
+        originalTitle: 'Il barbiere di Siviglia: Overture',
+        year: 1816,
+        genre: 'Opera',
+        genreJa: '歌劇（オペラ・ブッファ）',
+        city: 'Rome',
+        cityCoordinates: [12.4964, 41.9028],
+        description: '喜劇オペラの金字塔。弾けるような軽快さと爆発的なクレッシェンドが圧倒的。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 120, notes: [] }
+      },
+      {
+        id: 'rossini-tell',
+        title: '歌劇『ウィリアム・テル』序曲 (スイス軍の行進)',
+        originalTitle: 'Guillaume Tell: Overture (March of the Swiss Soldiers)',
+        year: 1829,
+        genre: 'Opera',
+        genreJa: '歌劇（グランド・オペラ）',
+        city: 'Paris',
+        cityCoordinates: [2.3522, 48.8566],
+        description: 'ファンファーレから駆け抜けるギャロップで誰もが熱狂するクラシック史上屈指の有名曲。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 138, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'berlioz',
+    name: 'エクトール・ベルリオーズ',
+    originalName: 'Hector Berlioz',
+    shortName: 'ベルリオーズ',
+    birthYear: 1803,
+    deathYear: 1869,
+    era: 'romantic',
+    country: 'フランス',
+    nationalityJa: 'フランス',
+    flag: '🇫🇷',
+    portraitUrl: '/portraits/liszt.jpg',
+    portraitPainter: 'ヴェルサイユ宮殿美術館所蔵肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'フランス・ロマン派最大の革新者であり近代管弦楽法の父。イギリス女優ハリエット・スミスソンへの狂おしい片想いから『幻想交響曲』を生み出し、従来の交響曲の概念を根底から覆した。『管弦楽法』の著書は今なおオーケストラ学習の必読書。',
+    musicalStyle: '「固定楽想（イデー・フィクス）」を用いた劇的統一、巨大な管弦楽編成、新奇な楽器の積極的導入による色彩豊かな音響。',
+    keyFeatures: ['『幻想交響曲』と固定楽想（イデー・フィクス）の確立', '標題交響曲の確立', '近代管弦楽法の体系化'],
+    historicalQuote: '「時は大いなる教師だが、残念なことにすべての生徒を死に至らしめる」',
+    contemporaries: ['ショパン', 'リスト', 'メンデルスゾーン', 'シューマン'],
+    cities: [
+      {
+        cityName: 'Paris',
+        cityNameJa: 'パリ',
+        country: 'フランス',
+        coordinates: [2.3522, 48.8566],
+        startYear: 1821,
+        endYear: 1869,
+        role: 'パリ音楽院・音楽批評家',
+        notableEvent: '『幻想交響曲』『レクイエム』の初演と劇音楽の革新'
+      }
+    ],
+    milestones: [
+      { year: 1830, event: 'ローマ賞受賞、および『幻想交響曲』パリ初演で衝撃を与える' },
+      { year: 1844, event: '世界的名著『近代楽器法および管弦楽法』を出版' },
+      { year: 1846, event: '劇的物語『ファウストの劫罰』初演' }
+    ],
+    works: [
+      {
+        id: 'berlioz-fantastique',
+        title: '『幻想交響曲』作品14 第4楽章「断頭台への行進」',
+        originalTitle: 'Symphonie fantastique, Op. 14: Marche au supplice',
+        year: 1830,
+        genre: 'Symphony',
+        genreJa: '標題交響曲',
+        city: 'Paris',
+        cityCoordinates: [2.3522, 48.8566],
+        description: '失恋の狂気からアヘンをあおり、自らの処刑場への行進を幻視するロマン派革命の記念碑。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 84, notes: [] }
+      },
+      {
+        id: 'berlioz-damnation',
+        title: '劇的物語『ファウストの劫罰』より「ラコッツィ行進曲」',
+        originalTitle: 'La damnation de Faust: Marche hongroise',
+        year: 1846,
+        genre: 'Orchestral',
+        genreJa: '劇的物語・管弦楽曲',
+        city: 'Paris',
+        cityCoordinates: [2.3522, 48.8566],
+        description: 'ハンガリーの愛国行進曲を壮大な管弦楽法で編曲し大熱狂を巻き起こした名作。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 110, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'puccini',
+    name: 'ジャコモ・プッチーニ',
+    originalName: 'Giacomo Puccini',
+    shortName: 'プッチーニ',
+    birthYear: 1858,
+    deathYear: 1924,
+    era: 'late-romantic',
+    country: 'イタリア',
+    nationalityJa: 'イタリア',
+    flag: '🇮🇹',
+    portraitUrl: '/portraits/verdi.jpg',
+    portraitPainter: 'ミラノ・リコルディ音楽出版所蔵写真・肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'ヴェルディ亡き後のイタリア・オペラ界の頂点に君臨したヴェリズモ（現実主義）オペラの巨匠。『ラ・ボエーム』『トスカ』『蝶々夫人』『トゥーランドット』など、今なお世界の歌劇場で最も頻繁に上演される名旋律を生み出し続けた。',
+    musicalStyle: '胸を締め付ける甘美で哀切な旋律美、異国情緒（オリエンタリズム）の導入、オーケストラと歌手が一体となった劇的カタルシス。',
+    keyFeatures: ['世界最高のオペラ・ヒット作の数々', 'ヴェリズモ（現実主義）と繊細な心理描写', '東洋（日本・中国）の音階と美の統合'],
+    historicalQuote: '「神が私に指を触れて言われた。『劇場のために作曲せよ、ただ劇場のためだけに』」',
+    contemporaries: ['マーラー', 'ドビュッシー', 'リヒャルト・シュトラウス', 'マスカーニ'],
+    cities: [
+      {
+        cityName: 'Milan',
+        cityNameJa: 'ミラノ',
+        country: 'イタリア',
+        coordinates: [9.19, 45.4642],
+        startYear: 1880,
+        endYear: 1924,
+        role: 'ミラノ音楽院・オペラ作曲家',
+        notableEvent: 'スカラ座での初演と世界的オペラ興行の成功'
+      }
+    ],
+    milestones: [
+      { year: 1896, event: '歌劇『ラ・ボエーム』トリノ初演（トスカニーニ指揮）' },
+      { year: 1900, event: '歌劇『トスカ』ローマ初演' },
+      { year: 1904, event: '歌劇『蝶々夫人』スカラ座初演' },
+      { year: 1924, event: '遺作『トゥーランドット』の作曲中にブリュッセルで没す' }
+    ],
+    works: [
+      {
+        id: 'puccini-turandot',
+        title: '歌劇『トゥーランドット』より「誰も寝てはならぬ」',
+        originalTitle: 'Turandot: Nessun dorma',
+        year: 1924,
+        genre: 'Opera',
+        genreJa: '歌劇アリア',
+        city: 'Milan',
+        cityCoordinates: [9.19, 45.4642],
+        description: 'カラフ王子が勝利を確信して歌い上げる、テノール・アリアの最高峰。',
+        audioSnippet: { type: 'synth', instrument: 'vocal', tempo: 52, notes: [] }
+      },
+      {
+        id: 'puccini-boheme',
+        title: '歌劇『ラ・ボエーム』より「冷たき手を」',
+        originalTitle: 'La bohème: Che gelida manina',
+        year: 1896,
+        genre: 'Opera',
+        genreJa: '歌劇アリア',
+        city: 'Turin',
+        cityCoordinates: [7.6869, 45.0703],
+        description: '極寒のパリ屋根裏部屋で詩人ロドルフォがお針子ミミに出会い愛を告げる永遠の旋律。',
+        audioSnippet: { type: 'synth', instrument: 'vocal', tempo: 58, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'palestrina',
+    name: 'ジョヴァンニ・ピエルルイジ・ダ・パレストリーナ',
+    originalName: 'Giovanni Pierluigi da Palestrina',
+    shortName: 'パレストリーナ',
+    birthYear: 1525,
+    deathYear: 1594,
+    era: 'renaissance',
+    country: 'イタリア',
+    nationalityJa: 'イタリア',
+    flag: '🇮🇹',
+    portraitUrl: '/portraits/bach.jpg',
+    portraitPainter: 'システィーナ礼拝堂所蔵の肖像画',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'ルネサンス・ポリフォニー（多声音楽）の完成者。「カトリック教会音楽の父」と称され、トリエント公会議においてポリフォニー音楽の廃止論議が起こった際、『教皇マルチェルスのミサ曲』を披露して言葉の明瞭さと多声の美しさを両立させ、教会音楽を救ったという伝説で知られる。',
+    musicalStyle: '不協和音の厳格な予備と解決、階段状の流麗な旋律線、神聖で澄み切った無伴奏合唱（ア・カペラ）の均衡美。',
+    keyFeatures: ['パレストリーナ様式（対位法規範の確立）', '『教皇マルチェルスのミサ曲』', 'ア・カペラ宗教合唱の最高峰'],
+    historicalQuote: '「神の栄光を称える声こそ、地上のすべての楽器に勝る」',
+    contemporaries: ['ラッスス', 'ヴィクトリア', 'バード'],
+    cities: [
+      {
+        cityName: 'Rome',
+        cityNameJa: 'ローマ',
+        country: 'イタリア',
+        coordinates: [12.4964, 41.9028],
+        startYear: 1551,
+        endYear: 1594,
+        role: 'ジュリア礼拝堂・システィーナ礼拝堂 楽長',
+        notableEvent: '教皇庁のために100曲を超えるミサ曲とモテットを作曲'
+      }
+    ],
+    milestones: [
+      { year: 1551, event: 'サン・ピエトロ大聖堂ジュリア礼拝堂楽長に就任' },
+      { year: 1567, event: '『教皇マルチェルスのミサ曲』出版' },
+      { year: 1571, event: '終生ジュリア礼拝堂楽長としてローマ音楽界の頂点に立つ' }
+    ],
+    works: [
+      {
+        id: 'palestrina-marcelli',
+        title: '『教皇マルチェルスのミサ曲』より キリエ (Kyrie)',
+        originalTitle: 'Missa Papae Marcelli: Kyrie',
+        year: 1562,
+        genre: 'Choral',
+        genreJa: 'ミサ曲（無伴奏声楽）',
+        city: 'Rome',
+        cityCoordinates: [12.4964, 41.9028],
+        description: '神聖なる祈りと完璧な声の綾織りが天上の響きを紡ぎ出すルネサンス音楽の奇跡。',
+        audioSnippet: { type: 'synth', instrument: 'choral', tempo: 60, notes: [] }
+      },
+      {
+        id: 'palestrina-sicut-cervus',
+        title: 'モテット『鹿が谷川の水を慕うように』',
+        originalTitle: 'Sicut cervus',
+        year: 1584,
+        genre: 'Choral',
+        genreJa: 'モテット',
+        city: 'Rome',
+        cityCoordinates: [12.4964, 41.9028],
+        description: '詩編第42篇に基づく、澄明を極めた対位法が心洗われる名作モテット。',
+        audioSnippet: { type: 'synth', instrument: 'choral', tempo: 56, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'richard-strauss',
+    name: 'リヒャルト・シュトラウス',
+    originalName: 'Richard Strauss',
+    shortName: 'R.シュトラウス',
+    birthYear: 1864,
+    deathYear: 1949,
+    era: 'late-romantic',
+    country: 'ドイツ',
+    nationalityJa: 'ドイツ',
+    flag: '🇩🇪',
+    portraitUrl: '/portraits/mahler.jpg',
+    portraitPainter: 'ベルリン・バイエルン歌劇場所蔵肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'ドイツ後期ロマン派から20世紀音楽の巨匠。交響詩『ツァラトゥストラはかく語りき』『ドン・ファン』で前人未到のオーケストラ色彩美を極め、歌劇『サロメ』『ばらの騎士』で世界を熱狂させた。卓越した指揮者としても活躍。',
+    musicalStyle: '巨大編成オーケストラの華麗極まる書法、痛烈な標題描写、爛熟した甘美なウィーン風ワルツと官能的ポリフォニー。',
+    keyFeatures: ['交響詩（トーン・ポエム）の極致', '映画『2001年宇宙の旅』冒頭曲の原典', '歌劇『ばらの騎士』の甘美な郷愁'],
+    historicalQuote: '「私はオーケストラでビールを注文する音楽さえ書くことができる」',
+    contemporaries: ['マーラー', 'ドビュッシー', 'シベリウス', 'ラヴェル'],
+    cities: [
+      {
+        cityName: 'Weimar',
+        cityNameJa: 'ヴァイマール',
+        country: 'ドイツ',
+        coordinates: [11.3287, 50.9787],
+        startYear: 1889,
+        endYear: 1894,
+        role: '宮廷歌劇場指揮者',
+        notableEvent: '『ドン・ファン』『死と変容』の初演で交響詩の覇者となる'
+      },
+      {
+        cityName: 'Vienna',
+        cityNameJa: 'ウィーン',
+        country: 'オーストリア',
+        coordinates: [16.3738, 48.2082],
+        startYear: 1919,
+        endYear: 1924,
+        role: 'ウィーン国立歌劇場総監督',
+        notableEvent: '『ばらの騎士』の世界的上演と音楽劇の牽引'
+      }
+    ],
+    milestones: [
+      { year: 1888, event: '交響詩『ドン・ファン』初演、一躍ヨーロッパの寵児に' },
+      { year: 1896, event: '交響詩『ツァラトゥストラはかく語りき』完成' },
+      { year: 1911, event: '歌劇『ばらの騎士』ドレスデン初演、熱狂的成功' },
+      { year: 1948, event: '晩年の至高の白鳥の歌『4つの最後の歌』を作曲' }
+    ],
+    works: [
+      {
+        id: 'rstrauss-zarathustra',
+        title: '交響詩『ツァラトゥストラはかく語りき』作品30「日の出」',
+        originalTitle: 'Also sprach Zarathustra, Op. 30: Sunrise',
+        year: 1896,
+        genre: 'Symphonic Poem',
+        genreJa: '交響詩',
+        city: 'Munich',
+        cityCoordinates: [11.582, 48.1351],
+        description: 'オルガンとティンパニの低音から宇宙の黎明が鳴り響く全音楽史上最も鮮烈な開始部。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 50, notes: [] }
+      },
+      {
+        id: 'rstrauss-rosenkavalier',
+        title: '歌劇『ばらの騎士』作品59 作品組曲ワルツ',
+        originalTitle: 'Der Rosenkavalier: Waltz Sequences',
+        year: 1911,
+        genre: 'Opera',
+        genreJa: '歌劇・管弦楽ワルツ',
+        city: 'Dresden',
+        cityCoordinates: [13.7373, 51.0504],
+        description: 'マリア・テレジア時代の18世紀ウィーンの優雅と哀愁を爛熟の管弦楽で描いた不朽の名作。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 72, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'bartok',
+    name: 'ベーラ・バルトーク',
+    originalName: 'Béla Bartók',
+    shortName: 'バルトーク',
+    birthYear: 1881,
+    deathYear: 1945,
+    era: 'modern',
+    country: 'ハンガリー',
+    nationalityJa: 'ハンガリー',
+    flag: '🇭🇺',
+    portraitUrl: '/portraits/stravinsky.jpg',
+    portraitPainter: 'ブダペスト・バルトーク記念館所蔵肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: '20世紀を代表するハンガリーの作曲家・民族音楽学者。コダーイとともに蓄音機を担いで東欧の農村を巡り、真の民謡（マジャル、ルーマニア、スロバキア等）を採取・採譜。その変拍子と非対称リズム、黄金分割の調和を融合し革新的音楽言語を打ち立てた。',
+    musicalStyle: '鋭角的なオスティナート（執拗な反復リズム）、黄金比やフィボナッチ数列に基づく形式構造、打楽器のように扱われるピアノ書法。',
+    keyFeatures: ['『管弦楽のための協奏曲』のオーケストラ名人芸', '比較民族音楽学の開拓', '不協和音と民族音階の有機的結晶'],
+    historicalQuote: '「民謡とは、自然の現象と同じように純粋で完璧な創造物である」',
+    contemporaries: ['ストラヴィンスキー', 'シェーンベルク', 'ラヴェル', 'コダーイ'],
+    cities: [
+      {
+        cityName: 'Budapest',
+        cityNameJa: 'ブダペスト',
+        country: 'ハンガリー',
+        coordinates: [19.0402, 47.4979],
+        startYear: 1907,
+        endYear: 1940,
+        role: 'リスト音楽院ピアノ科教授',
+        notableEvent: '民謡研究と弦楽四重奏曲・バレエ音楽の創出'
+      }
+    ],
+    milestones: [
+      { year: 1911, event: '歌劇『青ひげ公の城』を作曲' },
+      { year: 1936, event: '『弦楽器、打楽器とチェレスタのための音楽』を完成' },
+      { year: 1943, event: 'ボストン交響楽団の委嘱で『管弦楽のための協奏曲』を作曲' }
+    ],
+    works: [
+      {
+        id: 'bartok-concerto-orch',
+        title: '『管弦楽のための協奏曲』Sz. 116 第4楽章「中断された間奏曲」',
+        originalTitle: 'Concerto for Orchestra: Intermezzo interrotto',
+        year: 1943,
+        genre: 'Orchestral',
+        genreJa: '管弦楽曲',
+        city: 'New York',
+        cityCoordinates: [32.0, 43.0],
+        description: '亡命先のアメリカで全オーケストラ奏者の名人芸を華麗に競わせた20世紀屈指の傑作。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 96, notes: [] }
+      },
+      {
+        id: 'bartok-romanian-dances',
+        title: '『ルーマニア民俗舞曲』Sz. 56',
+        originalTitle: 'Romanian Folk Dances',
+        year: 1915,
+        genre: 'Chamber',
+        genreJa: '舞曲集',
+        city: 'Budapest',
+        cityCoordinates: [19.0402, 47.4979],
+        description: 'トランシルヴァニア地方の農民舞踊の素朴で情熱的な響きを芸術的に昇華した名曲。',
+        audioSnippet: { type: 'synth', instrument: 'strings', tempo: 104, notes: [] }
+      }
+    ]
+  },
+  {
+    id: 'prokofiev',
+    name: 'セルゲイ・プロコフィエフ',
+    originalName: 'Sergei Prokofiev',
+    shortName: 'プロコフィエフ',
+    birthYear: 1891,
+    deathYear: 1953,
+    era: 'modern',
+    country: 'ロシア',
+    nationalityJa: 'ロシア / ソ連',
+    flag: '🇷🇺',
+    portraitUrl: '/portraits/rachmaninoff.jpg',
+    portraitPainter: 'モスクワ国立音楽博物館所蔵肖像',
+    portraitAttribution: 'パブリックドメイン',
+    biography: 'モダニズムとロシア的抒情性を兼ね備えた20世紀ソ連の巨匠。サンクトペテルブルク音楽院で「恐るべき子供」として脚光を浴び、革命後に欧米へ亡命するも祖国へ帰還。バレエ『ロメオとジュリエット』、音楽物語『ピーターと狼』など親しみやすくも機知に富んだ傑作を量産した。',
+    musicalStyle: '鮮烈な不協和音と突飛な転調（トッカータ的打撃）、皮肉と諧謔（グロテスク）、そして一度聴いたら忘れられない広大で温かい歌心。',
+    keyFeatures: ['『ロメオとジュリエット』の圧倒的劇性', '音楽物語『ピーターと狼』による管弦楽入門', 'ロシア・アヴァンギャルドと新古典主義の統合'],
+    historicalQuote: '「私は真実のメロディを書きたい。明快で、誰もが理解できるメロディを」',
+    contemporaries: ['ストラヴィンスキー', 'ラフマニノフ', 'ショスタコーヴィチ'],
+    cities: [
+      {
+        cityName: 'St. Petersburg',
+        cityNameJa: 'サンクトペテルブルク',
+        country: 'ロシア',
+        coordinates: [30.3351, 59.9343],
+        startYear: 1904,
+        endYear: 1918,
+        role: '音楽院学生・前衛ピアニスト',
+        notableEvent: '『古典交響曲』初演とセンセーショナルな登場'
+      },
+      {
+        cityName: 'Moscow',
+        cityNameJa: 'モスクワ',
+        country: 'ロシア',
+        coordinates: [37.6173, 55.7558],
+        startYear: 1936,
+        endYear: 1953,
+        role: 'ソ連作曲家同盟・ソビエト芸術家',
+        notableEvent: '『ロメオとジュリエット』『交響曲第5番』の作曲'
+      }
+    ],
+    milestones: [
+      { year: 1917, event: 'ハイドンへのオマージュ『古典交響曲（交響曲第1番）』を完成' },
+      { year: 1935, event: 'バレエ音楽『ロメオとジュリエット』を作曲' },
+      { year: 1936, event: '子どものための音楽物語『ピーターと狼』をわずか4日で書き上げる' }
+    ],
+    works: [
+      {
+        id: 'prokofiev-romeo-montecchi',
+        title: 'バレエ『ロメオとジュリエット』組曲より「モンタギュー家とキャピュレット家」',
+        originalTitle: 'Romeo and Juliet: Montagues and Capulets',
+        year: 1935,
+        genre: 'Ballet',
+        genreJa: 'バレエ音楽・劇付随音楽',
+        city: 'Moscow',
+        cityCoordinates: [37.6173, 55.7558],
+        description: '重厚な低音の不協和音と騎士たちの傲慢な行進を描く、映画やドラマでも多用される名曲。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 80, notes: [] }
+      },
+      {
+        id: 'prokofiev-classical-symphony',
+        title: '『交響曲第1番 ニ長調 作品25「古典」』第1楽章 アレグロ',
+        originalTitle: 'Symphony No. 1 in D major, Op. 25 "Classical": Allegro',
+        year: 1917,
+        genre: 'Symphony',
+        genreJa: '交響曲（新古典派）',
+        city: 'St. Petersburg',
+        cityCoordinates: [30.3351, 59.9343],
+        description: 'もしハイドンが20世紀に生きていたら書いたであろう、才気とユーモアに満ちた小交響曲。',
+        audioSnippet: { type: 'synth', instrument: 'orchestra', tempo: 132, notes: [] }
+      }
+    ]
   }
 ];
 

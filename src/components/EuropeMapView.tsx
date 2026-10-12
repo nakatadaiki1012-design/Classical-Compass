@@ -93,9 +93,134 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     return getVisibleComposers().filter(c => currentYear >= c.birthYear && currentYear <= c.deathYear);
   }, [currentYear]);
 
+  // 地図の拡大・移動。k = 拡大率（1が全体）、(vx, vy) = 見えている範囲の左上（地図の座標）
+  const [view, setView] = useState<{ k: number; vx: number; vy: number }>({ k: 1, vx: 0, vy: 0 });
+  const { k, vx, vy } = view;
+  const MAX_K = 6;
+  const sc = 1 / k; // 拡大しても、札や文字の大きさが画面の上で変わらないようにするための倍率
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const didPanRef = useRef(false);
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const clampView = (v: { k: number; vx: number; vy: number }) => {
+    const kk = Math.min(MAX_K, Math.max(1, v.k));
+    return {
+      k: kk,
+      vx: Math.min(SVG_W - SVG_W / kk, Math.max(0, v.vx)),
+      vy: Math.min(SVG_H - SVG_H / kk, Math.max(0, v.vy))
+    };
+  };
+
+  /** 画面上の点（clientX/Y）を中心に、倍率を factor 倍にする */
+  const zoomAt = (factor: number, clientX?: number, clientY?: number) => {
+    const el = svgRef.current;
+    const cur = viewRef.current;
+    const nk = Math.min(MAX_K, Math.max(1, cur.k * factor));
+    if (!el) {
+      setView(clampView({ ...cur, k: nk }));
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    const fx = clientX === undefined ? 0.5 : (clientX - rect.left) / rect.width;
+    const fy = clientY === undefined ? 0.5 : (clientY - rect.top) / rect.height;
+    const wx = cur.vx + fx * (SVG_W / cur.k);
+    const wy = cur.vy + fy * (SVG_H / cur.k);
+    setView(clampView({ k: nk, vx: wx - fx * (SVG_W / nk), vy: wy - fy * (SVG_H / nk) }));
+  };
+
+  // マウスでドラッグして動かす（拡大しているときだけ）
+  const handleMapMouseDown = (e: React.MouseEvent) => {
+    if (viewRef.current.k <= 1 || !svgRef.current) return;
+    const start = { x: e.clientX, y: e.clientY, ...viewRef.current };
+    const rect = svgRef.current.getBoundingClientRect();
+    didPanRef.current = false;
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - start.x;
+      const dy = ev.clientY - start.y;
+      if (!didPanRef.current && Math.hypot(dx, dy) < 4) return;
+      didPanRef.current = true;
+      setView(
+        clampView({
+          k: start.k,
+          vx: start.vx - (dx / rect.width) * (SVG_W / start.k),
+          vy: start.vy - (dy / rect.height) * (SVG_H / start.k)
+        })
+      );
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.setTimeout(() => (didPanRef.current = false), 0);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  // 2本指のピンチで拡大縮小、拡大中は1本指で移動。Ctrl＋ホイール（トラックパッドのピンチ）でも拡大縮小
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    let pinch: { d: number } | null = null;
+    let pan: { x: number; y: number } | null = null;
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinch = { d: dist(e.touches) };
+        pan = null;
+      } else if (e.touches.length === 1 && viewRef.current.k > 1) {
+        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        didPanRef.current = false;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && pinch) {
+        e.preventDefault();
+        const d = dist(e.touches);
+        zoomAt(d / pinch.d, (e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2);
+        pinch.d = d;
+        didPanRef.current = true;
+      } else if (e.touches.length === 1 && pan) {
+        e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        const cur = viewRef.current;
+        const dx = e.touches[0].clientX - pan.x;
+        const dy = e.touches[0].clientY - pan.y;
+        if (Math.hypot(dx, dy) > 3) didPanRef.current = true;
+        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        setView(clampView({ k: cur.k, vx: cur.vx - (dx / rect.width) * (SVG_W / cur.k), vy: cur.vy - (dy / rect.height) * (SVG_H / cur.k) }));
+      }
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinch = null;
+      if (e.touches.length === 0) {
+        pan = null;
+        window.setTimeout(() => (didPanRef.current = false), 50);
+      }
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+      el.removeEventListener('wheel', onWheel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 地図に出す人物。その年の居場所（滞在・旅行）に合わせて位置が動く。
-  // 地図の範囲の外（アメリカ・日本など）は、右下の「地図の外」の枠に表示する。
-  const { composerMapData, offMapBox } = useMemo(() => {
+  // 地図の範囲の外（アメリカ・日本など）は、「地図の外」の枠に表示する。
+  // 同じ場所に人が集中しているときは、1つの「まとめ札」にして、都市を指示線で指す。
+  const { composerMapData, offMapBox, clusters } = useMemo(() => {
     interface Entry {
       composer: Composer;
       where: Whereabouts;
@@ -112,45 +237,118 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       });
     });
 
-    const pins: (Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean })[] = [];
+    type Pin = Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean; clusterId?: string };
+    interface Cluster {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      cols: number;
+      trueX: number;
+      trueY: number;
+      placeName: string;
+      members: Entry[];
+    }
+    const pins: Pin[] = [];
+    const clusters: Cluster[] = [];
 
-    // 札が重ならないように、近い人どうしをずらして配置する（本当の場所には小さな点と細い線を残す）
-    const LABEL_W = 104;
-    const LABEL_H = 62;
-    const placed: { x: number; y: number }[] = [];
-    // 本当の場所のまわりに、斜めも含めてあらゆる向きの候補を作る（近い順）。
-    // 横長の札なので、横方向の距離は少し長めにとる
-    const offsets: [number, number][] = [[0, 0]];
+    // 画面の上での大きさが変わらないよう、拡大しているときは地図の上での大きさを小さくして場所を探す
+    const s = 1 / k;
+    const placed: { x: number; y: number; w: number; h: number }[] = [];
+    const free = (x: number, y: number, w: number, h: number) =>
+      placed.every(q => Math.abs(q.x - x) >= (q.w + w) / 2 || Math.abs(q.y - y) >= (q.h + h) / 2);
     const ANGLES = [-45, 45, -135, 135, -90, 90, 0, 180, -22, 22, -158, 158, -68, 68, -112, 112];
-    [1, 2, 3, 4, 5].forEach(ring => {
-      ANGLES.forEach(deg => {
-        const rad = (deg * Math.PI) / 180;
-        offsets.push([Math.cos(rad) * ring * 78, Math.sin(rad) * ring * 58]);
-      });
-    });
+    /** 本当の場所のまわりで、斜めも含めて近い順に空いている場所を探す */
+    const findSpot = (tx: number, ty: number, w: number, h: number, firstRing: number): [number, number] => {
+      for (let ring = firstRing; ring <= 12; ring++) {
+        for (const deg of ANGLES) {
+          const rad = (deg * Math.PI) / 180;
+          const x = tx + Math.cos(rad) * ring * w * 0.75;
+          const y = ty + Math.sin(rad) * ring * h * 0.9;
+          const inside = x - w / 2 > 10 && x + w / 2 < SVG_W - 10 && y - h / 2 > 6 && y + h / 2 < SVG_H - 6;
+          if (inside && free(x, y, w, h)) return [x, y];
+        }
+      }
+      return [tx, ty];
+    };
 
-    entries
+    const onMap = entries
       .filter(e => !isOffMap(e.where.place))
       .map(e => {
         const [tx, ty] = projectGeoToSvg(e.where.place.lon, e.where.place.lat);
         return { e, tx, ty };
-      })
+      });
+
+    // 近い人どうしをグループにする（画面の上で約36px以内）
+    const parent = onMap.map((_, i) => i);
+    const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    for (let i = 0; i < onMap.length; i++) {
+      for (let j = i + 1; j < onMap.length; j++) {
+        if (Math.hypot(onMap[i].tx - onMap[j].tx, onMap[i].ty - onMap[j].ty) < 36 * s) parent[find(i)] = find(j);
+      }
+    }
+    const groups = new Map<number, typeof onMap>();
+    onMap.forEach((item, i) => {
+      const root = find(i);
+      groups.set(root, [...(groups.get(root) || []), item]);
+    });
+
+    // 4人以上が集中している場所は「まとめ札」
+    const CARD_ROW = 20;
+    const singles: typeof onMap = [];
+    groups.forEach(list => {
+      if (list.length < 4) {
+        singles.push(...list);
+        return;
+      }
+      const cx = list.reduce((a, b) => a + b.tx, 0) / list.length;
+      const cy = list.reduce((a, b) => a + b.ty, 0) / list.length;
+      const cols = list.length > 7 ? 2 : 1;
+      const rows = Math.ceil(list.length / cols);
+      const wScreen = cols * 104 + 16;
+      const hScreen = 26 + rows * CARD_ROW;
+      const id = `cluster-${clusters.length}`;
+      const nearest = list.reduce((best, cur) =>
+        Math.hypot(cur.tx - cx, cur.ty - cy) < Math.hypot(best.tx - cx, best.ty - cy) ? cur : best
+      );
+      clusters.push({
+        id,
+        x: cx,
+        y: cy,
+        w: wScreen * s,
+        h: hScreen * s,
+        cols,
+        trueX: cx,
+        trueY: cy,
+        placeName: nearest.e.where.place.ja,
+        members: list
+          .map(i => i.e)
+          .sort((a, b) => a.composer.birthYear - b.composer.birthYear)
+      });
+    });
+
+    // まとめ札を先に置く（大きいので、よい場所を先に取る）
+    clusters
+      .sort((a, b) => b.members.length - a.members.length)
+      .forEach(c => {
+        const [x, y] = findSpot(c.trueX, c.trueY, c.w, c.h, 1);
+        c.x = x;
+        c.y = y;
+        placed.push({ x, y, w: c.w, h: c.h });
+        c.members.forEach(m => {
+          pins.push({ ...m, x, y, trueX: c.trueX, trueY: c.trueY, offMap: false, clusterId: c.id });
+        });
+      });
+
+    // 残りの人は、1人ずつの札（札が重ならないよう、斜めにもずらす）
+    const LABEL_W = 104 * s;
+    const LABEL_H = 62 * s;
+    singles
       .sort((a, b) => a.ty - b.ty || a.tx - b.tx)
       .forEach(({ e, tx, ty }) => {
-        let best: [number, number] = [0, 0];
-        for (const [ox, oy] of offsets) {
-          const x = tx + ox;
-          const y = ty + oy;
-          const insideMap = x > 50 && x < SVG_W - 50 && y > 24 && y < SVG_H - 70;
-          const free = placed.every(q => Math.abs(q.x - x) >= LABEL_W || Math.abs(q.y - y) >= LABEL_H);
-          if (insideMap && free) {
-            best = [ox, oy];
-            break;
-          }
-        }
-        const x = tx + best[0];
-        const y = ty + best[1];
-        placed.push({ x, y });
+        const [x, y] = findSpot(tx, ty, LABEL_W, LABEL_H, 0);
+        placed.push({ x, y, w: LABEL_W, h: LABEL_H });
         pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: tx, trueY: ty, offMap: false });
       });
 
@@ -171,8 +369,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: x, trueY: y, offMap: true });
       });
     }
-    return { composerMapData: pins, offMapBox: box };
-  }, [activeComposers, currentYear]);
+    return { composerMapData: pins, offMapBox: box, clusters };
+  }, [activeComposers, currentYear, k]);
 
   // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
   const composerLifeStories = useMemo(() => {
@@ -226,6 +424,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   }, [composerLifeStories, selectedComposerId, currentYear]);
 
   const handlePinClick = (composerId: string) => {
+    if (didPanRef.current) return; // ドラッグで動かした直後のクリックは無視
     setSelectedComposerId(prev => (prev === composerId ? null : composerId));
   };
 
@@ -347,8 +546,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
         <div className="w-full max-w-6xl relative">
           <svg
-            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-            className="w-full h-auto max-h-[640px] object-contain drop-shadow-2xl select-none"
+            ref={svgRef}
+            viewBox={`${vx} ${vy} ${SVG_W / k} ${SVG_H / k}`}
+            className={`w-full h-auto max-h-[640px] object-contain drop-shadow-2xl select-none ${k > 1 ? 'cursor-grab' : ''}`}
+            onMouseDown={handleMapMouseDown}
           >
             <defs>
               <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
@@ -417,7 +618,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
             {/* 引っ越し・旅立ちの年は、前の滞在先からの点線の矢印で「移動」を見せる */}
             {composerMapData
-              .filter(p => p.where.movedFrom && !p.offMap && !isOffMap(p.where.movedFrom))
+              .filter(p => p.where.movedFrom && !p.offMap && !p.clusterId && !isOffMap(p.where.movedFrom))
               .map(p => {
                 const [fx, fy] = projectGeoToSvg(p.where.movedFrom!.lon, p.where.movedFrom!.lat);
                 return (
@@ -440,17 +641,28 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
             {/* 札を避けて少しずらした人には、本当の場所との間に細い線と点を表示 */}
             {composerMapData
-              .filter(p => !p.offMap && Math.hypot(p.x - p.trueX, p.y - p.trueY) > 6)
+              .filter(p => !p.offMap && !p.clusterId && Math.hypot(p.x - p.trueX, p.y - p.trueY) > 6 * sc)
               .map(p => (
                 <g key={`leader-${p.composer.id}`} className="pointer-events-none">
-                  <line x1={p.trueX} y1={p.trueY} x2={p.x} y2={p.y} stroke="#bdb1a1" strokeWidth="1.2" opacity="0.7" />
-                  <circle cx={p.trueX} cy={p.trueY} r="3.5" fill="#f5ebd9" stroke="#14110e" strokeWidth="1" />
+                  <line x1={p.trueX} y1={p.trueY} x2={p.x} y2={p.y} stroke="#bdb1a1" strokeWidth={1.2 * sc} opacity="0.7" />
+                  <circle cx={p.trueX} cy={p.trueY} r={3.5 * sc} fill="#f5ebd9" stroke="#14110e" strokeWidth={sc} />
                 </g>
               ))}
 
+            {/* 人が集中している都市：都市を指す線と人数の丸 */}
+            {clusters.map(c => (
+              <g key={`cl-line-${c.id}`} className="pointer-events-none">
+                <line x1={c.trueX} y1={c.trueY} x2={c.x} y2={c.y} stroke="#e6b95c" strokeWidth={1.6 * sc} opacity="0.85" />
+                <circle cx={c.trueX} cy={c.trueY} r={9 * sc} fill="#e6b95c" stroke="#14110e" strokeWidth={1.5 * sc} />
+                <text x={c.trueX} y={c.trueY + 4 * sc} textAnchor="middle" fontSize={11 * sc} fontWeight="bold" fill="#14110e">
+                  {c.members.length}
+                </text>
+              </g>
+            ))}
+
             {/* 地図の外（アメリカ・日本など）にいる人の枠 */}
             {offMapBox && (
-              <g className="pointer-events-none">
+              <g className="pointer-events-none" transform={`translate(${vx} ${vy}) scale(${sc})`}>
                 <rect
                   x={offMapBox.x}
                   y={offMapBox.y}
@@ -470,7 +682,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             )}
 
             {/* MAP COMPOSER PINS WITH LIFESPAN & COMPOSITION (生没年＆作曲を地図上に明記) */}
-            {composerMapData.map(pin => {
+            {composerMapData.filter(pin => !pin.clusterId).map(pin => {
               const { composer, where, x, y, offMap, activeWorksInYear } = pin;
               const era = getEraById(composer.era);
               const isSelected = selectedComposerId === composer.id;
@@ -480,6 +692,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               return (
                 <g
                   key={composer.id}
+                  transform={offMap ? `translate(${vx} ${vy}) scale(${sc})` : `translate(${x} ${y}) scale(${sc}) translate(${-x} ${-y})`}
                   onClick={() => handlePinClick(composer.id)}
                   onMouseEnter={() => setHoveredComposerId(composer.id)}
                   onMouseLeave={() => setHoveredComposerId(null)}
@@ -602,7 +815,80 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 </g>
               );
             })}
+
+            {/* 人が集中している都市の「まとめ札」：中の名前をタップするとその人の説明が開く */}
+            {clusters.map(c => {
+              const rows = Math.ceil(c.members.length / c.cols);
+              const W = c.w * k;
+              const H = c.h * k;
+              return (
+                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc})`} filter="url(#pinShadow)">
+                  <rect x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
+                  <text x={-W / 2 + 10} y={-H / 2 + 17} fontSize="12" fontWeight="bold" fill="#e6b95c">
+                    {c.placeName}　{c.members.length}人
+                  </text>
+                  {c.members.map((m, i) => {
+                    const col = Math.floor(i / rows);
+                    const row = i % rows;
+                    const mx = -W / 2 + 10 + col * 104;
+                    const my = -H / 2 + 26 + row * 20;
+                    const era = getEraById(m.composer.era);
+                    const selected = selectedComposerId === m.composer.id;
+                    return (
+                      <g
+                        key={m.composer.id}
+                        className="cursor-pointer"
+                        onClick={() => handlePinClick(m.composer.id)}
+                        onMouseEnter={() => setHoveredComposerId(m.composer.id)}
+                        onMouseLeave={() => setHoveredComposerId(null)}
+                      >
+                        <rect
+                          x={mx - 4}
+                          y={my}
+                          width="100"
+                          height="19"
+                          rx="5"
+                          fill={selected ? '#3a2d1c' : hoveredComposerId === m.composer.id ? '#2a2118' : 'transparent'}
+                          stroke={selected ? '#ffffff' : 'none'}
+                        />
+                        <circle cx={mx + 4} cy={my + 9.5} r="4.5" fill={era.color} />
+                        <text x={mx + 14} y={my + 13.5} fontSize="11" fontWeight="bold" fill="#ffffff">
+                          {m.composer.shortName.length > 7 ? m.composer.shortName.slice(0, 7) + '…' : m.composer.shortName}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            })}
           </svg>
+
+          {/* 拡大・縮小のボタン */}
+          <div className="absolute left-2 top-2 flex flex-col gap-1 z-10">
+            <button
+              onClick={() => zoomAt(1.5)}
+              className="w-8 h-8 rounded bg-[#241f19]/90 border border-[#3d362e] text-[#f5ebd9] text-lg font-bold hover:bg-[#382f23]"
+              aria-label="地図を拡大"
+            >
+              ＋
+            </button>
+            <button
+              onClick={() => zoomAt(1 / 1.5)}
+              className="w-8 h-8 rounded bg-[#241f19]/90 border border-[#3d362e] text-[#f5ebd9] text-lg font-bold hover:bg-[#382f23]"
+              aria-label="地図を縮小"
+            >
+              −
+            </button>
+            {k > 1 && (
+              <button
+                onClick={() => setView({ k: 1, vx: 0, vy: 0 })}
+                className="w-8 h-8 rounded bg-[#241f19]/90 border border-[#3d362e] text-[#bdb1a1] text-[10px] font-bold hover:bg-[#382f23]"
+                aria-label="全体に戻す"
+              >
+                全体
+              </button>
+            )}
+          </div>
 
           {/* 人物ポップアップ: 広い画面では地図の右上に重ねて、狭い画面では地図の下に表示 */}
           {popupPin && (

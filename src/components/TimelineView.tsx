@@ -918,7 +918,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                       setOpenPeriod(period);
                     }}
                     title={`${period.name}：${period.mainstream}`}
-                    className="absolute rounded-sm text-left px-1 overflow-hidden whitespace-nowrap text-[10px] font-bold leading-[13px] text-white/95 hover:brightness-125"
+                    className="absolute rounded-sm text-left overflow-clip whitespace-nowrap text-[10px] font-bold leading-[13px] text-white/95 hover:brightness-125"
                     style={{
                       left: (s - MIN_YEAR) * zoomScale + horizontalPadding,
                       width: Math.max(6, (e - s) * zoomScale - 1),
@@ -927,7 +927,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                       background: period.color + 'cc'
                     }}
                   >
-                    {period.name.replace('日本：', '日本・').split('（')[0]}
+                    {/* 帯の左端が画面の外に出ても、時代名は画面の左端について来る */}
+                    <span className="sticky left-1 px-1 inline-block">
+                      {period.name.replace('日本：', '日本・').split('（')[0]}
+                    </span>
                   </button>
                 );
               })}

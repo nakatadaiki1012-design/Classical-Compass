@@ -396,24 +396,49 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     return { panoramaBars: bars, panoramaRowCount: bars.length };
   }, [filteredComposers, zoomScale, horizontalPadding]);
 
-  // 年を動かして、その年に生きている人の段が画面の外になったら、縦にも動かして見える位置へ
+  // 2本指のピンチ（スマホ）や、Ctrl＋ホイール／トラックパッドのピンチで、年表を拡大・縮小する
+  const zoomRef = useRef(zoomScale);
+  zoomRef.current = zoomScale;
   useEffect(() => {
-    if (viewStyle !== 'panorama') return;
-    const timer = window.setTimeout(() => {
-      const container = containerRef.current;
-      if (!container) return;
-      const alive = panoramaBars.filter(
-        b => b.composer.birthYear <= focalYear && focalYear <= b.composer.deathYear
-      );
-      if (alive.length === 0) return;
-      const top = PANO_TOP + alive[0].row * PANO_ROW_HEIGHT;
-      const target = Math.max(0, top - 42); // 目盛りのすぐ下に、いちばん先に生まれた存命の人が来る
-      if (Math.abs(container.scrollTop - target) > 20) {
-        container.scrollTo({ top: target, behavior: 'smooth' });
+    const el = containerRef.current;
+    if (!el) return;
+    const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +z.toFixed(2)));
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+    let start: { d: number; zoom: number } | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        start = { d: dist(e.touches), zoom: zoomRef.current };
+        isDraggingRef.current = false;
       }
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [focalYear, viewStyle, panoramaBars]);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !start) return;
+      e.preventDefault();
+      setZoomScale(clampZoom((start.zoom * dist(e.touches)) / start.d));
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) start = null;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return; // ピンチ操作は ctrlKey つきのホイールとして届く
+      e.preventDefault();
+      setZoomScale(clampZoom(zoomRef.current * Math.exp(-e.deltaY * 0.004)));
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, []);
 
   // Generate fine-grained year ticks
   const yearTicks = useMemo(() => {
@@ -666,7 +691,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         }}
         onClick={handleCanvasClick}
         onScroll={handleContainerScroll}
-        className={`flex-1 min-h-0 overflow-x-auto ${viewStyle === 'panorama' ? 'overflow-y-auto' : 'overflow-y-hidden'} timeline-grab relative bg-[#0b0907]`}
+        className={`flex-1 min-h-0 overflow-x-auto ${viewStyle === 'panorama' ? 'overflow-y-auto' : 'overflow-y-hidden'} timeline-grab relative bg-[#0b0907] [touch-action:pan-x_pan-y]`}
       >
         <div
           className="relative min-h-full"
@@ -1135,11 +1160,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                 </div>
               </div>
             </div>
-            ) : (
-              <div className="bg-[#110f0d] p-3 rounded-lg border border-[#2e251c] text-xs text-[#a3978a]">
-                この曲は、試聴用の音のデータがまだありません。
-              </div>
-            )}
+            ) : null}
 
             {/* Detailed Episode Text */}
             <div className="space-y-2">

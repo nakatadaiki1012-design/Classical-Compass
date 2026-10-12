@@ -6,7 +6,9 @@ import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
 import { YearEventsPanel } from './YearEventsPanel';
+import { YearTopicsBar } from './YearTopicsBar';
 import { getWhereabouts, isOffMap, Whereabouts } from '../data/itinerary';
+import { SVG_W, SVG_H, projectGeoToSvg } from '../data/mapProjection';
 import { useAudio } from '../context/AudioContext';
 import {
   Play,
@@ -29,22 +31,6 @@ import { Composer, Composition } from '../types';
 interface EuropeMapViewProps {
   onSelectComposer: (composerId: string, year?: number) => void;
 }
-
-// Precise geographic projection for SVG [960 x 540]
-const minLon = -11;
-const maxLon = 42;
-const minLat = 35;
-const maxLat = 65;
-const SVG_W = 960;
-const SVG_H = 540;
-
-const projectGeoToSvg = (lon: number, lat: number): [number, number] => {
-  const clampedLat = Math.max(34, Math.min(66, lat));
-  const clampedLon = Math.max(-12, Math.min(43, lon));
-  const x = ((clampedLon - minLon) / (maxLon - minLon)) * SVG_W;
-  const y = ((maxLat - clampedLat) / (maxLat - minLat)) * SVG_H;
-  return [Math.round(x), Math.round(y)];
-};
 
 export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
@@ -343,14 +329,27 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           />
           <span className="text-xs font-mono text-[#a3978a]">1990年</span>
         </div>
+
+        {/* その年の重要なできごとを短く（くわしくは下の欄） */}
+        <YearTopicsBar
+          year={currentYear}
+          visibleComposerIds={null}
+          onShowDetails={() =>
+            document.getElementById('year-events-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+          onJumpToYear={year => {
+            setCurrentYear(year);
+            setSelectedComposerId(null);
+          }}
+        />
       </div>
 
       {/* 2. Main SVG Europe Map Canvas (地図のほう: 生没年＆その年の作曲を表示) */}
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
         <div className="w-full max-w-6xl relative">
           <svg
-            viewBox="0 0 960 540"
-            className="w-full h-auto max-h-[580px] object-contain drop-shadow-2xl select-none"
+            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+            className="w-full h-auto max-h-[640px] object-contain drop-shadow-2xl select-none"
           >
             <defs>
               <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
@@ -368,15 +367,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </defs>
 
             {/* Ocean / Background */}
-            <rect width="960" height="540" fill="url(#oceanGlow)" />
+            <rect width={SVG_W} height={SVG_H} fill="url(#oceanGlow)" />
 
-            {/* Grid Lines */}
-            <line x1="0" y1="135" x2="960" y2="135" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
-            <line x1="0" y1="270" x2="960" y2="270" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
-            <line x1="0" y1="405" x2="960" y2="405" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
-            <line x1="240" y1="0" x2="240" y2="540" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
-            <line x1="480" y1="0" x2="480" y2="540" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
-            <line x1="720" y1="0" x2="720" y2="540" stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />
+            {/* 緯度・経度の目盛り線（5度ごとの緯度線、10度ごとの経度線） */}
+            {[40, 45, 50, 55, 60].map(lat => {
+              const y = projectGeoToSvg(0, lat)[1];
+              return <line key={`lat-${lat}`} x1="0" y1={y} x2={SVG_W} y2={y} stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />;
+            })}
+            {[-10, 0, 10, 20, 30, 40].map(lon => {
+              const x = projectGeoToSvg(lon, 0)[0];
+              return <line key={`lon-${lon}`} x1={x} y1="0" x2={x} y2={SVG_H} stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />;
+            })}
 
             {/* European Country Outlines */}
             <g id="european-countries-accurate">

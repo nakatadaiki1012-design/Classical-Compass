@@ -4,6 +4,7 @@ import { COMPOSERS } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { YearEventsPanel } from './YearEventsPanel';
+import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import {
   ZoomIn,
@@ -65,6 +66,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
   // 検索・表示設定パネルの開閉（普段は閉じて画面をすっきり見せる）
   const [showSettings, setShowSettings] = useState<boolean>(false);
+
+  // 下の「できごと」欄の開閉（広い画面では最初から開く）
+  const [eventsOpen, setEventsOpen] = useState<boolean>(
+    () => typeof window === 'undefined' || window.innerWidth >= 768
+  );
 
   // User adjustable cylinder radius (default 165px for a broad, readable 3D bundle!)
   const [cylinderRadius, setCylinderRadius] = useState<number>(165);
@@ -365,7 +371,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-108px)] sm:h-[calc(100dvh-57px)] select-none bg-[#090807] overflow-hidden font-sans">
+    <div className="flex flex-col h-[calc(100dvh-45px)] select-none bg-[#090807] overflow-hidden font-sans">
       {/* Top bar: 年・時代・ツマミだけを常に表示。検索や設定は「検索・設定」を押したときだけ出る */}
       <div className="bg-[#14100c]/95 backdrop-blur-xl border-b border-[#302519] px-4 md:px-6 py-2.5 shrink-0 z-30 shadow-lg">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -550,6 +556,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
             </div>
           </div>
         )}
+      </div>
+
+      {/* その年の重要なできごとを短く（くわしくは下の欄） */}
+      <div className="shrink-0 bg-[#100d0a] border-b border-[#261e14] px-4 md:px-6">
+        <YearTopicsBar
+          year={focalYear}
+          visibleComposerIds={visibleComposerIds}
+          onShowDetails={() => setEventsOpen(true)}
+          onJumpToYear={scrollToYear}
+        />
       </div>
 
       {/* Main Timeline View Canvas & Scroller Area */}
@@ -936,6 +952,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       <YearEventsPanel
         year={focalYear}
         visibleComposerIds={visibleComposerIds}
+        open={eventsOpen}
+        onOpenChange={setEventsOpen}
         onSelectComposer={onSelectComposerWithYear}
         onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
         onJumpToYear={scrollToYear}

@@ -1,15 +1,11 @@
 import { PLACES, Place } from './places';
 import { ITINERARY_RAW } from './itineraryData';
 import { Composer } from '../types';
+import { isOffMapLonLat } from './mapProjection';
 
-/** 地図に出す範囲（これを外れる場所は「地図の外」の枠に出す） */
-export const MAP_BOUNDS = { minLon: -11, maxLon: 42, minLat: 35, maxLat: 65 };
+export { MAP_BOUNDS } from './mapProjection';
 
-export const isOffMap = (place: { lon: number; lat: number }): boolean =>
-  place.lon < MAP_BOUNDS.minLon ||
-  place.lon > MAP_BOUNDS.maxLon ||
-  place.lat < MAP_BOUNDS.minLat ||
-  place.lat > MAP_BOUNDS.maxLat;
+export const isOffMap = (place: { lon: number; lat: number }): boolean => isOffMapLonLat(place.lon, place.lat);
 
 /** ある年の居場所 */
 export interface Whereabouts {

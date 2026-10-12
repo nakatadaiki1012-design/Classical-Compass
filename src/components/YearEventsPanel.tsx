@@ -11,6 +11,9 @@ interface YearEventsPanelProps {
   visibleComposerIds: Set<string> | null;
   /** 地図画面など、画面の中に置くとき（閉じられず、下に固定もしない） */
   embedded?: boolean;
+  /** 開閉を外から操作するとき（省略すると、この部品の中で管理する） */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSelectComposer: (composerId: string, year?: number) => void;
   onOpenWork: (work: Composition, composer: Composer) => void;
   onJumpToYear: (year: number) => void;
@@ -30,14 +33,22 @@ export const YearEventsPanel: React.FC<YearEventsPanelProps> = ({
   year,
   visibleComposerIds,
   embedded = false,
+  open,
+  onOpenChange,
   onSelectComposer,
   onOpenWork,
   onJumpToYear
 }) => {
   // 画面が狭いときは最初は閉じておく
-  const [isOpen, setIsOpen] = useState<boolean>(
+  const [innerOpen, setInnerOpen] = useState<boolean>(
     () => typeof window === 'undefined' || window.innerWidth >= 768
   );
+  const isOpen = open ?? innerOpen;
+  const setIsOpen = (next: boolean | ((v: boolean) => boolean)) => {
+    const value = typeof next === 'function' ? next(isOpen) : next;
+    if (onOpenChange) onOpenChange(value);
+    else setInnerOpen(value);
+  };
 
   const { musicEvents, worldEvents } = useMemo(() => {
     const all = getEventsForYear(year);
@@ -109,6 +120,7 @@ export const YearEventsPanel: React.FC<YearEventsPanelProps> = ({
 
   return (
     <div
+      id={embedded ? 'year-events-detail' : undefined}
       className={
         embedded
           ? 'rounded-2xl bg-[#100d0a] border border-[#3a2d1c]'

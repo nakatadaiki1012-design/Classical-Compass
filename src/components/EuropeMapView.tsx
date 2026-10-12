@@ -612,14 +612,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               onOpenProfile={id => onSelectComposer(id, currentYear)}
             />
           )}
-
-          {/* Map Status Bar */}
-          {!popupPin && (
-            <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#d6cdbd] flex items-center gap-2 shadow-xl">
-              <span className="w-2 h-2 rounded-full bg-[#c99738] animate-ping" />
-              <span>人物をタップすると、その人が何をしたかが出ます</span>
-            </div>
-          )}
         </div>
       </div>
 

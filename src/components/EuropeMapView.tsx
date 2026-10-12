@@ -5,6 +5,8 @@ import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
+import { YearEventsPanel } from './YearEventsPanel';
+import { getWhereabouts, isOffMap, Whereabouts } from '../data/itinerary';
 import { useAudio } from '../context/AudioContext';
 import {
   Play,
@@ -25,7 +27,7 @@ import {
 import { Composer, Composition } from '../types';
 
 interface EuropeMapViewProps {
-  onSelectComposer: (composerId: string) => void;
+  onSelectComposer: (composerId: string, year?: number) => void;
 }
 
 // Precise geographic projection for SVG [960 x 540]
@@ -104,72 +106,84 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     return COMPOSERS.filter(c => currentYear >= c.birthYear && currentYear <= c.deathYear);
   }, [currentYear]);
 
-  // Active composer map pins with accurate relocation city positioning & composed work labels
-  const composerMapData = useMemo(() => {
-    const pins: {
+  // 地図に出す人物。その年の居場所（滞在・旅行）に合わせて位置が動く。
+  // 地図の範囲の外（アメリカ・日本など）は、右下の「地図の外」の枠に表示する。
+  const { composerMapData, offMapBox } = useMemo(() => {
+    interface Entry {
       composer: Composer;
-      cityStay: Composer['cities'][0];
-      x: number;
-      y: number;
-      cityNameJa: string;
+      where: Whereabouts;
       activeWorksInYear: Composition[];
-    }[] = [];
-
-    // Group active composers by city to prevent overlap
-    const cityGroups: Record<string, Composer[]> = {};
-
+    }
+    const entries: Entry[] = [];
     activeComposers.forEach(composer => {
-      const currentStay = composer.cities.find(
-        s => currentYear >= s.startYear && currentYear <= s.endYear
-      ) || composer.cities[0];
-
-      const cityNameKey = currentStay?.cityName.toLowerCase() || 'vienna';
-      if (!cityGroups[cityNameKey]) cityGroups[cityNameKey] = [];
-      cityGroups[cityNameKey].push(composer);
-    });
-
-    Object.entries(cityGroups).forEach(([cityNameKey, group]) => {
-      const cityData = Object.values(EUROPEAN_CITIES).find(
-        c => c.name.toLowerCase() === cityNameKey || c.id === cityNameKey
-      ) || EUROPEAN_CITIES['vienna'];
-
-      const [baseX, baseY] = projectGeoToSvg(cityData.coordinates[0], cityData.coordinates[1]);
-      const groupSize = group.length;
-
-      group.forEach((composer, index) => {
-        let x = baseX;
-        let y = baseY;
-
-        if (groupSize > 1) {
-          // Lay out side by side (max 3 per row) so the name labels under each pin don't collide
-          const cols = Math.min(groupSize, 3);
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-          x = baseX + (col - (cols - 1) / 2) * 112;
-          y = baseY + row * 78;
-        }
-
-        const currentStay = composer.cities.find(
-          s => currentYear >= s.startYear && currentYear <= s.endYear
-        ) || composer.cities[0];
-
-        // Find works composed in or near currentYear (+/- 2 years)
-        const activeWorksInYear = composer.works.filter(
-          w => Math.abs(w.year - currentYear) <= 2
-        );
-
-        pins.push({
-          composer,
-          cityStay: currentStay,
-          x: Math.round(x),
-          y: Math.round(y),
-          cityNameJa: currentStay?.cityNameJa || cityData.nameJa,
-          activeWorksInYear
-        });
+      const where = getWhereabouts(composer, currentYear);
+      if (!where) return;
+      entries.push({
+        composer,
+        where,
+        activeWorksInYear: composer.works.filter(w => Math.abs(w.year - currentYear) <= 2)
       });
     });
 
-    return pins;
+    const pins: (Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean })[] = [];
+
+    // 札が重ならないように、近い人どうしをずらして配置する（本当の場所には小さな点と細い線を残す）
+    const LABEL_W = 104;
+    const LABEL_H = 62;
+    const placed: { x: number; y: number }[] = [];
+    const offsets: [number, number][] = [];
+    [0, 1, 2, 3].forEach(ring => {
+      offsets.push([ring * LABEL_W, 0], [-ring * LABEL_W, 0]);
+      [1, 2].forEach(row => {
+        offsets.push([ring * LABEL_W, row * LABEL_H], [-ring * LABEL_W, row * LABEL_H]);
+        offsets.push([ring * LABEL_W, -row * LABEL_H], [-ring * LABEL_W, -row * LABEL_H]);
+      });
+    });
+    offsets.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
+
+    entries
+      .filter(e => !isOffMap(e.where.place))
+      .map(e => {
+        const [tx, ty] = projectGeoToSvg(e.where.place.lon, e.where.place.lat);
+        return { e, tx, ty };
+      })
+      .sort((a, b) => a.ty - b.ty || a.tx - b.tx)
+      .forEach(({ e, tx, ty }) => {
+        let best: [number, number] = [0, 0];
+        for (const [ox, oy] of offsets) {
+          const x = tx + ox;
+          const y = ty + oy;
+          const insideMap = x > 50 && x < SVG_W - 50 && y > 24 && y < SVG_H - 70;
+          const free = placed.every(q => Math.abs(q.x - x) >= LABEL_W || Math.abs(q.y - y) >= LABEL_H);
+          if (insideMap && free) {
+            best = [ox, oy];
+            break;
+          }
+        }
+        const x = tx + best[0];
+        const y = ty + best[1];
+        placed.push({ x, y });
+        pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: tx, trueY: ty, offMap: false });
+      });
+
+    // 地図の外の枠（右下）
+    const off = entries.filter(e => isOffMap(e.where.place));
+    let box: { x: number; y: number; w: number; h: number } | null = null;
+    if (off.length > 0) {
+      const cols = Math.min(off.length, 3);
+      const rows = Math.ceil(off.length / 3);
+      const w = Math.max(cols * 124 + 24, 240);
+      const h = 34 + rows * 84;
+      box = { x: SVG_W - 10 - w, y: SVG_H - 10 - h, w, h };
+      off.forEach((e, index) => {
+        const colsInRow = Math.min(3, off.length - Math.floor(index / 3) * 3);
+        const startX = box!.x + (w - colsInRow * 124) / 2 + 62;
+        const x = startX + (index % 3) * 124;
+        const y = box!.y + 34 + 30 + Math.floor(index / 3) * 84;
+        pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: x, trueY: y, offMap: true });
+      });
+    }
+    return { composerMapData: pins, offMapBox: box };
   }, [activeComposers, currentYear]);
 
   // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
@@ -344,6 +358,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 <stop offset="100%" stopColor="#080706" />
               </radialGradient>
 
+              <marker id="moveArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#e6b95c" />
+              </marker>
+
               <filter id="pinShadow" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.8" />
               </filter>
@@ -397,9 +415,63 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               );
             })}
 
+            {/* 引っ越し・旅立ちの年は、前の滞在先からの点線の矢印で「移動」を見せる */}
+            {composerMapData
+              .filter(p => p.where.movedFrom && !p.offMap && !isOffMap(p.where.movedFrom))
+              .map(p => {
+                const [fx, fy] = projectGeoToSvg(p.where.movedFrom!.lon, p.where.movedFrom!.lat);
+                return (
+                  <g key={`move-${p.composer.id}`} className="pointer-events-none">
+                    <line
+                      x1={fx}
+                      y1={fy}
+                      x2={p.x}
+                      y2={p.y}
+                      stroke="#e6b95c"
+                      strokeWidth="2"
+                      strokeDasharray="7 6"
+                      opacity="0.75"
+                      markerEnd="url(#moveArrow)"
+                    />
+                    <circle cx={fx} cy={fy} r="4" fill="#e6b95c" opacity="0.8" />
+                  </g>
+                );
+              })}
+
+            {/* 札を避けて少しずらした人には、本当の場所との間に細い線と点を表示 */}
+            {composerMapData
+              .filter(p => !p.offMap && Math.hypot(p.x - p.trueX, p.y - p.trueY) > 6)
+              .map(p => (
+                <g key={`leader-${p.composer.id}`} className="pointer-events-none">
+                  <line x1={p.trueX} y1={p.trueY} x2={p.x} y2={p.y} stroke="#bdb1a1" strokeWidth="1.2" opacity="0.7" />
+                  <circle cx={p.trueX} cy={p.trueY} r="3.5" fill="#f5ebd9" stroke="#14110e" strokeWidth="1" />
+                </g>
+              ))}
+
+            {/* 地図の外（アメリカ・日本など）にいる人の枠 */}
+            {offMapBox && (
+              <g className="pointer-events-none">
+                <rect
+                  x={offMapBox.x}
+                  y={offMapBox.y}
+                  width={offMapBox.w}
+                  height={offMapBox.h}
+                  rx="12"
+                  fill="#14110e"
+                  stroke="#c99738"
+                  strokeWidth="1.2"
+                  strokeDasharray="5 4"
+                  opacity="0.92"
+                />
+                <text x={offMapBox.x + 14} y={offMapBox.y + 22} fontSize="12" fontWeight="bold" fill="#e6b95c">
+                  地図の外にいる人（遠方）
+                </text>
+              </g>
+            )}
+
             {/* MAP COMPOSER PINS WITH LIFESPAN & COMPOSITION (生没年＆作曲を地図上に明記) */}
             {composerMapData.map(pin => {
-              const { composer, cityStay, x, y, cityNameJa, activeWorksInYear } = pin;
+              const { composer, where, x, y, offMap, activeWorksInYear } = pin;
               const era = getEraById(composer.era);
               const isSelected = selectedComposerId === composer.id;
               const isHovered = hoveredComposerId === composer.id;
@@ -436,6 +508,11 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   />
                   <circle cx={x} cy={y + 16} r="2.5" fill="#ffffff" stroke={era.color} strokeWidth="1.5" />
 
+                  {/* 記録がなく、近い年の居場所から推定しているときは点線の輪 */}
+                  {where.isEstimated && (
+                    <circle cx={x} cy={y} r="21" fill="none" stroke="#d6cdbd" strokeWidth="1.2" strokeDasharray="3 3" />
+                  )}
+
                   {/* Portrait Avatar Marker */}
                   <foreignObject
                     x={x - (isSelected ? 18 : 15)}
@@ -463,24 +540,41 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     </div>
                   </foreignObject>
 
+                  {/* 長期の旅行・遠征・留学中は「旅」のバッジ */}
+                  {where.isTrip && (
+                    <g>
+                      <circle cx={x + 15} cy={y - 15} r="9" fill="#c99738" stroke="#14110e" strokeWidth="1.5" />
+                      <text x={x + 15} y={y - 11.5} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#14110e">
+                        旅
+                      </text>
+                    </g>
+                  )}
+
                   {/* ON-MAP LABEL: name on line 1, composition (or years) on line 2, box sized to fit */}
                   {(() => {
                     const line1 = composer.shortName;
                     const workTitle = topWork
                       ? topWork.title.length > 10 ? topWork.title.substring(0, 9) + '…' : topWork.title
                       : '';
-                    const line2 = topWork ? `♪ ${workTitle}` : `${composer.birthYear}〜${composer.deathYear}`;
+                    const crowded = composerMapData.length > 8 && !isSelected && !topWork;
+                    const line2 = topWork
+                      ? `♪ ${workTitle}`
+                      : offMap
+                      ? where.place.ja
+                      : where.isTrip
+                      ? `${where.place.ja}・旅行中`
+                      : `${composer.birthYear}〜${composer.deathYear}`;
                     // CJK glyphs are ~1em wide, digits/latin ~0.6em
                     const textWidth = (text: string, size: number) =>
                       [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
-                    const boxWidth = Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
+                    const boxWidth = crowded ? textWidth(line1, 12) + 16 : Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
                     return (
                       <g transform={`translate(${x}, ${y + 22})`} className={isSelected ? undefined : 'max-md:hidden'}>
                         <rect
                           x={-boxWidth / 2}
                           y="0"
                           width={boxWidth}
-                          height="32"
+                          height={crowded ? 20 : 32}
                           rx="7"
                           fill="#14110e"
                           stroke={isSelected ? '#ffffff' : topWork ? '#c99738' : era.color}
@@ -490,6 +584,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         <text x="0" y="14" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#ffffff">
                           {line1}
                         </text>
+                        {!crowded && (
                         <text
                           x="0"
                           y="27"
@@ -500,6 +595,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         >
                           {line2}
                         </text>
+                        )}
                       </g>
                     );
                   })()}
@@ -513,10 +609,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             <MapPersonPopup
               composer={popupPin.composer}
               year={currentYear}
-              cityStay={popupPin.cityStay}
-              cityNameJa={popupPin.cityNameJa}
+              where={popupPin.where}
               onClose={() => setSelectedComposerId(null)}
-              onOpenProfile={onSelectComposer}
+              onOpenProfile={id => onSelectComposer(id, currentYear)}
             />
           )}
 
@@ -530,7 +625,22 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         </div>
       </div>
 
-      {/* 3. 地図の下: この年に活動した人の一覧。くわしい物語は別画面で見る */}
+      {/* 3-a. その年の作曲と大きな出来事（音楽・世界） */}
+      <div className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-6">
+        <YearEventsPanel
+          embedded
+          year={currentYear}
+          visibleComposerIds={null}
+          onSelectComposer={onSelectComposer}
+          onOpenWork={(_work, composer) => onSelectComposer(composer.id, currentYear)}
+          onJumpToYear={year => {
+            setCurrentYear(year);
+            setSelectedComposerId(null);
+          }}
+        />
+      </div>
+
+      {/* 3-b. 地図の下: この年に活動した人の一覧。くわしい物語は別画面で見る */}
       <div className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base md:text-lg font-classical-display font-bold text-[#f5ebd9]">
@@ -740,7 +850,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   {/* Card Bottom: 作曲者の紹介は別ボタンで飛ぶようにして */}
                   <div className="pt-2 border-t border-[#29221b] flex items-center justify-end">
                     <button
-                      onClick={() => onSelectComposer(composer.id)}
+                      onClick={() => onSelectComposer(composer.id, currentYear)}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#241e18] hover:bg-[#332b22] border border-[#c99738]/60 text-[#c99738] hover:text-[#f5ebd9] text-xs font-bold transition-all shadow-md group/btn"
                     >
                       <UserCheck className="w-4 h-4 text-[#c99738]" />

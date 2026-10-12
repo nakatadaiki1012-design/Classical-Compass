@@ -4,6 +4,7 @@ import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { getComposerEvents } from '../data/chronicle';
 import { KIND_LABEL } from './YearEventsPanel';
+import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import {
   X,
@@ -20,12 +21,15 @@ import {
 
 interface ComposerModalProps {
   composer: Composer | null;
+  /** 年表の中心年・地図の年など、開いたときに見ていた年（なければ null） */
+  year?: number | null;
   onClose: () => void;
-  onSelectComposer: (composerId: string) => void;
+  onSelectComposer: (composerId: string, year?: number) => void;
 }
 
 export const ComposerModal: React.FC<ComposerModalProps> = ({
   composer,
+  year = null,
   onClose,
   onSelectComposer
 }) => {
@@ -128,6 +132,30 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section: 開いたときに見ていた年の様子（どこで何をしていたか） */}
+          {year !== null && (
+            <div className="rounded-xl bg-[#1b1611] border border-[#c99738]/50 p-4 space-y-3">
+              <h3 className="text-base font-classical-display font-bold text-[#f5ebd9] flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#c99738]" />
+                <span>{year}年の{composer.shortName}</span>
+                {year >= composer.birthYear && year <= composer.deathYear && (
+                  <span className="text-xs font-normal text-[#a3978a]">（{year - composer.birthYear}歳）</span>
+                )}
+              </h3>
+              {year < composer.birthYear ? (
+                <p className="text-sm text-[#d6cdbd]">
+                  この年は、まだ生まれていません（誕生は{composer.birthYear}年）。
+                </p>
+              ) : year > composer.deathYear ? (
+                <p className="text-sm text-[#d6cdbd]">
+                  この年には、すでに亡くなっています（没年は{composer.deathYear}年）。
+                </p>
+              ) : (
+                <ComposerYearSnapshot composer={composer} year={year} />
+              )}
+            </div>
+          )}
 
           {/* Section: Representative Works & Interactive Player */}
           <div className="space-y-4">

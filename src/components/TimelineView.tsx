@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 interface TimelineViewProps {
-  onSelectComposer: (composerId: string) => void;
+  onSelectComposer: (composerId: string, year?: number) => void;
 }
 
 interface ActiveNearItem {
@@ -46,7 +46,7 @@ interface StrandItem {
   yearDiff: number;
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) => {
+export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
 
   const MIN_YEAR = 1300;
@@ -72,6 +72,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focalYear, setFocalYear] = useState<number>(1787);
+
+  // 人物を開くときは、いま見ている年（中心年）も一緒に渡し、「その年の様子」を見せる
+  const onSelectComposer = useCallback(
+    (composerId: string) => onSelectComposerWithYear(composerId, focalYear),
+    [onSelectComposerWithYear, focalYear]
+  );
 
   // Episode modal for single-tap on composition points
   const [focusedEpisodeWork, setFocusedEpisodeWork] = useState<{
@@ -930,7 +936,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
       <YearEventsPanel
         year={focalYear}
         visibleComposerIds={visibleComposerIds}
-        onSelectComposer={onSelectComposer}
+        onSelectComposer={onSelectComposerWithYear}
         onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
         onJumpToYear={scrollToYear}
       />

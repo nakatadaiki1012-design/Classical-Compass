@@ -17,10 +17,13 @@ import { AudioPlayerBar } from './components/AudioPlayerBar';
 function ClassicalAppContent() {
   const [currentView, setCurrentView] = useState<ViewMode>('timeline');
   const [selectedComposerId, setSelectedComposerId] = useState<string | null>(null);
+  // 人物詳細を開いたときの「いま見ていた年」（年表の中心年・地図の年）。なければ null
+  const [modalYear, setModalYear] = useState<number | null>(null);
   const { playTrack } = useAudio();
 
-  const handleSelectComposer = useCallback((composerId: string) => {
+  const handleSelectComposer = useCallback((composerId: string, year?: number) => {
     setSelectedComposerId(composerId);
+    setModalYear(year ?? null);
   }, []);
 
   const handleCloseModal = useCallback(() => {
@@ -72,6 +75,7 @@ function ClassicalAppContent() {
       {/* Composer Full Profile Modal */}
       <ComposerModal
         composer={selectedComposer}
+        year={modalYear}
         onClose={handleCloseModal}
         onSelectComposer={handleSelectComposer}
       />

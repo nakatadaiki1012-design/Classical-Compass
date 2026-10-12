@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
 import { ChevronRight, Pause, Play, X } from 'lucide-react';
-import { CityStay, Composer } from '../types';
-import { getComposerEvents } from '../data/chronicle';
+import { Composer } from '../types';
+import { Whereabouts } from '../data/itinerary';
 import { ComposerPortrait } from './ComposerPortrait';
 import { KIND_LABEL } from './YearEventsPanel';
+import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 
 interface MapPersonPopupProps {
   composer: Composer;
   year: number;
-  cityStay?: CityStay;
-  cityNameJa: string;
+  where: Whereabouts;
   onClose: () => void;
   onOpenProfile: (composerId: string) => void;
 }
@@ -19,23 +19,12 @@ interface MapPersonPopupProps {
 export const MapPersonPopup: React.FC<MapPersonPopupProps> = ({
   composer,
   year,
-  cityStay,
-  cityNameJa,
+  where,
   onClose,
   onOpenProfile
 }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
   const age = year - composer.birthYear;
-
-  // その年に近いできごとを最大4件（生誕・没年は、その年のときだけ）
-  const { events, hasExactYear } = useMemo(() => {
-    const list = getComposerEvents(composer.id).filter(
-      e => !(e.kind === 'birth' || e.kind === 'death') || e.year === year
-    );
-    const sorted = [...list].sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year) || a.year - b.year);
-    const picked = sorted.slice(0, 4).sort((a, b) => a.year - b.year);
-    return { events: picked, hasExactYear: list.some(e => e.year === year) };
-  }, [composer.id, year]);
 
   // 試聴: その年に一番近い作品
   const nearestWork = useMemo(
@@ -67,7 +56,7 @@ export const MapPersonPopup: React.FC<MapPersonPopupProps> = ({
               {composer.flag} {composer.shortName}
             </div>
             <div className="text-xs text-[#d6cdbd] mt-0.5">
-              {year}年・{age}歳　📍{cityNameJa}
+              {year}年・{age}歳　📍{where.place.ja}
             </div>
             <div className="text-[11px] text-[#a3978a] mt-0.5">
               {composer.birthYear}〜{composer.deathYear}年（享年{composer.deathYear - composer.birthYear}歳）
@@ -86,38 +75,7 @@ export const MapPersonPopup: React.FC<MapPersonPopupProps> = ({
           </div>
         )}
 
-        {cityStay?.role && (
-          <p className="text-xs text-[#d6cdbd] leading-relaxed bg-[#1d1812] border border-[#2e251a] rounded-lg px-3 py-2">
-            <span className="font-bold text-[#c99738]">{cityNameJa}での立場：</span>
-            {cityStay.role}
-          </p>
-        )}
-
-        {/* この頃に何をしたか */}
-        <div className="space-y-2">
-          <div className="text-xs font-bold text-[#c99738]">
-            {hasExactYear ? `${year}年のできごと` : 'この年に近いできごと'}
-          </div>
-          {events.map(ev => {
-            const badge = KIND_LABEL[ev.kind];
-            return (
-              <div key={ev.id} className="flex gap-2.5">
-                <div className="shrink-0 w-14 text-right">
-                  <div className="text-[11px] font-mono font-bold text-[#e6b95c]">{ev.year}年</div>
-                  <span className={`inline-block mt-0.5 px-1 rounded border text-[10px] font-bold whitespace-nowrap ${badge.className}`}>
-                    {badge.label}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-bold text-[#f5ebd9] leading-snug">{ev.title}</div>
-                  {ev.text && (
-                    <p className="text-xs text-[#b5aa9b] leading-relaxed line-clamp-2 mt-0.5">{ev.text}</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ComposerYearSnapshot composer={composer} year={year} />
 
         {/* 操作 */}
         <div className="flex flex-wrap gap-2 pt-1">

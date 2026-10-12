@@ -143,3 +143,22 @@ export function getComposerEventsAround(
       : e.year === year
   );
 }
+
+/** その年に近い年の音楽のできごと（記録の少ない年の補足用）。近い順に最大 limit 件 */
+export function getNearbyMusicEvents(
+  year: number,
+  options: { range?: number; limit?: number; composerIds?: Set<string> | null } = {}
+): YearEvent[] {
+  const { range = 6, limit = 6, composerIds = null } = options;
+  return ALL_EVENTS.filter(
+    e =>
+      e.kind !== 'world' &&
+      e.year !== year &&
+      Math.abs(e.year - year) <= range &&
+      (!composerIds || (e.composerId && composerIds.has(e.composerId))) &&
+      // 誕生・没年より、作品とできごとを優先する
+      (e.kind === 'work' || e.kind === 'episode')
+  )
+    .sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year) || a.year - b.year)
+    .slice(0, limit);
+}

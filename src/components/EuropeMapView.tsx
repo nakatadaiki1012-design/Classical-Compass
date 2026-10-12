@@ -4,6 +4,7 @@ import { EUROPEAN_CITIES } from '../data/cities';
 import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
+import { MapPersonPopup } from './MapPersonPopup';
 import { useAudio } from '../context/AudioContext';
 import {
   Play,
@@ -18,7 +19,8 @@ import {
   Filter,
   UserCheck,
   Heart,
-  Flame
+  Flame,
+  X
 } from 'lucide-react';
 import { Composer, Composition } from '../types';
 
@@ -52,7 +54,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   const [selectedComposerId, setSelectedComposerId] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
-  const episodeSectionRef = useRef<HTMLDivElement | null>(null);
+  const [showStories, setShowStories] = useState<boolean>(false);
 
   // Historical milestones across 700 years
   const milestones = [
@@ -222,16 +224,18 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   }, [composerLifeStories, selectedComposerId, currentYear]);
 
   const handlePinClick = (composerId: string) => {
-    if (selectedComposerId === composerId) {
-      setSelectedComposerId(null); // Toggle off filter
-    } else {
-      setSelectedComposerId(composerId);
-      // Scroll smoothly down to episode section
-      if (episodeSectionRef.current) {
-        episodeSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+    setSelectedComposerId(prev => (prev === composerId ? null : composerId));
   };
+
+  // 年を動かして、選んだ作曲家がその年に存命でなくなったらポップアップを閉じる
+  useEffect(() => {
+    if (!selectedComposerId) return;
+    const c = COMPOSERS.find(x => x.id === selectedComposerId);
+    if (!c || currentYear < c.birthYear || currentYear > c.deathYear) setSelectedComposerId(null);
+  }, [currentYear, selectedComposerId]);
+
+  // ポップアップに出す人物（地図上の位置の都市名も使う）
+  const popupPin = composerMapData.find(pin => pin.composer.id === selectedComposerId) || null;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121110] text-[#f5ebd9] select-none pb-16">
@@ -248,15 +252,33 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               style={{ backgroundColor: currentEra.color }}
             >
               <span>{currentEra.name}</span>
-              <span className="opacity-80 text-[11px]">({currentEra.nameEn})</span>
             </div>
             <span className="text-xs text-[#b5aa9b] hidden sm:inline">
               存命の巨匠: <strong className="text-[#f5ebd9] font-mono">{activeComposers.length}名</strong>
             </span>
           </div>
 
-          {/* Time Travel Auto Play & Speed Controls */}
-          <div className="flex items-center gap-2.5">
+          {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <select
+              value=""
+              onChange={e => {
+                if (e.target.value) {
+                  setCurrentYear(parseInt(e.target.value, 10));
+                  setSelectedComposerId(null);
+                }
+              }}
+              className="bg-[#241f19] border border-[#3d362e] rounded-lg px-2.5 py-1.5 text-xs text-[#e8dec8] focus:outline-none focus:border-[#c99738] cursor-pointer max-w-[150px] sm:max-w-[190px]"
+              aria-label="有名な年へジャンプ"
+            >
+              <option value="">有名な年へジャンプ</option>
+              {milestones.map(m => (
+                <option key={m.year} value={m.year} className="bg-[#1a140f]">
+                  {m.year}年　{m.title}
+                </option>
+              ))}
+            </select>
+
             <button
               onClick={() => setIsPlayingTimeTravel(!isPlayingTimeTravel)}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#2b241c] hover:bg-[#382f23] border border-[#c99738]/50 text-[#f5ebd9] text-xs font-bold transition-all shadow-md active:scale-95"
@@ -264,42 +286,33 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               {isPlayingTimeTravel ? (
                 <>
                   <Pause className="w-3.5 h-3.5 fill-current text-[#c99738]" />
-                  <span>年代進行を停止</span>
+                  <span>停止</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current text-[#c99738]" />
-                  <span>年代を自動巡行</span>
+                  <span>年代を自動で進める</span>
                 </>
               )}
             </button>
 
-            <div className="flex items-center bg-[#241f19] border border-[#3d362e] rounded-lg p-0.5 text-[11px]">
-              {[1, 2, 4].map(spd => (
-                <button
-                  key={spd}
-                  onClick={() => setPlaybackSpeed(spd)}
-                  className={`px-2.5 py-1 rounded transition-colors ${
-                    playbackSpeed === spd
-                      ? 'bg-[#c99738] text-[#161412] font-bold'
-                      : 'text-[#b5aa9b] hover:text-[#f5ebd9]'
-                  }`}
-                >
-                  {spd}x
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => {
-                setCurrentYear(1787);
-                setSelectedComposerId(null);
-              }}
-              className="p-2 text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#241f19] rounded-lg transition-colors"
-              title="1787年（モーツァルト絶頂期）へ戻る"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+            {isPlayingTimeTravel && (
+              <div className="flex items-center bg-[#241f19] border border-[#3d362e] rounded-lg p-0.5 text-[11px]">
+                {[1, 2, 4].map(spd => (
+                  <button
+                    key={spd}
+                    onClick={() => setPlaybackSpeed(spd)}
+                    className={`px-2.5 py-1 rounded transition-colors ${
+                      playbackSpeed === spd
+                        ? 'bg-[#c99738] text-[#161412] font-bold'
+                        : 'text-[#b5aa9b] hover:text-[#f5ebd9]'
+                    }`}
+                  >
+                    {spd}倍
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -315,30 +328,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
           />
           <span className="text-xs font-mono text-[#a3978a]">1990年</span>
-        </div>
-
-        {/* Historical Milestone Shortcut Badges */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
-          <span className="text-[#a3978a] text-[11px] shrink-0 mr-1 font-bold flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-[#c99738]" />
-            歴史的画期:
-          </span>
-          {milestones.map(m => (
-            <button
-              key={m.year}
-              onClick={() => {
-                setCurrentYear(m.year);
-                setSelectedComposerId(null);
-              }}
-              className={`px-2.5 py-1 rounded-md border whitespace-nowrap transition-all text-xs ${
-                Math.abs(currentYear - m.year) <= 2
-                  ? 'bg-[#c99738]/20 border-[#c99738] text-[#f5ebd9] font-bold'
-                  : 'bg-[#1e1b18] border-[#332c24] text-[#b5aa9b] hover:text-[#f5ebd9]'
-              }`}
-            >
-              {m.year}年: {m.title.split(' ')[0]}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -391,7 +380,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             {Object.values(EUROPEAN_CITIES).map(city => {
               const [cx, cy] = projectGeoToSvg(city.coordinates[0], city.coordinates[1]);
               return (
-                <g key={city.id} className="opacity-70 pointer-events-none">
+                <g key={city.id} className="opacity-70 pointer-events-none max-md:hidden">
                   <circle cx={cx} cy={cy} r="2.5" fill="#8c7e6d" />
                   <text
                     x={cx}
@@ -486,7 +475,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                       [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
                     const boxWidth = Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
                     return (
-                      <g transform={`translate(${x}, ${y + 22})`}>
+                      <g transform={`translate(${x}, ${y + 22})`} className={isSelected ? undefined : 'max-md:hidden'}>
                         <rect
                           x={-boxWidth / 2}
                           y="0"
@@ -519,19 +508,89 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             })}
           </svg>
 
+          {/* 人物ポップアップ: 広い画面では地図の右上に重ねて、狭い画面では地図の下に表示 */}
+          {popupPin && (
+            <MapPersonPopup
+              composer={popupPin.composer}
+              year={currentYear}
+              cityStay={popupPin.cityStay}
+              cityNameJa={popupPin.cityNameJa}
+              onClose={() => setSelectedComposerId(null)}
+              onOpenProfile={onSelectComposer}
+            />
+          )}
+
           {/* Map Status Bar */}
-          <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#b5aa9b] flex items-center gap-2 shadow-xl">
-            <span className="w-2 h-2 rounded-full bg-[#c99738] animate-ping" />
-            <span>地図上のピンをタップすると、下の「生没エピソード & 作曲ストーリー」に絞り込まれます</span>
-          </div>
+          {!popupPin && (
+            <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#d6cdbd] flex items-center gap-2 shadow-xl">
+              <span className="w-2 h-2 rounded-full bg-[#c99738] animate-ping" />
+              <span>人物をタップすると、その人が何をしたかが出ます</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 3. Bottom Section: 生没年・生誕＆最期のエピソード & 作曲秘話 */}
-      <div
-        ref={episodeSectionRef}
-        className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-8 space-y-6"
-      >
+      {/* 3. 地図の下: この年に活動した人の一覧。くわしい物語は別画面で見る */}
+      <div className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base md:text-lg font-classical-display font-bold text-[#f5ebd9]">
+            {currentYear}年に活動していた作曲家
+            <span className="ml-2 text-xs font-mono font-normal text-[#bdb1a1] bg-[#241f19] px-2.5 py-0.5 rounded-full border border-[#382f25]">
+              {activeComposers.length}名
+            </span>
+          </h2>
+          <button
+            onClick={() => {
+              setSelectedComposerId(null);
+              setShowStories(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#241e18] hover:bg-[#332b22] border border-[#c99738]/60 text-[#e8dec8] text-xs font-bold transition-colors"
+          >
+            <BookOpen className="w-4 h-4 text-[#c99738]" />
+            <span>生い立ち・最期・作曲の物語を別画面で見る</span>
+            <ChevronRight className="w-4 h-4 text-[#c99738]" />
+          </button>
+        </div>
+
+        {activeComposers.length === 0 ? (
+          <p className="text-sm text-[#bdb1a1]">この年に活動していた登録済みの作曲家はいません。年を動かしてみてください。</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {activeComposers.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedComposerId(prev => (prev === c.id ? null : c.id))}
+                className={`flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border text-xs transition-colors ${
+                  selectedComposerId === c.id
+                    ? 'bg-[#c99738]/20 border-[#c99738] text-[#f5ebd9]'
+                    : 'bg-[#1c1712] border-[#33291c] text-[#e8dec8] hover:border-[#c99738]/60'
+                }`}
+              >
+                <ComposerPortrait composer={c} size="xs" />
+                <span className="font-semibold">{c.shortName}</span>
+                <span className="text-[#a3978a]">{currentYear - c.birthYear}歳</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 別画面: この年の物語（生い立ち・最期・作曲のエピソード） */}
+      {showStories && (
+        <div className="fixed inset-0 z-50 bg-[#121110] overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-[#191613]/95 backdrop-blur-md border-b border-[#2e2924] px-4 md:px-8 py-3 flex items-center justify-between gap-3">
+            <span className="font-classical-display font-bold text-lg text-[#f5ebd9]">
+              {currentYear}年の物語
+            </span>
+            <button
+              onClick={() => setShowStories(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#241e18] hover:bg-[#332b22] border border-[#3d362e] text-[#e8dec8] text-xs font-bold"
+            >
+              <X className="w-4 h-4" />
+              <span>地図にもどる</span>
+            </button>
+          </div>
+          <div className="max-w-6xl mx-auto w-full px-4 md:px-8 py-6 pb-24 space-y-6">
         {/* Section Header */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2e2820] pb-4">
           <div>
@@ -706,7 +765,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </button>
           </div>
         )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

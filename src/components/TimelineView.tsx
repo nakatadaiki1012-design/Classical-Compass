@@ -3,13 +3,13 @@ import { Composer, Composition, EraId } from '../types';
 import { COMPOSERS } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
+import { YearEventsPanel } from './YearEventsPanel';
 import { useAudio } from '../context/AudioContext';
 import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
   Search,
-  Filter,
   Play,
   Pause,
   Sparkles,
@@ -17,8 +17,8 @@ import {
   Layers,
   ChevronRight,
   Maximize2,
-  Info,
-  SlidersHorizontal
+  SlidersHorizontal,
+  X
 } from 'lucide-react';
 
 interface TimelineViewProps {
@@ -63,6 +63,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
   // Auto-rotating set to FALSE by default so it doesn't spin arbitrarily without scrolling ("勝手に回転はしなくてよい")
   const [isAutoRotating, setIsAutoRotating] = useState<boolean>(false);
 
+  // 検索・表示設定パネルの開閉（普段は閉じて画面をすっきり見せる）
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+
   // User adjustable cylinder radius (default 165px for a broad, readable 3D bundle!)
   const [cylinderRadius, setCylinderRadius] = useState<number>(165);
 
@@ -104,6 +107,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
       return true;
     }).sort((a, b) => a.birthYear - b.birthYear);
   }, [selectedEra, searchQuery]);
+
+  // 検索・時代で絞り込み中のときだけ、できごと欄もその作曲家に絞る
+  const visibleComposerIds = useMemo(
+    () => (selectedEra === 'all' && !searchQuery.trim() ? null : new Set(filteredComposers.map(c => c.id))),
+    [filteredComposers, selectedEra, searchQuery]
+  );
 
   // Current era based on focal year
   const currentEra = useMemo(() => {
@@ -351,209 +360,190 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
 
   return (
     <div className="flex flex-col h-[calc(100dvh-108px)] sm:h-[calc(100dvh-57px)] select-none bg-[#090807] overflow-hidden font-sans">
-      {/* Top Controls Toolbar */}
-      <div className="bg-[#14100c]/95 backdrop-blur-xl border-b border-[#302519] px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 z-30 shrink-0 shadow-lg">
-        {/* Left Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-[#1e1711] border border-[#3d3021] rounded-lg p-0.5 shadow-inner">
-            {([
-              { id: 'panorama', label: '見やすい一覧', Icon: Layers },
-              { id: '3d-bundle', label: '3D立体表示', Icon: Compass }
-            ] as const).map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                onClick={() => setViewStyle(id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  viewStyle === id
-                    ? 'bg-gradient-to-r from-[#c99738] via-[#e6b95c] to-[#9e7220] text-black shadow-md'
-                    : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
-                }`}
+      {/* Top bar: 年・時代・ツマミだけを常に表示。検索や設定は「検索・設定」を押したときだけ出る */}
+      <div className="bg-[#14100c]/95 backdrop-blur-xl border-b border-[#302519] px-4 md:px-6 py-2.5 shrink-0 z-30 shadow-lg">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="order-1 flex items-center gap-2.5 shrink-0">
+            <span className="font-classical-display font-mono font-bold text-2xl text-[#f5ebd9] tabular-nums">
+              {focalYear}年
+            </span>
+            {currentEra && (
+              <span
+                className="px-2.5 py-0.5 rounded text-xs font-bold text-white shadow-sm"
+                style={{ backgroundColor: currentEra.color }}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="relative flex-1 min-w-[160px] md:flex-none">
-            <Search className="w-3.5 h-3.5 text-[#bdb1a1] absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="作曲家・名曲・エピソード検索..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="bg-[#1e1711] border border-[#3d3021] rounded-lg px-3 py-1.5 pl-8 text-xs text-[#f5ebd9] placeholder-[#8f8476] focus:outline-none focus:border-[#c99738] w-full md:w-56 shadow-inner"
-            />
-          </div>
-
-          {/* Era Filter */}
-          <div className="flex items-center gap-1.5 bg-[#1e1711] border border-[#3d3021] rounded-lg px-2.5 py-1.5 text-xs">
-            <Filter className="w-3.5 h-3.5 text-[#c99738]" />
-            <select
-              value={selectedEra}
-              onChange={e => setSelectedEra(e.target.value as EraId | 'all')}
-              className="bg-transparent text-[#f5ebd9] focus:outline-none cursor-pointer text-xs font-medium"
-            >
-              <option value="all" className="bg-[#1a140f]">全時代 ({COMPOSERS.length}名)</option>
-              {ERAS.map(era => (
-                <option key={era.id} value={era.id} className="bg-[#1a140f]">
-                  {era.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Right Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* 3D Bundle Controls */}
-          {viewStyle === '3d-bundle' && (
-            <div className="hidden md:flex items-center gap-2 bg-[#1e1711] border border-[#3d3021] rounded-lg px-2.5 py-1 text-xs">
-              <span className="text-[11px] text-[#c99738] font-bold flex items-center gap-1">
-                <Maximize2 className="w-3 h-3" />
-                筒サイズ:
+                {currentEra.name}
               </span>
-              <input
-                type="range"
-                min="100"
-                max="260"
-                step="5"
-                value={cylinderRadius}
-                onChange={e => setCylinderRadius(parseInt(e.target.value))}
-                className="w-20 h-1.5 bg-[#0e0b08] accent-[#c99738] rounded cursor-pointer"
-                title="3D筒の直径を拡大・縮小（作曲家間の距離を広げます）"
-              />
-              <button
-                onClick={() => setIsAutoRotating(!isAutoRotating)}
-                className={`text-[11px] px-2 py-0.5 rounded-md font-bold transition-all shadow ${
-                  isAutoRotating ? 'bg-[#c99738] text-black' : 'text-[#bdb1a1] hover:text-white bg-[#2b2118]'
-                }`}
-                title="スクロールで自動回転します。連続回転を切り替えます"
-              >
-                {isAutoRotating ? '連動停止' : '連続回転'}
-              </button>
-            </div>
-          )}
-
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-[#1e1711] border border-[#3d3021] rounded-lg p-1">
-            <button
-              onClick={() => setZoomScale(prev => Math.max(6.0, prev - 2.0))}
-              className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded transition-colors"
-              title="年代を縮小"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <span className="text-[11px] font-mono font-bold text-[#c99738] px-1.5">
-              拡大 {Math.round((zoomScale / 12) * 100)}%
-            </span>
-            <button
-              onClick={() => setZoomScale(prev => Math.min(36.0, prev + 2.0))}
-              className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded transition-colors"
-              title="年代を細かく拡大（横に長く）"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setZoomScale(12.0)}
-              className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded transition-colors"
-              title="標準幅に戻す"
-            >
-              <RotateCcw className="w-3 h-3" />
-            </button>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Interactive Timeline Scrubber Knob ("年表もツマミでスクロール") */}
-      <div className="bg-[#120e0a] border-b border-[#292015] px-4 md:px-6 py-2 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 z-25 shadow-md">
-        {/* Left: Focal Year & Era badge */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <span className="hidden md:flex text-xs font-bold text-[#c99738] items-center gap-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>年代:</span>
-          </span>
-          <span className="font-classical-display font-mono font-bold text-lg md:text-xl text-[#f5ebd9] bg-[#1a140f] px-3 py-0.5 rounded-md border border-[#382d1f]">
-            {focalYear}年
-          </span>
-          {currentEra && (
-            <span
-              className="px-2.5 py-0.5 rounded text-[11px] font-bold text-white shadow-sm flex items-center gap-1"
-              style={{ backgroundColor: currentEra.color }}
+          <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 flex items-center gap-2.5">
+            <button
+              onClick={() => scrollToYear(Math.max(MIN_YEAR, focalYear - 10))}
+              className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="10年戻る"
             >
-              <span>{currentEra.name}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Center: The Slider / Knob itself with Step Buttons */}
-        <div className="flex-1 flex items-center gap-2.5 w-full max-w-3xl">
-          <button
-            onClick={() => scrollToYear(Math.max(MIN_YEAR, focalYear - 10))}
-            className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono transition-colors shrink-0"
-            title="10年戻る"
-          >
-            -10年
-          </button>
-
-          <div className="flex-1 flex flex-col gap-1">
+              −10
+            </button>
             <input
               type="range"
               min={MIN_YEAR}
               max={MAX_YEAR}
               value={focalYear}
-              onChange={e => {
-                const yr = parseInt(e.target.value, 10);
-                scrollToYear(yr);
-              }}
-              className="w-full h-2.5 bg-[#1f1812] accent-[#c99738] rounded-lg cursor-pointer transition-all shadow-inner"
+              onChange={e => scrollToYear(parseInt(e.target.value, 10))}
+              className="flex-1 h-2.5 bg-[#1f1812] accent-[#c99738] rounded-lg cursor-pointer"
+              aria-label="年代"
             />
-            {/* Era Indicator Ticks below slider */}
-            <div className="flex justify-between text-[11px] text-[#a3978a] px-0.5 select-none">
-              <span>中世</span>
-              <span className="hidden sm:inline">ルネサンス</span>
-              <span>バロック</span>
-              <span>古典派</span>
-              <span>ロマン派</span>
-              <span>近代</span>
-            </div>
+            <button
+              onClick={() => scrollToYear(Math.min(MAX_YEAR, focalYear + 10))}
+              className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="10年進む"
+            >
+              +10
+            </button>
           </div>
 
           <button
-            onClick={() => scrollToYear(Math.min(MAX_YEAR, focalYear + 10))}
-            className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono transition-colors shrink-0"
-            title="10年進む"
+            onClick={() => setShowSettings(v => !v)}
+            className={`order-2 ml-auto md:order-3 md:ml-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors shrink-0 ${
+              showSettings
+                ? 'bg-[#c99738] border-[#e6b95c] text-black'
+                : 'bg-[#1e1711] border-[#3d3021] text-[#e8dec8] hover:border-[#c99738]/60'
+            }`}
           >
-            +10年
+            {showSettings ? <X className="w-3.5 h-3.5" /> : <SlidersHorizontal className="w-3.5 h-3.5" />}
+            <span>検索・設定</span>
+            {!showSettings && visibleComposerIds && (
+              <span className="px-1.5 rounded-full bg-[#c99738] text-black text-[10px]">絞込中</span>
+            )}
           </button>
         </div>
-      </div>
 
-      {/* Quick Jump Bar */}
-      <div className="bg-[#0f0c09] border-b border-[#241c13] px-4 md:px-6 py-1.5 flex items-center gap-2 overflow-x-auto text-[11px] scrollbar-none shrink-0 z-20">
-        <span className="text-[#a3978a] text-[11px] shrink-0 font-bold flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-[#c99738]" />
-          ジャンプ:
-        </span>
-        {iconicComposers.map(item => {
-          const isCurrentFocal = Math.abs(focalYear - item.year) <= 4;
-          return (
-            <button
-              key={item.id}
-              onClick={() => scrollToYear(item.year)}
-              className={`px-3 py-1 rounded-full border whitespace-nowrap transition-all flex items-center gap-1 text-xs ${
-                isCurrentFocal
-                  ? 'bg-gradient-to-r from-[#c99738] to-[#e6b95c] border-[#f0d48d] text-black font-extrabold shadow-md scale-105'
-                  : 'bg-[#18130e] border-[#2e2317] text-[#b3a492] hover:text-[#f5ebd9] hover:border-[#c99738]/50'
-              }`}
-            >
-              <span>{item.name}</span>
-              <span className="font-mono text-[11px] opacity-75">{item.year}</span>
-            </button>
-          );
-        })}
+        {showSettings && (
+          <div className="mt-2.5 pt-2.5 border-t border-[#2a2015] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3 text-xs">
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-[#a3978a]">検索（作曲家・曲名・できごと）</span>
+              <span className="relative">
+                <Search className="w-3.5 h-3.5 text-[#bdb1a1] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="例: モーツァルト、運命、革命"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#1e1711] border border-[#3d3021] rounded-lg px-3 py-2 pl-8 text-sm text-[#f5ebd9] placeholder-[#8f8476] focus:outline-none focus:border-[#c99738]"
+                />
+              </span>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-[#a3978a]">時代で絞り込む</span>
+              <select
+                value={selectedEra}
+                onChange={e => setSelectedEra(e.target.value as EraId | 'all')}
+                className="bg-[#1e1711] border border-[#3d3021] rounded-lg px-3 py-2 text-sm text-[#f5ebd9] focus:outline-none focus:border-[#c99738] cursor-pointer"
+              >
+                <option value="all" className="bg-[#1a140f]">全時代（{COMPOSERS.length}名）</option>
+                {ERAS.map(era => (
+                  <option key={era.id} value={era.id} className="bg-[#1a140f]">
+                    {era.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-[#a3978a]">作曲家の時代へジャンプ</span>
+              <select
+                value=""
+                onChange={e => {
+                  if (e.target.value) scrollToYear(parseInt(e.target.value, 10));
+                }}
+                className="bg-[#1e1711] border border-[#3d3021] rounded-lg px-3 py-2 text-sm text-[#f5ebd9] focus:outline-none focus:border-[#c99738] cursor-pointer"
+              >
+                <option value="">選んでください</option>
+                {iconicComposers.map(item => (
+                  <option key={item.id} value={item.year} className="bg-[#1a140f]">
+                    {item.name}（{item.year}年）
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold text-[#a3978a]">表示のしかた</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center bg-[#1e1711] border border-[#3d3021] rounded-lg p-0.5">
+                  {([
+                    { id: 'panorama', label: '見やすい一覧', Icon: Layers },
+                    { id: '3d-bundle', label: '3D', Icon: Compass }
+                  ] as const).map(({ id, label, Icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setViewStyle(id)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-bold transition-all ${
+                        viewStyle === id
+                          ? 'bg-gradient-to-r from-[#c99738] via-[#e6b95c] to-[#9e7220] text-black'
+                          : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1 bg-[#1e1711] border border-[#3d3021] rounded-lg p-1">
+                  <button
+                    onClick={() => setZoomScale(prev => Math.max(6.0, prev - 2.0))}
+                    className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
+                    title="縮小"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <span className="text-[11px] font-mono font-bold text-[#c99738] px-1 w-12 text-center">
+                    {Math.round((zoomScale / 12) * 100)}%
+                  </span>
+                  <button
+                    onClick={() => setZoomScale(prev => Math.min(36.0, prev + 2.0))}
+                    className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
+                    title="拡大"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setZoomScale(12.0)}
+                    className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
+                    title="標準に戻す"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              {viewStyle === '3d-bundle' && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Maximize2 className="w-3.5 h-3.5 text-[#c99738]" />
+                  <input
+                    type="range"
+                    min="100"
+                    max="260"
+                    step="5"
+                    value={cylinderRadius}
+                    onChange={e => setCylinderRadius(parseInt(e.target.value))}
+                    className="w-24 h-1.5 accent-[#c99738] cursor-pointer"
+                    title="3D筒の大きさ"
+                  />
+                  <button
+                    onClick={() => setIsAutoRotating(!isAutoRotating)}
+                    className={`px-2 py-0.5 rounded-md font-bold ${
+                      isAutoRotating ? 'bg-[#c99738] text-black' : 'bg-[#2b2118] text-[#bdb1a1] hover:text-white'
+                    }`}
+                  >
+                    {isAutoRotating ? '回転を止める' : '回転させる'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Timeline View Canvas & Scroller Area */}
@@ -892,18 +882,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
                       }}
                       title={`${composer.name} (${composer.birthYear}〜${composer.deathYear})`}
                     >
-                      {/* Sticky so the name stays visible while the bar's start is scrolled off-screen */}
-                      <div className="sticky left-2 flex items-center min-w-0 max-w-full">
-                        <ComposerPortrait composer={composer} size="xs" className="shrink-0 mr-2" />
-                        <span className="text-[13px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate">
-                          {width >= 280 ? composer.name : composer.shortName}
+                      <ComposerPortrait composer={composer} size="xs" className="shrink-0 mr-2" />
+                      <span className="text-[13px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate">
+                        {width >= 560 ? composer.name : composer.shortName}
+                      </span>
+                      {width >= 220 && (
+                        <span className="text-xs font-mono text-white/85 pl-2 shrink-0 font-semibold drop-shadow">
+                          {composer.birthYear}年〜
                         </span>
-                        {width >= 220 && (
-                          <span className="text-xs font-mono text-white/85 pl-2.5 shrink-0 font-semibold drop-shadow">
-                            {composer.birthYear}〜{composer.deathYear}
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {width >= 220 && (
+                        <span className="text-xs font-mono text-white/85 ml-auto pl-3 shrink-0 font-semibold drop-shadow">
+                          〜{composer.deathYear}年
+                        </span>
+                      )}
                     </div>
 
                     {/* Composition Dots on the bar's lower edge (kept clear of the name) */}
@@ -933,6 +925,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer }) 
           )}
         </div>
       </div>
+
+      {/* その年のできごと（音楽＋世界） */}
+      <YearEventsPanel
+        year={focalYear}
+        visibleComposerIds={visibleComposerIds}
+        onSelectComposer={onSelectComposer}
+        onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
+        onJumpToYear={scrollToYear}
+      />
 
       {/* Partial Episode Modal (Single-Tap Action on composition points) */}
       {focusedEpisodeWork && (

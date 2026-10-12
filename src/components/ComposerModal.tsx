@@ -2,6 +2,8 @@ import React from 'react';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
+import { getComposerEvents } from '../data/chronicle';
+import { KIND_LABEL } from './YearEventsPanel';
 import { useAudio } from '../context/AudioContext';
 import {
   X,
@@ -33,6 +35,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
 
   const era = getEraById(composer.era);
   const age = composer.deathYear - composer.birthYear;
+  const lifeEvents = getComposerEvents(composer.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -181,6 +184,36 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 );
               })}
             </div>
+          </div>
+
+          {/* Section: 年ごとの主要作品とエピソード */}
+          <div className="space-y-4">
+            <h3 className="text-base font-classical-display font-bold text-[#f5ebd9] flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#c99738]" />
+              <span>年ごとの作品とエピソード</span>
+              <span className="text-xs font-normal text-[#a3978a]">（{lifeEvents.length}件）</span>
+            </h3>
+            <ol className="relative ml-2 border-l border-[#3a2f20] space-y-4">
+              {lifeEvents.map(ev => {
+                const badge = KIND_LABEL[ev.kind];
+                return (
+                  <li key={ev.id} className="relative pl-5">
+                    <span className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#c99738] ring-4 ring-[#161412]" />
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-mono font-bold text-[#e6b95c]">{ev.year}年</span>
+                      {ev.kind !== 'birth' && (
+                        <span className="text-[#a3978a]">{ev.year - composer.birthYear}歳</span>
+                      )}
+                      <span className={`px-1.5 py-0.5 rounded border text-[11px] font-bold whitespace-nowrap ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+                    <div className="text-sm font-bold text-[#f5ebd9] mt-1 leading-snug">{ev.title}</div>
+                    {ev.text && <p className="text-xs text-[#b5aa9b] mt-0.5 leading-relaxed">{ev.text}</p>}
+                  </li>
+                );
+              })}
+            </ol>
           </div>
 
           {/* Section: Detailed Biography (経歴) */}

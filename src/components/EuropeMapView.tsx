@@ -334,9 +334,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         <YearTopicsBar
           year={currentYear}
           visibleComposerIds={null}
-          onShowDetails={() =>
-            document.getElementById('year-events-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
           onJumpToYear={year => {
             setCurrentYear(year);
             setSelectedComposerId(null);

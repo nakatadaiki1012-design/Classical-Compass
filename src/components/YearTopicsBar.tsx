@@ -4,8 +4,6 @@ import { getYearTopics, YearTopic } from '../data/chronicle';
 interface YearTopicsBarProps {
   year: number;
   visibleComposerIds: Set<string> | null;
-  /** 「くわしく」を押したとき（下の詳細を開く／そこまで移動する） */
-  onShowDetails: () => void;
   /** 近い年のトピックを押したとき、その年へ移動する */
   onJumpToYear?: (year: number) => void;
 }
@@ -23,7 +21,6 @@ const TAG_STYLE: Record<YearTopic['tag'], { label: string; className: string }> 
 export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
   year,
   visibleComposerIds,
-  onShowDetails,
   onJumpToYear
 }) => {
   const { topics, hiddenCount, near } = useMemo(
@@ -33,12 +30,15 @@ export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
 
   const chip = (t: YearTopic, key: string, extra?: React.ReactNode, onClick?: () => void) => {
     const style = TAG_STYLE[t.tag];
+    const Tag = onClick ? 'button' : 'div';
     return (
-      <button
+      <Tag
         key={key}
-        onClick={onClick || onShowDetails}
+        {...(onClick ? { onClick, type: 'button' as const } : {})}
         title={t.full}
-        className="shrink-0 max-w-[17rem] flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full bg-[#1a150f] border border-[#33291c] hover:border-[#c99738]/60 transition-colors"
+        className={`shrink-0 max-w-[17rem] flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full bg-[#1a150f] border border-[#33291c] ${
+          onClick ? 'hover:border-[#c99738]/60 transition-colors' : ''
+        }`}
       >
         <span className={`px-1.5 rounded-full border text-[10px] font-bold whitespace-nowrap ${style.className}`}>
           {style.label}
@@ -48,7 +48,7 @@ export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
           {extra}
           {t.label}
         </span>
-      </button>
+      </Tag>
     );
   };
 
@@ -58,14 +58,7 @@ export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
       {topics.map(t => chip(t, t.id))}
       {topics.length === 0 && near && chip(near, near.id, <span className="text-[#a3978a]">{near.year}年　</span>, () => onJumpToYear?.(near.year))}
       {topics.length === 0 && !near && <span className="text-xs text-[#a3978a]">この年の主なできごとの記録はありません</span>}
-      {(hiddenCount > 0 || topics.length > 0) && (
-        <button
-          onClick={onShowDetails}
-          className="shrink-0 text-xs font-bold text-[#c99738] hover:text-[#e6b95c] whitespace-nowrap px-1"
-        >
-          {hiddenCount > 0 ? `ほか${hiddenCount}件・くわしく ▼` : 'くわしく ▼'}
-        </button>
-      )}
+      {hiddenCount > 0 && <span className="shrink-0 text-xs text-[#a3978a] whitespace-nowrap">ほか{hiddenCount}件は下に</span>}
     </div>
   );
 };

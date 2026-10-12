@@ -67,6 +67,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // Zoom scale (pixels per year): default 12.0px/year
   // 横の拡大率（1年あたりの幅）。小さいほど広い範囲が一度に見える
   const [zoomScale, setZoomScale] = useState<number>(BASE_ZOOM);
+  // 縦の拡大率（段の高さ）。1が標準
+  const [rowScale, setRowScale] = useState<number>(1);
+  const MIN_ROW_SCALE = 0.35;
+  const MAX_ROW_SCALE = 1.6;
   const [rotationAngle, setRotationAngle] = useState<number>(0);
 
   // Auto-rotating set to FALSE by default so it doesn't spin arbitrarily without scrolling ("勝手に回転はしなくてよい")
@@ -424,7 +428,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const BAND_H = bandLanes * BAND_LANE_H + 3;
 
   const PANO_TOP = 44 + BAND_H;
-  const PANO_ROW_HEIGHT = 34;
+  const PANO_ROW_HEIGHT = Math.round(34 * rowScale);
+  const compactRows = PANO_ROW_HEIGHT < 26; // 縦に縮めたときは、肖像や♪を小さくして文字だけにする
   const { panoramaBars, panoramaRowCount } = useMemo(() => {
     const bars = filteredComposers.map((composer, row) => {
       const birthX = (composer.birthYear - MIN_YEAR) * zoomScale + horizontalPadding;
@@ -456,23 +461,37 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // 2本指のピンチ（スマホ）や、Ctrl＋ホイール／トラックパッドのピンチで、年表を拡大・縮小する
   const zoomRef = useRef(zoomScale);
   zoomRef.current = zoomScale;
+  const rowRef = useRef(rowScale);
+  rowRef.current = rowScale;
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +z.toFixed(2)));
+    const clampRow = (z: number) => Math.min(MAX_ROW_SCALE, Math.max(MIN_ROW_SCALE, +z.toFixed(2)));
     const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 
-    let start: { d: number; zoom: number } | null = null;
+    // 指を開く向きで、横（年）・縦（段の高さ）・両方を決める
+    let start: { d: number; zoom: number; row: number; mode: 'x' | 'y' | 'both' } | null = null;
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        start = { d: dist(e.touches), zoom: zoomRef.current };
+        const dx = Math.abs(e.touches[0].clientX - e.touches[1].clientX);
+        const dy = Math.abs(e.touches[0].clientY - e.touches[1].clientY);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        start = {
+          d: dist(e.touches),
+          zoom: zoomRef.current,
+          row: rowRef.current,
+          mode: angle < 30 ? 'x' : angle > 60 ? 'y' : 'both'
+        };
         isDraggingRef.current = false;
       }
     };
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 2 || !start) return;
       e.preventDefault();
-      setZoomScale(clampZoom((start.zoom * dist(e.touches)) / start.d));
+      const r = dist(e.touches) / start.d;
+      if (start.mode !== 'y') setZoomScale(clampZoom(start.zoom * r));
+      if (start.mode !== 'x') setRowScale(clampRow(start.row * r));
     };
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) start = null;
@@ -480,7 +499,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey) return; // ピンチ操作は ctrlKey つきのホイールとして届く
       e.preventDefault();
-      setZoomScale(clampZoom(zoomRef.current * Math.exp(-e.deltaY * 0.004)));
+      const f = Math.exp(-e.deltaY * 0.004);
+      // Shift を押しながらなら縦、そのままなら横
+      if (e.shiftKey) setRowScale(clampRow(rowRef.current * f));
+      else setZoomScale(clampZoom(zoomRef.current * f));
     };
 
     el.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -689,8 +711,23 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                   >
                     <ZoomIn className="w-4 h-4" />
                   </button>
+                  <span className="w-px h-4 bg-[#3d3021] mx-0.5" />
                   <button
-                    onClick={() => setZoomScale(BASE_ZOOM)}
+                    onClick={() => setRowScale(prev => Math.max(MIN_ROW_SCALE, +(prev / 1.25).toFixed(2)))}
+                    className="px-1.5 py-0.5 text-[11px] font-bold text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
+                    title="縦に縮める"
+                  >
+                    縦−
+                  </button>
+                  <button
+                    onClick={() => setRowScale(prev => Math.min(MAX_ROW_SCALE, +(prev * 1.25).toFixed(2)))}
+                    className="px-1.5 py-0.5 text-[11px] font-bold text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
+                    title="縦に広げる"
+                  >
+                    縦＋
+                  </button>
+                  <button
+                    onClick={() => { setZoomScale(BASE_ZOOM); setRowScale(1); }}
                     className="p-1 text-[#bdb1a1] hover:text-[#f5ebd9] hover:bg-[#2c2218] rounded"
                     title="標準に戻す"
                   >
@@ -1127,8 +1164,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                       }}
                       title={`${composer.name} (${composer.birthYear}〜${composer.deathYear})`}
                     >
-                      <ComposerPortrait composer={composer} size="xs" className="shrink-0 mr-2" />
-                      <span className="text-[12px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate">
+                      {!compactRows && <ComposerPortrait composer={composer} size="xs" className="shrink-0 mr-2" />}
+                      <span className={`${compactRows ? 'text-[10px] leading-none pl-1' : 'text-[12px]'} font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate`}>
                         {width >= 560 ? composer.name : composer.shortName}
                       </span>
                       {width >= 290 && (
@@ -1153,12 +1190,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                             e.stopPropagation();
                             setFocusedEpisodeWork({ work: w, composer });
                           }}
-                          className="absolute -bottom-2 -translate-x-1/2 cursor-pointer z-20 group/panodot"
+                          className={`absolute ${compactRows ? '-bottom-1' : '-bottom-2'} -translate-x-1/2 cursor-pointer z-20 group/panodot`}
                           style={{ left: `${workOffsetX}px` }}
                           title={`${w.year}年: ${w.title}（タップで解説）`}
                         >
-                          <div className="w-4 h-4 rounded-full bg-[#120e0b] border border-[#f0d48d] text-[#f0d48d] text-[9px] font-bold flex items-center justify-center hover:scale-150 transition-transform shadow-md">
-                            ♪
+                          <div className={`${compactRows ? 'w-2 h-2' : 'w-4 h-4 text-[9px]'} rounded-full bg-[#120e0b] border border-[#f0d48d] text-[#f0d48d] font-bold flex items-center justify-center hover:scale-150 transition-transform shadow-md`}>
+                            {!compactRows && '♪'}
                           </div>
                         </div>
                       );

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { MUSIC_PERIODS } from '../data/musicPeriods';
 import { useJapanMode } from '../utils/japanMode';
-import { PeriodDetail, periodRange } from './PeriodDetail';
+import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
 
 interface PeriodsViewProps {
   onSelectComposer: (composerId: string) => void;
@@ -62,6 +62,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
                 className="w-full text-left px-4 py-3 flex items-start gap-3"
                 aria-expanded={open}
               >
+                <PeriodImage periodId={p.id} captionless className="shrink-0 w-16 h-16 [&_img]:h-16" />
                 <span className="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[11px] font-mono font-bold text-[#e6b95c]">{periodRange(p)}</span>

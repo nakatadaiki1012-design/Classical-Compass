@@ -5,6 +5,7 @@ import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
+import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { hasAudio } from '../utils/hasAudio';
 import { YearEventsOverlay } from './YearEventsOverlay';
 import { YearTopicsBar } from './YearTopicsBar';
@@ -99,6 +100,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   const MAX_K = 6;
   const sc = 1 / k; // 拡大しても、札や文字の大きさが画面の上で変わらないようにするための倍率
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const hoverCardRef = useRef<HoverCardHandle>(null);
   const didPanRef = useRef(false);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -295,7 +297,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     });
 
     // 4人以上が集中している場所は「まとめ札」
-    const CARD_ROW = 20;
+    const CARD_ROW = 28;
     const singles: typeof onMap = [];
     groups.forEach(list => {
       if (list.length < 4) {
@@ -306,7 +308,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       const cy = list.reduce((a, b) => a + b.ty, 0) / list.length;
       const cols = list.length > 7 ? 2 : 1;
       const rows = Math.ceil(list.length / cols);
-      const wScreen = cols * 104 + 16;
+      const wScreen = cols * 108 + 16;
       const hScreen = 26 + rows * CARD_ROW;
       const id = `cluster-${clusters.length}`;
       const nearest = list.reduce((best, cur) =>
@@ -520,6 +522,18 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         {/* Timeline Range Slider */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-mono text-[#a3978a]">1000年</span>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(1000, Math.min(2010, y - 10)))}
+            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+          >
+            −10
+          </button>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(1000, Math.min(2010, y - 1)))}
+            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+          >
+            −1
+          </button>
           <input
             type="range"
             min={1000}
@@ -528,6 +542,18 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
             className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
           />
+          <button
+            onClick={() => setCurrentYear(y => Math.max(1000, Math.min(2010, y + 1)))}
+            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+          >
+            +1
+          </button>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(1000, Math.min(2010, y + 10)))}
+            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+          >
+            +10
+          </button>
           <span className="text-xs font-mono text-[#a3978a]">2010年</span>
         </div>
 
@@ -539,6 +565,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             setCurrentYear(year);
             setSelectedComposerId(null);
           }}
+          onOpenComposer={onSelectComposer}
         />
       </div>
 
@@ -694,8 +721,15 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   key={composer.id}
                   transform={offMap ? `translate(${vx} ${vy}) scale(${sc})` : `translate(${x} ${y}) scale(${sc}) translate(${-x} ${-y})`}
                   onClick={() => handlePinClick(composer.id)}
-                  onMouseEnter={() => setHoveredComposerId(composer.id)}
-                  onMouseLeave={() => setHoveredComposerId(null)}
+                  onMouseEnter={e => {
+                    setHoveredComposerId(composer.id);
+                    hoverCardRef.current?.show(composer.id, currentYear, e.clientX, e.clientY);
+                  }}
+                  onMouseMove={e => hoverCardRef.current?.move(e.clientX, e.clientY)}
+                  onMouseLeave={() => {
+                    setHoveredComposerId(null);
+                    hoverCardRef.current?.hide();
+                  }}
                   className="cursor-pointer group"
                   filter="url(#pinShadow)"
                 >
@@ -830,8 +864,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   {c.members.map((m, i) => {
                     const col = Math.floor(i / rows);
                     const row = i % rows;
-                    const mx = -W / 2 + 10 + col * 104;
-                    const my = -H / 2 + 26 + row * 20;
+                    const mx = -W / 2 + 10 + col * 108;
+                    const my = -H / 2 + 26 + row * 28;
                     const era = getEraById(m.composer.era);
                     const selected = selectedComposerId === m.composer.id;
                     return (
@@ -839,21 +873,31 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         key={m.composer.id}
                         className="cursor-pointer"
                         onClick={() => handlePinClick(m.composer.id)}
-                        onMouseEnter={() => setHoveredComposerId(m.composer.id)}
-                        onMouseLeave={() => setHoveredComposerId(null)}
+                        onMouseEnter={e => {
+                          setHoveredComposerId(m.composer.id);
+                          hoverCardRef.current?.show(m.composer.id, currentYear, e.clientX, e.clientY);
+                        }}
+                        onMouseMove={e => hoverCardRef.current?.move(e.clientX, e.clientY)}
+                        onMouseLeave={() => {
+                          setHoveredComposerId(null);
+                          hoverCardRef.current?.hide();
+                        }}
                       >
                         <rect
                           x={mx - 4}
                           y={my}
-                          width="100"
-                          height="19"
-                          rx="5"
+                          width="104"
+                          height="27"
+                          rx="6"
                           fill={selected ? '#3a2d1c' : hoveredComposerId === m.composer.id ? '#2a2118' : 'transparent'}
                           stroke={selected ? '#ffffff' : 'none'}
                         />
-                        <circle cx={mx + 4} cy={my + 9.5} r="4.5" fill={era.color} />
-                        <text x={mx + 14} y={my + 13.5} fontSize="11" fontWeight="bold" fill="#ffffff">
-                          {m.composer.shortName.length > 7 ? m.composer.shortName.slice(0, 7) + '…' : m.composer.shortName}
+                        <foreignObject x={mx} y={my + 2} width="24" height="24">
+                          <ComposerPortrait composer={m.composer} size="xs" showOrnateBorder={false} />
+                        </foreignObject>
+                        <circle cx={mx + 22} cy={my + 22} r="3.2" fill={era.color} stroke="#14110e" strokeWidth="1" />
+                        <text x={mx + 30} y={my + 17} fontSize="11" fontWeight="bold" fill="#ffffff">
+                          {m.composer.shortName.length > 6 ? m.composer.shortName.slice(0, 6) + '…' : m.composer.shortName}
                         </text>
                       </g>
                     );
@@ -862,6 +906,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               );
             })}
           </svg>
+
+          <ComposerHoverCard ref={hoverCardRef} />
 
           {/* 拡大・縮小のボタン */}
           <div className="absolute left-2 top-2 flex flex-col gap-1 z-10">

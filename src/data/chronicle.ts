@@ -226,6 +226,8 @@ export interface YearTopic {
   /** 省略せずに表示するための全文 */
   full: string;
   year: number;
+  /** 元のできごと（タップで詳しい説明を開くため） */
+  event: YearEvent;
 }
 
 const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
@@ -253,7 +255,8 @@ export function getYearTopics(
       who: composer?.shortName,
       label: clip(title, 20),
       full: composer ? `${composer.shortName}：${title}` : title,
-      year: e.year
+      year: e.year,
+      event: e
     };
   };
 

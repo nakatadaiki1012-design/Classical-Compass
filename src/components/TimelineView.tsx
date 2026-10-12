@@ -9,6 +9,7 @@ import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import { MUSIC_PERIODS, MusicPeriod } from '../data/musicPeriods';
 import { PeriodModal } from './PeriodModal';
+import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { useJapanMode } from '../utils/japanMode';
 import {
   ZoomIn,
@@ -405,6 +406,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // 時代の帯（年表の目盛りの下）。重なる時代は段を分けて並べる
   const japanMode = useJapanMode();
   const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
+  const hoverCardRef = useRef<HoverCardHandle>(null);
   const BAND_LANE_H = 14;
   const { bandSegments, bandLanes } = useMemo(() => {
     const place = (list: MusicPeriod[], firstLane: number) => {
@@ -581,8 +583,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
           <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 flex items-center gap-2.5">
             <button
+              onClick={() => scrollToYear(Math.max(MIN_YEAR, Math.min(MAX_YEAR, focalYear - 1)))}
+              className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="1年戻る"
+            >
+              −1
+            </button>
+            <button
               onClick={() => scrollToYear(Math.max(MIN_YEAR, focalYear - 10))}
-              className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
               title="10年戻る"
             >
               −10
@@ -602,6 +611,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               title="10年進む"
             >
               +10
+            </button>
+            <button
+              onClick={() => scrollToYear(Math.max(MIN_YEAR, Math.min(MAX_YEAR, focalYear + 1)))}
+              className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="1年進む"
+            >
+              +1
             </button>
           </div>
 
@@ -769,6 +785,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           year={focalYear}
           visibleComposerIds={visibleComposerIds}
           onJumpToYear={animateToYear}
+          onOpenComposer={onSelectComposerWithYear}
+          onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
         />
       </div>
 
@@ -1145,6 +1163,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                   <div
                     key={composer.id}
                     className="absolute flex items-center group/pano"
+                    onMouseEnter={e => hoverCardRef.current?.show(composer.id, focalYear, e.clientX, e.clientY)}
+                    onMouseMove={e => hoverCardRef.current?.move(e.clientX, e.clientY)}
+                    onMouseLeave={() => hoverCardRef.current?.hide()}
                     style={{
                       left: `${birthX}px`,
                       width: `${width}px`,
@@ -1220,6 +1241,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           onJumpToYear={animateToYear}
         />
       </div>
+
+      <ComposerHoverCard ref={hoverCardRef} />
 
       {openPeriod && (
         <PeriodModal

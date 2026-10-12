@@ -16,6 +16,13 @@
   <body class="bg-[#121110] text-[#f4eee4] antialiased selection:bg-[#c99738]/30 selection:text-[#fbf7ee]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // GitHub Pages "Deploy from a branch" serves this unbuilt file; jump to the prebuilt app in dist/.
+      // The Vite build removes the src/main.tsx tag, so the built page never redirects.
+      if (location.hostname.endsWith('github.io') && document.querySelector('script[src$="src/main.tsx"]')) {
+        location.replace('./dist/' + location.search + location.hash);
+      }
+    </script>
   </body>
 </html>
 

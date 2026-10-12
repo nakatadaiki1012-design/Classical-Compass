@@ -88,7 +88,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
     return (
       <aside aria-label="再生プレーヤー" className="fixed bottom-0 left-0 right-0 z-30 bg-[#161412]/95 backdrop-blur-md border-t border-[#2e2924] px-4 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-[#9c9388]">
+          <div className="flex items-center gap-3 text-xs text-[#b5aa9b]">
             <Sparkles className="w-4 h-4 text-[#c99738]" />
             <span>年表や地図上の作曲家・作品をクリックすると、代表曲の試聴が始まります</span>
           </div>
@@ -124,7 +124,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
             </span>
             <button
               onClick={() => setShowPlaylist(false)}
-              className="text-[#9c9388] hover:text-[#f5ebd9] p-1"
+              className="text-[#b5aa9b] hover:text-[#f5ebd9] p-1"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -143,13 +143,13 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
                     className={`w-full text-left p-2 rounded flex items-center gap-3 transition-colors ${
                       isCurrent
                         ? 'bg-[#2b241c] text-[#f5ebd9]'
-                        : 'hover:bg-[#221d18] text-[#9c9388] hover:text-[#e8dec8]'
+                        : 'hover:bg-[#221d18] text-[#b5aa9b] hover:text-[#e8dec8]'
                     }`}
                   >
                     <ComposerPortrait composer={c} size="sm" showOrnateBorder={false} />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium truncate text-[#f5ebd9]">{w.title}</p>
-                      <p className="text-[11px] text-[#9c9388] truncate">
+                      <p className="text-[11px] text-[#b5aa9b] truncate">
                         {c.shortName} · {w.year}年
                       </p>
                     </div>
@@ -198,7 +198,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
                   {work.title}
                 </p>
               </div>
-              <p className="text-[11px] text-[#9c9388] truncate flex items-center gap-1.5">
+              <p className="text-[11px] text-[#b5aa9b] truncate flex items-center gap-1.5">
                 <button
                   onClick={() => onOpenComposer(composer.id)}
                   className="hover:text-[#c99738] underline-offset-2 hover:underline transition-colors"
@@ -216,7 +216,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
           {/* Center: Play Controls & Visualizer */}
           <div className="flex flex-col items-center gap-1 shrink-0">
             <div className="flex items-center gap-4">
-              <span className="text-[11px] font-mono tabular-nums text-[#9c9388] hidden md:inline">
+              <span className="text-[11px] font-mono tabular-nums text-[#b5aa9b] hidden md:inline">
                 {formatTime(currentTime)}
               </span>
 
@@ -232,7 +232,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
                 )}
               </button>
 
-              <span className="text-[11px] font-mono tabular-nums text-[#9c9388] hidden md:inline">
+              <span className="text-[11px] font-mono tabular-nums text-[#b5aa9b] hidden md:inline">
                 {formatTime(duration)}
               </span>
             </div>
@@ -252,7 +252,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
             <div className="hidden lg:flex items-center gap-2">
               <button
                 onClick={toggleMute}
-                className="text-[#9c9388] hover:text-[#f5ebd9] transition-colors"
+                className="text-[#b5aa9b] hover:text-[#f5ebd9] transition-colors"
                 title={isMuted ? 'ミュート解除' : 'ミュート'}
               >
                 {isMuted || volume === 0 ? (
@@ -278,7 +278,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
               className={`p-2 rounded border transition-colors flex items-center gap-1.5 text-xs ${
                 showPlaylist
                   ? 'bg-[#2b241c] border-[#c99738] text-[#c99738]'
-                  : 'bg-[#1e1b18] border-[#383129] text-[#9c9388] hover:text-[#f5ebd9]'
+                  : 'bg-[#1e1b18] border-[#383129] text-[#b5aa9b] hover:text-[#f5ebd9]'
               }`}
               title="楽曲一覧"
             >

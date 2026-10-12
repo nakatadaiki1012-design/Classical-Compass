@@ -37,7 +37,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
           <h2 className="font-classical-display font-bold text-xl md:text-2xl text-[#f5ebd9]">
             クラシック作曲家 名鑑
           </h2>
-          <p className="text-xs text-[#9c9388] mt-1">
+          <p className="text-xs text-[#b5aa9b] mt-1">
             バロックから20世紀まで、西洋音楽史を築いた大作曲家たちの生涯と名曲アーカイブ
           </p>
         </div>
@@ -45,13 +45,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[#9c9388] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#b5aa9b] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="作曲家や作品名を検索..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="bg-[#241f19] border border-[#3d362e] rounded px-2.5 py-1.5 pl-8 text-xs text-[#f5ebd9] placeholder-[#7d7366] focus:outline-none focus:border-[#c99738] w-48 md:w-56"
+              className="bg-[#241f19] border border-[#3d362e] rounded px-2.5 py-2 pl-8 text-sm text-[#f5ebd9] placeholder-[#8f8476] focus:outline-none focus:border-[#c99738] w-48 md:w-56"
             />
           </div>
 
@@ -100,7 +100,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                     />
                     {era.name}
                   </span>
-                  <span className="text-[11px] font-mono tabular-nums text-[#8c8273]">
+                  <span className="text-[11px] font-mono tabular-nums text-[#a3978a]">
                     {composer.birthYear} - {composer.deathYear} ({age}歳)
                   </span>
                 </div>
@@ -118,14 +118,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                       onClick={() => onSelectComposer(composer.id)}
                       className="text-left group/title"
                     >
-                      <h3 className="font-classical-display font-bold text-base text-[#f5ebd9] group-hover/title:text-[#c99738] transition-colors truncate">
+                      <h3 className="font-classical-display font-bold text-[15px] leading-snug text-[#f5ebd9] group-hover/title:text-[#c99738] transition-colors">
                         {composer.name}
                       </h3>
-                      <p className="text-xs font-serif italic text-[#8c8273] truncate">
+                      <p className="text-xs font-serif italic text-[#a3978a] truncate">
                         {composer.originalName}
                       </p>
                     </button>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-[#9c9388]">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-[#b5aa9b]">
                       <span>{composer.flag}</span>
                       <span>{composer.country}</span>
                     </div>
@@ -137,7 +137,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                   {composer.keyFeatures.slice(0, 2).map((feat, idx) => (
                     <span
                       key={idx}
-                      className="text-[10px] px-2 py-0.5 rounded bg-[#201a15] text-[#d6cdbd] border border-[#30271e] truncate max-w-full"
+                      className="text-xs px-2 py-0.5 rounded bg-[#201a15] text-[#d6cdbd] border border-[#30271e] truncate max-w-full"
                     >
                       {feat}
                     </span>
@@ -145,7 +145,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                 </div>
 
                 {/* Short bio preview */}
-                <p className="text-xs text-[#9c9388] mt-3 line-clamp-2 leading-relaxed">
+                <p className="text-[13px] text-[#c9bfb0] mt-3 line-clamp-3 leading-relaxed">
                   {composer.biography}
                 </p>
               </div>
@@ -166,7 +166,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
 
                 <button
                   onClick={() => onSelectComposer(composer.id)}
-                  className="px-2 py-1 rounded text-[#9c9388] hover:text-[#f5ebd9] hover:bg-[#241e18] transition-colors shrink-0 flex items-center text-xs gap-1 font-bold"
+                  className="px-2 py-1 rounded text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#241e18] transition-colors shrink-0 flex items-center text-xs gap-1 font-bold"
                 >
                   <span>名鑑詳細</span>
                   <ChevronRight className="w-3.5 h-3.5" />

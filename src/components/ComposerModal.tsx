@@ -54,7 +54,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-[#9c9388] hover:text-[#f5ebd9] hover:bg-[#2b241c] rounded-lg transition-colors"
+            className="p-1.5 text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#2b241c] rounded-lg transition-colors"
             title="閉じる"
           >
             <X className="w-5 h-5" />
@@ -74,13 +74,13 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 className="shadow-2xl ring-4 ring-[#c99738]/40"
               />
               <div className="mt-3 text-center max-w-[200px] bg-[#1a1714] border border-[#332a20] rounded-lg p-2">
-                <span className="text-[10px] font-semibold text-[#c99738] block">
+                <span className="text-[11px] font-semibold text-[#c99738] block">
                   著作権フリー（パブリックドメイン）
                 </span>
-                <span className="text-[10px] text-[#9c9388] block mt-0.5">
+                <span className="text-[11px] text-[#b5aa9b] block mt-0.5">
                   {composer.portraitPainter || '歴史的肖像画（18〜19世紀原画）'}
                 </span>
-                <span className="text-[9px] text-[#7d7366] block">
+                <span className="text-[10px] text-[#a3978a] block">
                   {composer.portraitAttribution || '没後70年以上経過・公有財産'}
                 </span>
               </div>
@@ -93,7 +93,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 <span className="text-xs px-2 py-0.5 rounded bg-[#241f19] text-[#c99738] font-mono">
                   {composer.country}
                 </span>
-                <span className="text-xs text-[#9c9388] font-mono tabular-nums">
+                <span className="text-xs text-[#b5aa9b] font-mono tabular-nums">
                   {composer.birthYear}年 - {composer.deathYear}年（享年{age}歳）
                 </span>
               </div>
@@ -147,13 +147,13 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#141210] text-[#c99738] font-semibold">
+                        <span className="text-[11px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#141210] text-[#c99738] font-semibold">
                           {work.genreJa} · {work.year}年
                         </span>
                         <h4 className="text-sm font-bold text-[#f5ebd9] mt-1.5 leading-snug">
                           {work.title}
                         </h4>
-                        <p className="text-[11px] font-serif italic text-[#8c8273] truncate">
+                        <p className="text-[11px] font-serif italic text-[#a3978a] truncate">
                           {work.originalTitle}
                         </p>
                       </div>
@@ -168,12 +168,12 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                       {work.description}
                     </p>
 
-                    <div className="mt-3 pt-2 border-t border-[#262019] flex items-center justify-between text-[11px] text-[#7d7366]">
+                    <div className="mt-3 pt-2 border-t border-[#262019] flex items-center justify-between text-[11px] text-[#a3978a]">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-[#c99738]" />
                         <span>作曲地: {work.city}</span>
                       </span>
-                      <span className="font-mono text-[10px] text-[#c99738]">
+                      <span className="font-mono text-[11px] text-[#c99738]">
                         ジャンル: {work.genreJa}
                       </span>
                     </div>
@@ -222,8 +222,8 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                   <div>
                     <span className="text-xs font-bold text-[#f5ebd9] flex items-center gap-1.5">
                       <span className="text-[#c99738]">{city.cityNameJa}</span>
-                      <span className="text-[#9c9388] font-normal">({city.country})</span>
-                      <span className="text-[10px] font-mono text-[#7d7366]">
+                      <span className="text-[#b5aa9b] font-normal">({city.country})</span>
+                      <span className="text-[11px] font-mono text-[#a3978a]">
                         {city.startYear}〜{city.endYear}年
                       </span>
                     </span>

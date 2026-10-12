@@ -13,6 +13,8 @@ import { PeriodModal } from './PeriodModal';
 import { getWorkTrivia } from '../data/trivia';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { useJapanMode } from '../utils/japanMode';
+import { useSettings } from '../utils/appSettings';
+import { countryOf, countryColor } from '../data/composerMeta';
 import {
   ZoomIn,
   ZoomOut,
@@ -409,6 +411,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const japanMode = useJapanMode();
   const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
   const hoverCardRef = useRef<HoverCardHandle>(null);
+  const { colorBy } = useSettings();
+  // 国ごとの色分けのときの凡例（いま表示している人の国だけ）
+  const countryLegend = useMemo(() => {
+    const names = new Set(filteredComposers.map(c => countryOf(c)));
+    return [...names].sort((a, b) => a.localeCompare(b, 'ja'));
+  }, [filteredComposers]);
   const BAND_LANE_H = 14;
   const { bandSegments, bandLanes } = useMemo(() => {
     const place = (list: MusicPeriod[], firstLane: number) => {
@@ -791,6 +799,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
         />
       </div>
+
+      {/* 国ごとの色分けのときの凡例 */}
+      {colorBy === 'country' && (
+        <div className="shrink-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none bg-[#100d0a] border-b border-[#261e14] px-4 md:px-6 py-1">
+          <span className="shrink-0 text-[11px] font-bold text-[#c99738]">色＝現在の国</span>
+          {countryLegend.map(name => (
+            <span key={name} className="shrink-0 flex items-center gap-1 text-[11px] text-[#d6cdbd]">
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: countryColor(name) }} />
+              {name}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* 年表の本体。その年のできごとの窓は、この上に半透明で重ねる */}
       <div className="relative flex-1 min-h-0 flex flex-col">
@@ -1185,7 +1206,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                         isAlive ? 'border-white/60' : 'border-white/15'
                       }`}
                       style={{
-                        background: `linear-gradient(90deg, ${era.color}, ${era.accentColor})`,
+                        background:
+                          colorBy === 'country'
+                            ? `linear-gradient(90deg, ${countryColor(countryOf(composer))}, ${countryColor(countryOf(composer))}bb)`
+                            : `linear-gradient(90deg, ${era.color}, ${era.accentColor})`,
                         opacity: isAlive ? 1 : 0.8
                       }}
                       title={`${composer.name} (${composer.birthYear}〜${composer.deathYear})`}

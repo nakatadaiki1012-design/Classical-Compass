@@ -65,3 +65,63 @@ export function gyoOf(yomi: string): string {
   const hit = GYO.find(([, chars]) => chars.includes(ch));
   return (hit ? hit[0] : '他') + '行';
 }
+
+/** 生まれた土地の「現在の国」。出身地の書き方から読み取り、例外だけ個別に指定する */
+const COUNTRY_OVERRIDE: Record<string, string> = {
+  vivaldi: 'イタリア',
+  josquin: 'フランス',
+  lassus: 'ベルギー',
+  dufay: 'ベルギー',
+  willaert: 'ベルギー',
+  ockeghem: 'ベルギー',
+  tallis: 'イギリス',
+  byrd: 'イギリス',
+  lully: 'イタリア',
+  pythagoras: 'ギリシア',
+  gregory1: 'イタリア',
+  guido: 'イタリア',
+  yatsuhashi: '日本',
+  mussorgsky: 'ロシア',
+  mahler: 'チェコ',
+  liszt: 'オーストリア',
+  bartok: 'ルーマニア',
+  prokofiev: 'ウクライナ',
+  handel: 'ドイツ',
+  chopin: 'ポーランド'
+};
+
+export function countryOf(c: Composer): string {
+  if (COUNTRY_OVERRIDE[c.id]) return COUNTRY_OVERRIDE[c.id];
+  const p = c.birthPlace || c.country;
+  const now = p.match(/現([^・）／/]+)/);
+  if (now) return now[1].replace(/領$/, '');
+  const head = p.split(/[・（(]/)[0];
+  if (head === 'ボヘミア') return 'チェコ';
+  if (head === 'イングランド') return 'イギリス';
+  if (head === 'ロシア帝国') return 'ロシア';
+  return head || '不明';
+}
+
+/** 国ごとの色（年表の色分け用） */
+export const COUNTRY_COLORS: Record<string, string> = {
+  イタリア: '#16a34a',
+  ドイツ: '#eab308',
+  オーストリア: '#ef4444',
+  フランス: '#3b82f6',
+  イギリス: '#ec4899',
+  ロシア: '#8b5cf6',
+  ポーランド: '#f97316',
+  ハンガリー: '#14b8a6',
+  チェコ: '#06b6d4',
+  ルーマニア: '#84cc16',
+  ウクライナ: '#a3a3a3',
+  ベルギー: '#d946ef',
+  ノルウェー: '#0ea5e9',
+  フィンランド: '#6366f1',
+  スペイン: '#f43f5e',
+  アメリカ: '#22c55e',
+  日本: '#dc2626',
+  ギリシア: '#38bdf8'
+};
+
+export const countryColor = (country: string): string => COUNTRY_COLORS[country] || '#9ca3af';

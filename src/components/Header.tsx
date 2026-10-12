@@ -2,6 +2,7 @@ import React from 'react';
 import { ViewMode } from '../types';
 import { Compass } from 'lucide-react';
 import { setJapanMode, useJapanMode } from '../utils/japanMode';
+import { SettingsMenu } from './SettingsMenu';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -72,6 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           <span className="sm:hidden">🇯🇵</span>
           <span className="hidden sm:inline">🇯🇵 日本音楽史{japanMode ? ' ON' : ''}</span>
         </button>
+        <SettingsMenu />
       </div>
     </header>
   );

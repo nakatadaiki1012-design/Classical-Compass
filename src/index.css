@@ -47,3 +47,42 @@
 .timeline-grab:active {
   cursor: grabbing;
 }
+
+/* ===== 表示設定：フォント・文字の大きさ・ライトモード ===== */
+html[data-font="gothic"] {
+  --font-sans: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-display: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-serif: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+html[data-font="mincho"] {
+  --font-sans: "Noto Serif JP", "Shippori Mincho", "Hiragino Mincho ProN", serif;
+  --font-display: "Noto Serif JP", "Shippori Mincho", "Hiragino Mincho ProN", serif;
+  --font-serif: "Noto Serif JP", "Shippori Mincho", "Hiragino Mincho ProN", serif;
+}
+html[data-font="maru"] {
+  --font-sans: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  --font-serif: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+}
+html[data-font="ud"] {
+  --font-sans: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+  --font-display: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+  --font-serif: "BIZ UDPGothic", "Noto Sans JP", sans-serif;
+}
+html[data-font]:not([data-font="default"]) body {
+  font-family: var(--font-sans);
+}
+
+html[data-size="s"] { font-size: 90%; }
+html[data-size="l"] { font-size: 115%; }
+
+/* ライトモード：全体の色を反転し、色相は元に戻す。写真・画像は二重に反転して元の色にする */
+html[data-theme="light"] {
+  filter: invert(1) hue-rotate(180deg);
+  background: #ffffff;
+}
+html[data-theme="light"] img,
+html[data-theme="light"] video,
+html[data-theme="light"] iframe {
+  filter: invert(1) hue-rotate(180deg);
+}

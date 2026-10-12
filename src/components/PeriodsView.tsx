@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { MUSIC_PERIODS } from '../data/musicPeriods';
+import { HISTORY_AXES } from '../data/historyAxes';
+import { PeriodModal } from './PeriodModal';
 import { useJapanMode } from '../utils/japanMode';
 import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
 
@@ -13,6 +15,10 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
   const japanMode = useJapanMode();
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  // 学び方：時代ごと／テーマ（軸）ごと
+  const [mode, setMode] = useState<'periods' | 'instrument' | 'texture' | 'theory' | 'form'>('periods');
+  const [modalPeriodId, setModalPeriodId] = useState<string | null>(null);
+  const axis = HISTORY_AXES.find(a => a.id === mode);
 
   const q = query.trim();
   const periods = useMemo(
@@ -26,7 +32,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full space-y-5 pb-20">
       <div className="space-y-1 pb-3 border-b border-[#2e2924]">
-        <h2 className="font-classical-display font-bold text-xl md:text-2xl text-[#f5ebd9]">音楽史（時代と用語）</h2>
+        <h2 className="font-classical-display font-bold text-xl md:text-2xl text-[#f5ebd9]">音楽史（時代・テーマ別）</h2>
         <p className="text-xs text-[#b5aa9b]">
           古代から現代まで、その時代に主流だった音楽と、試験によく出る用語をまとめました。時代の名前をタップすると開きます。
           {!japanMode && '（日本音楽史は、上の「日本音楽史」ボタンをオンにすると加わります）'}
@@ -46,7 +52,78 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
         </div>
       </div>
 
-      {periods.map((p, i) => {
+      {/* 学び方の切り替え */}
+      <div className="flex flex-wrap gap-1.5">
+        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES].map(t => (
+          <button
+            key={t.id}
+            onClick={() => {
+              setMode(t.id as typeof mode);
+              setOpenId(null);
+            }}
+            aria-pressed={mode === t.id}
+            className={`px-3 py-1.5 rounded-lg border text-[13px] font-bold transition-colors ${
+              mode === t.id
+                ? 'bg-[#c99738] border-[#c99738] text-[#161412]'
+                : 'bg-[#241f19] border-[#3d362e] text-[#d6cdbd] hover:text-[#f5ebd9]'
+            }`}
+          >
+            {t.icon} {t.name}
+          </button>
+        ))}
+      </div>
+
+      {axis && (
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-[#d6cdbd]">{axis.intro}</p>
+          <details className="rounded-xl border border-[#3a2f20] bg-[#181512] px-4 py-2" open={!!q}>
+            <summary className="cursor-pointer text-sm font-bold text-[#e6b95c]">覚えておきたい用語（{axis.terms.length}）</summary>
+            <dl className="mt-2 space-y-1.5">
+              {axis.terms
+                .filter(([t, d]) => !q || (t + d).includes(q))
+                .map(([term, desc]) => (
+                  <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5">
+                    <dt className="text-[13px] font-bold text-[#f5ebd9]">{term}</dt>
+                    <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+                  </div>
+                ))}
+            </dl>
+          </details>
+          <ol className="relative ml-2 border-l border-[#3a2f20] space-y-3">
+            {[...axis.entries]
+              .sort((a, b) => a[0] - b[0])
+              .filter(([, when, title, text]) => !q || (when + title + text).includes(q))
+              .map(([sort, when, title, text, periodId]) => {
+                const period = MUSIC_PERIODS.find(pp => pp.id === periodId);
+                return (
+                  <li key={sort + title} className="relative pl-5">
+                    <span
+                      className="absolute -left-[6px] top-2 w-3 h-3 rounded-full ring-4 ring-[#121110]"
+                      style={{ background: period?.color || '#c99738' }}
+                    />
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-mono font-bold text-[#e6b95c]">{when}</span>
+                      {period && (
+                        <button
+                          onClick={() => setModalPeriodId(period.id)}
+                          className="px-2 rounded-full border text-[11px] text-[#e8dec8] hover:bg-white/10"
+                          style={{ borderColor: period.color + 'aa' }}
+                          title="この時代の解説を開く"
+                        >
+                          {period.name.replace('日本：', '日本・').split('（')[0]}
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-1 text-[14px] font-bold text-[#f5ebd9] leading-snug">{title}</div>
+                    <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#c9bfb0]">{text}</p>
+                  </li>
+                );
+              })}
+          </ol>
+        </div>
+      )}
+
+      {mode === 'periods' && periods.map((p, i) => {
         const open = openId === p.id || !!q;
         const showRegionHead = i === 0 || periods[i - 1].region !== p.region;
         return (
@@ -80,7 +157,13 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
           </React.Fragment>
         );
       })}
-      {periods.length === 0 && <p className="text-sm text-[#a3978a]">「{q}」に当てはまる時代・用語はありません。</p>}
+      {mode === 'periods' && periods.length === 0 && <p className="text-sm text-[#a3978a]">「{q}」に当てはまる時代・用語はありません。</p>}
+      {modalPeriodId && (() => {
+        const mp = MUSIC_PERIODS.find(x => x.id === modalPeriodId);
+        return mp ? (
+          <PeriodModal period={mp} onClose={() => setModalPeriodId(null)} onOpenComposer={id => onSelectComposer(id)} />
+        ) : null;
+      })()}
     </div>
   );
 };

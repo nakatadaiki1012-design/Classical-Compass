@@ -1,5 +1,6 @@
 import { Composer } from '../types';
 import { LIFE_EPISODES } from './lifeEpisodes';
+import { MORE_COMPOSERS } from './moreComposers';
 
 const BASE_COMPOSERS: Composer[] = [
   // --- BAROQUE ---
@@ -2942,10 +2943,13 @@ const BASE_COMPOSERS: Composer[] = [
   }
 ];
 
-export const COMPOSERS: Composer[] = BASE_COMPOSERS.map(c => {
-  const ep = LIFE_EPISODES[c.id];
-  return ep ? { ...c, ...ep } : c;
-});
+export const COMPOSERS: Composer[] = [
+  ...BASE_COMPOSERS.map(c => {
+    const ep = LIFE_EPISODES[c.id];
+    return ep ? { ...c, ...ep } : c;
+  }),
+  ...MORE_COMPOSERS
+];
 
 export const getComposerById = (id: string): Composer | undefined => {
   return COMPOSERS.find(c => c.id === id);

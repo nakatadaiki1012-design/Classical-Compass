@@ -5,6 +5,7 @@ import {
   WORLD_EVENTS,
   RawEntry
 } from './chronicleData';
+import { CHRONICLE_RAW_MORE } from './chronicleDataMore';
 import { Composer, Composition } from '../types';
 
 /** 年表・地図に出す「できごと」1件 */
@@ -22,9 +23,29 @@ export interface YearEvent {
 }
 
 /** 追加データ（試聴なしの主要作品とエピソード）。作曲家IDごと */
-const ALL_RAW: Record<string, RawEntry[]> = { ...CHRONICLE_RAW, ...CHRONICLE_RAW_LATE };
+const ALL_RAW: Record<string, RawEntry[]> = { ...CHRONICLE_RAW, ...CHRONICLE_RAW_LATE, ...CHRONICLE_RAW_MORE };
 
 /** 作曲家1人分のできごと（誕生・没年・作品・エピソード）を年順に返す */
+/** 題名の比較用に、かっこ・記号・「頃」などを取り除く */
+const normTitle = (t: string) => t.replace(/[\s『』「」（）()・、。〜~\-－]|頃/g, '');
+
+/** 同じ題名のできごとかどうか（長い共通部分がある場合のみ同じとみなす） */
+const sameTitle = (a: string, b: string) => {
+  const x = normTitle(a);
+  const y = normTitle(b);
+  const shorter = Math.min(x.length, y.length);
+  if (shorter < 4) return false;
+  let best = 0;
+  const prev = new Array(y.length + 1).fill(0);
+  for (let i = 1; i <= x.length; i++) {
+    for (let j = y.length; j >= 1; j--) {
+      prev[j] = x[i - 1] === y[j - 1] ? prev[j - 1] + 1 : 0;
+      if (prev[j] > best) best = prev[j];
+    }
+  }
+  return best >= 4 && best / shorter >= 0.75;
+};
+
 export function buildComposerEvents(composer: Composer): YearEvent[] {
   const events: YearEvent[] = [];
 
@@ -71,6 +92,12 @@ export function buildComposerEvents(composer: Composer): YearEvent[] {
 
   (ALL_RAW[composer.id] || []).forEach((entry, idx) => {
     const [year, kind, title, text] = entry;
+    // 作品リストや主なできごとと同じ内容なら、重ねて出さずに説明文だけ補う
+    const dup = events.find(e => e.year === year && e.kind !== 'birth' && e.kind !== 'death' && sameTitle(e.title, title));
+    if (dup) {
+      if (!dup.text && text) dup.text = text;
+      return;
+    }
     events.push({
       id: `${composer.id}-ch-${idx}`,
       year,

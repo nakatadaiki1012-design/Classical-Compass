@@ -13,6 +13,7 @@ import { EuropeMapView } from './components/EuropeMapView';
 import { CatalogView } from './components/CatalogView';
 import { ComposerModal } from './components/ComposerModal';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
+import { hasAudio } from './utils/hasAudio';
 
 function ClassicalAppContent() {
   const [currentView, setCurrentView] = useState<ViewMode>('timeline');
@@ -35,7 +36,7 @@ function ClassicalAppContent() {
     const allWorks: { work: (typeof COMPOSERS)[0]['works'][0]; composer: (typeof COMPOSERS)[0] }[] = [];
     COMPOSERS.forEach(composer => {
       composer.works.forEach(work => {
-        allWorks.push({ work, composer });
+        if (hasAudio(work)) allWorks.push({ work, composer });
       });
     });
 

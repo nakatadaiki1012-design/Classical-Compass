@@ -4,6 +4,7 @@ import { COMPOSERS } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { YearEventsOverlay } from './YearEventsOverlay';
+import { hasAudio } from '../utils/hasAudio';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import {
@@ -1115,6 +1116,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
             </div>
 
             {/* Audio Snippet Preview */}
+            {hasAudio(focusedEpisodeWork.work) ? (
             <div className="bg-[#110f0d] p-3 rounded-lg border border-[#2e251c] flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <button
@@ -1133,6 +1135,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="bg-[#110f0d] p-3 rounded-lg border border-[#2e251c] text-xs text-[#a3978a]">
+                この曲は、試聴用の音のデータがまだありません。
+              </div>
+            )}
 
             {/* Detailed Episode Text */}
             <div className="space-y-2">

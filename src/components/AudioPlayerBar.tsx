@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { hasAudio } from '../utils/hasAudio';
 import { useAudio } from '../context/AudioContext';
 import { ComposerPortrait } from './ComposerPortrait';
 import { COMPOSERS } from '../data/composers';
@@ -94,9 +95,10 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
           </div>
           <button
             onClick={() => {
-              const firstComp = COMPOSERS[0];
-              if (firstComp && firstComp.works[0]) {
-                playTrack(firstComp.works[0], firstComp);
+              const firstComp = COMPOSERS.find(c => c.works.some(hasAudio));
+              const firstWork = firstComp?.works.find(hasAudio);
+              if (firstComp && firstWork) {
+                playTrack(firstWork, firstComp);
               }
             }}
             className="flex items-center gap-2 px-3 py-1 rounded bg-[#2b241c] hover:bg-[#382f23] border border-[#c99738]/40 text-[#f5ebd9] text-xs font-medium transition-colors"
@@ -131,7 +133,7 @@ export const AudioPlayerBar: React.FC<{ onOpenComposer: (composerId: string) => 
           </div>
           <div className="overflow-y-auto p-2 space-y-1 divide-y divide-[#2a241c]">
             {COMPOSERS.map(c =>
-              c.works.map(w => {
+              c.works.filter(hasAudio).map(w => {
                 const isCurrent = currentTrack.work.id === w.id;
                 return (
                   <button

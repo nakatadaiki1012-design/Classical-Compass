@@ -3,7 +3,7 @@ import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { getComposerEvents } from '../data/chronicle';
-import { KIND_LABEL } from './YearEventsPanel';
+import { KIND_LABEL } from './eventStyles';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import {
@@ -81,15 +81,21 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 className="shadow-2xl ring-4 ring-[#c99738]/40"
               />
               <div className="mt-3 text-center max-w-[200px] bg-[#1a1714] border border-[#332a20] rounded-lg p-2">
-                <span className="text-[11px] font-semibold text-[#c99738] block">
-                  著作権フリー（パブリックドメイン）
-                </span>
-                <span className="text-[11px] text-[#b5aa9b] block mt-0.5">
-                  {composer.portraitPainter || '歴史的肖像画（18〜19世紀原画）'}
-                </span>
-                <span className="text-[10px] text-[#a3978a] block">
-                  {composer.portraitAttribution || '没後70年以上経過・公有財産'}
-                </span>
+                {composer.portraitUrl ? (
+                  <>
+                    <span className="text-[11px] font-semibold text-[#c99738] block">
+                      著作権フリー（パブリックドメイン）
+                    </span>
+                    <span className="text-[11px] text-[#b5aa9b] block mt-0.5">
+                      {composer.portraitPainter || '歴史的肖像画（18〜19世紀原画）'}
+                    </span>
+                    <span className="text-[10px] text-[#a3978a] block">
+                      {composer.portraitAttribution || '没後70年以上経過・公有財産'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-[#b5aa9b] block">肖像画は準備中です</span>
+                )}
               </div>
             </div>
 

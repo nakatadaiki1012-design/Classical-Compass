@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { MusicPeriod } from '../data/musicPeriods';
@@ -17,7 +18,8 @@ export const PeriodModal: React.FC<PeriodModalProps> = ({ period, onClose, onOpe
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  return (
+  // 親の要素に隠れないよう、画面全体の一番上（body 直下）に出す
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
       onClick={onClose}
@@ -42,5 +44,7 @@ export const PeriodModal: React.FC<PeriodModalProps> = ({ period, onClose, onOpe
         />
       </div>
     </div>
+    ,
+    document.body
   );
 };

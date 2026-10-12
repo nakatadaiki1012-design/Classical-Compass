@@ -1,4 +1,5 @@
 export type EraId =
+  | 'ancient'
   | 'medieval'
   | 'renaissance'
   | 'baroque'

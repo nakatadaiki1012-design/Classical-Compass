@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { yearText, yearTick } from '../utils/yearLabel';
 import { Composer, Composition, EraId } from '../types';
 import { getVisibleComposers } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
@@ -9,6 +10,7 @@ import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import { MUSIC_PERIODS, MusicPeriod } from '../data/musicPeriods';
 import { PeriodModal } from './PeriodModal';
+import { getWorkTrivia } from '../data/trivia';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { useJapanMode } from '../utils/japanMode';
 import {
@@ -55,7 +57,7 @@ interface StrandItem {
 export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
 
-  const MIN_YEAR = 1000;
+  const MIN_YEAR = -600;
   const BASE_ZOOM = 7.0;
   const MIN_ZOOM = 3.0;
   const MAX_ZOOM = 36.0;
@@ -227,7 +229,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     }
     line.style.display = 'block';
     line.style.left = `${(year - MIN_YEAR) * zoomScale + horizontalPadding}px`;
-    label.textContent = `${year}年へ`;
+    label.textContent = `${yearText(year)}へ`;
   };
 
   // 指でのスクロール（スマホ）やトラックパッドで動かしたときも、中心の年を追従させる
@@ -534,11 +536,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       const x = (yr - MIN_YEAR) * zoomScale + horizontalPadding;
 
       if (yr % 50 === 0) {
-        ticks.push({ year: yr, x, type: 'major-50', label: `${yr}` });
+        ticks.push({ year: yr, x, type: 'major-50', label: yearTick(yr) });
       } else if (yr % 10 === 0) {
-        ticks.push({ year: yr, x, type: 'decade-10', label: `${yr}` });
+        ticks.push({ year: yr, x, type: 'decade-10', label: yearTick(yr) });
       } else if (yr % 5 === 0) {
-        ticks.push({ year: yr, x, type: 'half-decade-5', label: `${yr}` });
+        ticks.push({ year: yr, x, type: 'half-decade-5', label: yearTick(yr) });
       } else if (zoomScale >= 14.0) {
         ticks.push({ year: yr, x, type: 'single-1' });
       }
@@ -569,7 +571,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="order-1 flex items-center gap-2.5 shrink-0">
             <span className="font-classical-display font-mono font-bold text-2xl text-[#f5ebd9] tabular-nums">
-              {focalYear}年
+              {yearText(focalYear)}
             </span>
             {currentEra && (
               <span
@@ -583,18 +585,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
           <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 flex items-center gap-2.5">
             <button
-              onClick={() => scrollToYear(Math.max(MIN_YEAR, Math.min(MAX_YEAR, focalYear - 1)))}
-              className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
-              title="1年戻る"
-            >
-              −1
-            </button>
-            <button
               onClick={() => scrollToYear(Math.max(MIN_YEAR, focalYear - 10))}
               className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
               title="10年戻る"
             >
               −10
+            </button>
+            <button
+              onClick={() => scrollToYear(Math.max(MIN_YEAR, Math.min(MAX_YEAR, focalYear - 1)))}
+              className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="1年戻る"
+            >
+              −1
             </button>
             <input
               type="range"
@@ -606,18 +608,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               aria-label="年代"
             />
             <button
-              onClick={() => scrollToYear(Math.min(MAX_YEAR, focalYear + 10))}
-              className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
-              title="10年進む"
-            >
-              +10
-            </button>
-            <button
               onClick={() => scrollToYear(Math.max(MIN_YEAR, Math.min(MAX_YEAR, focalYear + 1)))}
               className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
               title="1年進む"
             >
               +1
+            </button>
+            <button
+              onClick={() => scrollToYear(Math.min(MAX_YEAR, focalYear + 10))}
+              className="px-2.5 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono transition-colors shrink-0"
+              title="10年進む"
+            >
+              +10
             </button>
           </div>
 
@@ -821,7 +823,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           >
             <div className="sticky top-0 bg-gradient-to-b from-[#e6b95c] to-[#c99738] text-black font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-b shadow-xl flex items-center gap-1 border-x border-b border-[#f0d48d]">
               <span>▼</span>
-              <span>{focalYear}年</span>
+              <span>{yearText(focalYear)}</span>
             </div>
             <div className="w-[2px] flex-1 bg-gradient-to-b from-[#c99738] via-[#e6b95c]/60 to-transparent shadow-[0_0_12px_#c99738]" />
           </div>
@@ -1332,6 +1334,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               <p className="text-xs text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]">
                 {focusedEpisodeWork.work.description}
               </p>
+              {getWorkTrivia(focusedEpisodeWork.composer.id, focusedEpisodeWork.work) && (
+                <p className="text-xs text-[#d9cfbd] leading-relaxed bg-[#241e17] p-3 rounded-lg border border-[#3a2f20]">
+                  <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
+                  {getWorkTrivia(focusedEpisodeWork.composer.id, focusedEpisodeWork.work)}
+                </p>
+              )}
             </div>
 
             {/* Actions */}

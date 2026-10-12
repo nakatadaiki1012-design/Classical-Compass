@@ -3,6 +3,7 @@ import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { getAssetUrl } from '../utils/assets';
 import { useWikiPortrait } from '../utils/useWikiPortrait';
+import { commonsPortraitUrl } from '../data/commonsPortraits';
 
 interface ComposerPortraitProps {
   composer: Composer;
@@ -17,10 +18,15 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
   className = '',
   showOrnateBorder = true
 }) => {
-  const [hasError, setHasError] = useState(false);
+  const [stage, setStage] = useState(0);
+  const hasError = false;
   const era = getEraById(composer.era);
   const wikiUrl = useWikiPortrait(composer);
-  const imageUrl = composer.portraitUrl ? getAssetUrl(composer.portraitUrl) : wikiUrl;
+  // 画像の候補：手持ちのファイル → コモンズのファイル → ウィキペディアの代表画像。読み込めなければ次の候補へ
+  const candidates = composer.portraitUrl
+    ? [getAssetUrl(composer.portraitUrl)]
+    : [commonsPortraitUrl(composer.id), wikiUrl].filter(Boolean);
+  const imageUrl = candidates[stage] || '';
 
   const sizeClasses = {
     xs: 'w-6 h-6',
@@ -65,7 +71,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
         alt={composer.name}
         referrerPolicy="no-referrer"
         loading="lazy"
-        onError={() => setHasError(true)}
+        onError={() => setStage(s => s + 1)}
         className="w-full h-full object-cover object-top filter contrast-[1.04] transition-transform duration-500 hover:scale-105"
       />
       <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/30 pointer-events-none" />

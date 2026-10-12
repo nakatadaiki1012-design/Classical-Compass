@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Globe2, Music2 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Globe2, Music2 } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { COMPOSERS, getComposerById } from '../data/composers';
 import { getEventsForYear, getNearbyMusicEvents, getNearestEvents, YearEvent, YearEventKind } from '../data/chronicle';
@@ -11,9 +11,6 @@ interface YearEventsPanelProps {
   visibleComposerIds: Set<string> | null;
   /** 地図画面など、画面の中に置くとき（閉じられず、下に固定もしない） */
   embedded?: boolean;
-  /** 開閉を外から操作するとき（省略すると、この部品の中で管理する） */
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   onSelectComposer: (composerId: string, year?: number) => void;
   onOpenWork: (work: Composition, composer: Composer) => void;
   onJumpToYear: (year: number) => void;
@@ -33,23 +30,10 @@ export const YearEventsPanel: React.FC<YearEventsPanelProps> = ({
   year,
   visibleComposerIds,
   embedded = false,
-  open,
-  onOpenChange,
   onSelectComposer,
   onOpenWork,
   onJumpToYear
 }) => {
-  // 画面が狭いときは最初は閉じておく
-  const [innerOpen, setInnerOpen] = useState<boolean>(
-    () => typeof window === 'undefined' || window.innerWidth >= 768
-  );
-  const isOpen = open ?? innerOpen;
-  const setIsOpen = (next: boolean | ((v: boolean) => boolean)) => {
-    const value = typeof next === 'function' ? next(isOpen) : next;
-    if (onOpenChange) onOpenChange(value);
-    else setInnerOpen(value);
-  };
-
   const { musicEvents, worldEvents } = useMemo(() => {
     const all = getEventsForYear(year);
     return {
@@ -127,11 +111,8 @@ export const YearEventsPanel: React.FC<YearEventsPanelProps> = ({
           : 'shrink-0 bg-[#100d0a] border-t border-[#3a2d1c] shadow-[0_-8px_24px_rgba(0,0,0,0.5)] z-30'
       }
     >
-      {/* 見出し（タップで開閉） */}
-      <button
-        onClick={() => !embedded && setIsOpen(v => !v)}
-        className={`w-full flex items-center justify-between gap-3 px-4 md:px-6 py-2.5 text-left ${embedded ? 'cursor-default' : ''}`}
-      >
+      {/* 見出し（常に表示。開く操作は要らない） */}
+      <div className="w-full flex items-center justify-between gap-3 px-4 md:px-6 py-2.5">
         <span className="flex items-center gap-2.5 min-w-0">
           <span className="font-classical-display font-bold text-base md:text-lg text-[#f5ebd9] whitespace-nowrap">
             {embedded ? `${year}年の作曲と大きな出来事` : `${year}年のできごと`}
@@ -140,16 +121,10 @@ export const YearEventsPanel: React.FC<YearEventsPanelProps> = ({
             {total > 0 ? `音楽 ${musicEvents.length}件 ・ 世界 ${worldEvents.length}件` : '記録なし'}
           </span>
         </span>
-        {!embedded && (
-          <span className="flex items-center gap-1 text-xs text-[#c99738] shrink-0">
-            {isOpen ? '閉じる' : '開く'}
-            {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-          </span>
-        )}
-      </button>
+      </div>
 
-      {(isOpen || embedded) && (
-        <div className={`px-4 md:px-6 pb-4 space-y-3 ${embedded ? '' : 'max-h-[30vh] overflow-y-auto'}`}>
+      {(
+        <div className={`px-4 md:px-6 pb-4 space-y-3 ${embedded ? '' : 'max-h-[34vh] overflow-y-auto'}`}>
           {/* この年に生きていた作曲家と年齢 */}
           <div className="flex items-start gap-2">
             <span className="text-[11px] font-bold text-[#a3978a] shrink-0 pt-1">存命:</span>

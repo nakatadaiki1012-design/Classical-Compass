@@ -67,10 +67,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // 検索・表示設定パネルの開閉（普段は閉じて画面をすっきり見せる）
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
-  // 下の「できごと」欄の開閉（広い画面では最初から開く）
-  const [eventsOpen, setEventsOpen] = useState<boolean>(
-    () => typeof window === 'undefined' || window.innerWidth >= 768
-  );
 
   // User adjustable cylinder radius (default 165px for a broad, readable 3D bundle!)
   const [cylinderRadius, setCylinderRadius] = useState<number>(165);
@@ -117,7 +113,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         if (!matchesName && !matchesWork && !matchesMilestone) return false;
       }
       return true;
-    }).sort((a, b) => a.birthYear - b.birthYear);
+    }).sort((a, b) => a.birthYear - b.birthYear || a.deathYear - b.deathYear);
   }, [selectedEra, searchQuery]);
 
   // 検索・時代で絞り込み中のときだけ、できごと欄もその作曲家に絞る
@@ -142,6 +138,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     setFocalYear(targetYear);
   }, [zoomScale, horizontalPadding]);
 
+  // 目盛りを触ったときなど、なめらかに動いてその年にフォーカスする
+  const animateToYear = useCallback(
+    (targetYear: number) => {
+      if (!containerRef.current) return;
+      const clientWidth = containerRef.current.clientWidth;
+      const clamped = Math.max(MIN_YEAR, Math.min(MAX_YEAR, targetYear));
+      const targetPixel = (clamped - MIN_YEAR) * zoomScale + horizontalPadding - clientWidth / 2;
+      velocityRef.current = { vx: 0, vy: 0 };
+      targetScrollPosRef.current = Math.max(0, targetPixel);
+    },
+    [zoomScale, horizontalPadding]
+  );
+
   // Initial center on 1787 (Mozart / Classical peak)
   useEffect(() => {
     if (containerRef.current) {
@@ -153,6 +162,59 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     }
   }, [zoomScale]);
 
+  // 画面上の横位置 → 年
+  const clientXToYear = (clientX: number): number | null => {
+    const container = containerRef.current;
+    if (!container) return null;
+    const rect = container.getBoundingClientRect();
+    const x = clientX - rect.left + container.scrollLeft;
+    return Math.round(MIN_YEAR + (x - horizontalPadding) / zoomScale);
+  };
+
+  // 年表や目盛りを軽くタップ（クリック）すると、そこにフォーカスが移る。ドラッグのあとは何もしない
+  const pointerDownPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    const moved = Math.hypot(e.clientX - pointerDownPosRef.current.x, e.clientY - pointerDownPosRef.current.y);
+    if (moved > 6) return;
+    const year = clientXToYear(e.clientX);
+    if (year !== null && year >= MIN_YEAR - 5 && year <= MAX_YEAR + 5) animateToYear(year);
+  };
+
+  // マウスを乗せた位置に、年を示す薄い線を出す（押せることが分かるように）
+  const hoverLineRef = useRef<HTMLDivElement | null>(null);
+  const hoverLabelRef = useRef<HTMLSpanElement | null>(null);
+  const updateHoverGuide = (clientX: number | null) => {
+    const line = hoverLineRef.current;
+    const label = hoverLabelRef.current;
+    const container = containerRef.current;
+    if (!line || !label || !container) return;
+    if (clientX === null) {
+      line.style.display = 'none';
+      return;
+    }
+    const rect = container.getBoundingClientRect();
+    const x = clientX - rect.left + container.scrollLeft;
+    const year = Math.round(MIN_YEAR + (x - horizontalPadding) / zoomScale);
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+      line.style.display = 'none';
+      return;
+    }
+    line.style.display = 'block';
+    line.style.left = `${(year - MIN_YEAR) * zoomScale + horizontalPadding}px`;
+    label.textContent = `${year}年へ`;
+  };
+
+  // 指でのスクロール（スマホ）やトラックパッドで動かしたときも、中心の年を追従させる
+  const handleContainerScroll = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (Math.abs(container.scrollLeft - scrollPosRef.current) > 2) {
+      scrollPosRef.current = container.scrollLeft;
+      targetScrollPosRef.current = container.scrollLeft;
+      velocityRef.current = { vx: 0, vy: 0 };
+    }
+  };
+
   // Handle Dragging / Swiping
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
@@ -161,6 +223,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    updateHoverGuide(isDraggingRef.current ? null : e.clientX);
     if (!isDraggingRef.current) return;
     e.preventDefault();
 
@@ -182,6 +245,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
+  };
+  const handleMouseLeave = () => {
+    isDraggingRef.current = false;
+    updateHoverGuide(null);
   };
 
   // Main 60fps Animation Loop
@@ -309,25 +376,39 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     return { bundle3DData: strands, activeNearComposer: nearest };
   }, [filteredComposers, rotationAngle, zoomScale, horizontalPadding, focalYear, cylinderRadius]);
 
-  // Pack lifespans into as few rows as possible without any overlap (panorama view)
+  // 一覧表示: 生まれた年が遅い人ほど下の段に置く（1人1段）。左上から右下へ階段のように流れる
   const PANO_TOP = 52;
   const PANO_ROW_HEIGHT = 46;
   const { panoramaBars, panoramaRowCount } = useMemo(() => {
-    const rowEnds: number[] = [];
-    const bars = filteredComposers.map(composer => {
+    const bars = filteredComposers.map((composer, row) => {
       const birthX = (composer.birthYear - MIN_YEAR) * zoomScale + horizontalPadding;
       const deathX = (composer.deathYear - MIN_YEAR) * zoomScale + horizontalPadding;
       const width = Math.max(150, deathX - birthX);
-      let row = rowEnds.findIndex(end => end <= birthX);
-      if (row === -1) {
-        row = rowEnds.length;
-        rowEnds.push(0);
-      }
-      rowEnds[row] = birthX + width + 14;
       return { composer, birthX, width, row };
     });
-    return { panoramaBars: bars, panoramaRowCount: rowEnds.length };
+    return { panoramaBars: bars, panoramaRowCount: bars.length };
   }, [filteredComposers, zoomScale, horizontalPadding]);
+
+  // 年を動かして、その年に生きている人の段が画面の外になったら、縦にも動かして見える位置へ
+  useEffect(() => {
+    if (viewStyle !== 'panorama') return;
+    const timer = window.setTimeout(() => {
+      const container = containerRef.current;
+      if (!container) return;
+      const alive = panoramaBars.filter(
+        b => b.composer.birthYear <= focalYear && focalYear <= b.composer.deathYear
+      );
+      if (alive.length === 0) return;
+      const top = PANO_TOP + alive[0].row * PANO_ROW_HEIGHT;
+      const bottom = PANO_TOP + (alive[alive.length - 1].row + 1) * PANO_ROW_HEIGHT;
+      const viewTop = container.scrollTop + 36; // 上の目盛りの高さ
+      const viewBottom = container.scrollTop + container.clientHeight;
+      if (bottom <= viewTop || top >= viewBottom) {
+        container.scrollTo({ top: Math.max(0, top - 48), behavior: 'smooth' });
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [focalYear, viewStyle, panoramaBars]);
 
   // Generate fine-grained year ticks
   const yearTicks = useMemo(() => {
@@ -563,8 +644,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         <YearTopicsBar
           year={focalYear}
           visibleComposerIds={visibleComposerIds}
-          onShowDetails={() => setEventsOpen(true)}
-          onJumpToYear={scrollToYear}
+          onJumpToYear={animateToYear}
         />
       </div>
 
@@ -574,7 +654,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onPointerDownCapture={e => {
+          pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+        }}
+        onClick={handleCanvasClick}
+        onScroll={handleContainerScroll}
         className={`flex-1 overflow-x-auto ${viewStyle === 'panorama' ? 'overflow-y-auto' : 'overflow-y-hidden'} timeline-grab relative bg-[#0b0907]`}
       >
         <div
@@ -591,11 +676,23 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               left: `${(focalYear - MIN_YEAR) * zoomScale + horizontalPadding}px`
             }}
           >
-            <div className="bg-gradient-to-b from-[#e6b95c] to-[#c99738] text-black font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-b shadow-xl flex items-center gap-1 border-x border-b border-[#f0d48d]">
+            <div className="sticky top-0 bg-gradient-to-b from-[#e6b95c] to-[#c99738] text-black font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-b shadow-xl flex items-center gap-1 border-x border-b border-[#f0d48d]">
               <span>▼</span>
               <span>{focalYear}年</span>
             </div>
             <div className="w-[2px] flex-1 bg-gradient-to-b from-[#c99738] via-[#e6b95c]/60 to-transparent shadow-[0_0_12px_#c99738]" />
+          </div>
+
+          {/* マウスを乗せた位置の年を示す薄い線（クリックでそこにフォーカス） */}
+          <div
+            ref={hoverLineRef}
+            className="absolute top-0 bottom-0 w-px bg-[#e6b95c]/35 pointer-events-none z-[25]"
+            style={{ display: 'none' }}
+          >
+            <span
+              ref={hoverLabelRef}
+              className="sticky top-10 ml-1 block w-max px-1.5 py-0.5 rounded bg-[#1e1711]/95 border border-[#c99738]/50 text-[11px] font-mono text-[#e6b95c] whitespace-nowrap"
+            />
           </div>
 
           {/* Era Bands in Background */}
@@ -894,7 +991,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                   >
                     {/* Ribbon Bar */}
                     <div
-                      onClick={() => onSelectComposer(composer.id)}
+                      onClick={e => {
+                        e.stopPropagation();
+                        onSelectComposer(composer.id);
+                      }}
                       className={`absolute inset-0 rounded-lg cursor-pointer flex items-center pl-1 pr-3 border transition-all hover:brightness-125 shadow-md ${
                         isAlive ? 'border-white/60' : 'border-white/15'
                       }`}
@@ -952,11 +1052,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       <YearEventsPanel
         year={focalYear}
         visibleComposerIds={visibleComposerIds}
-        open={eventsOpen}
-        onOpenChange={setEventsOpen}
         onSelectComposer={onSelectComposerWithYear}
         onOpenWork={(work, composer) => setFocusedEpisodeWork({ work, composer })}
-        onJumpToYear={scrollToYear}
+        onJumpToYear={animateToYear}
       />
 
       {/* Partial Episode Modal (Single-Tap Action on composition points) */}

@@ -162,3 +162,76 @@ export function getNearbyMusicEvents(
     .sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year) || a.year - b.year)
     .slice(0, limit);
 }
+
+/** 「その年のトピック」1件（短い一行表示用） */
+export interface YearTopic {
+  id: string;
+  /** 'world' | 'history'（音楽史） | 音楽のできごとの種類 */
+  tag: 'world' | 'history' | 'birth' | 'death' | 'work' | 'episode';
+  /** 作曲家名（音楽のできごとのとき） */
+  who?: string;
+  /** 短くした見出し */
+  label: string;
+  /** 省略せずに表示するための全文 */
+  full: string;
+  year: number;
+}
+
+const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+const RANK: Record<YearEventKind, number> = { work: 1, episode: 2, birth: 3, death: 3, world: 0 };
+
+/**
+ * その年の重要なできごとを、短いトピックとして最大 limit 件返す。
+ * 世界のできごと（フランス革命など）を先に、次に音楽のできごとを選ぶ。
+ * その年に何もなければ、近い年（前後6年）の世界のできごとを1件返す（nearYear 付き）。
+ */
+export function getYearTopics(
+  year: number,
+  options: { limit?: number; composerIds?: Set<string> | null } = {}
+): { topics: YearTopic[]; hiddenCount: number; near?: YearTopic } {
+  const { limit = 4, composerIds = null } = options;
+  const all = getEventsForYear(year);
+  const toTopic = (e: YearEvent): YearTopic => {
+    const composer = e.composerId ? COMPOSERS.find(c => c.id === e.composerId) : undefined;
+    const isHistory = e.kind === 'world' && e.title.startsWith('【音楽史】');
+    const title = e.title.replace('【音楽史】', '');
+    return {
+      id: e.id,
+      tag: e.kind === 'world' ? (isHistory ? 'history' : 'world') : e.kind,
+      who: composer?.shortName,
+      label: clip(title, 20),
+      full: composer ? `${composer.shortName}：${title}` : title,
+      year: e.year
+    };
+  };
+
+  const world = all.filter(e => e.kind === 'world').map(toTopic);
+  const music = all
+    .filter(e => e.kind !== 'world' && (!composerIds || (e.composerId && composerIds.has(e.composerId))))
+    .sort((a, b) => RANK[a.kind] - RANK[b.kind] || (a.playable ? -1 : 0) - (b.playable ? -1 : 0))
+    .map(toTopic);
+
+  const slots = Math.max(limit - world.length, 2);
+  // 音楽のできごとは、同じ作曲家ばかりにならないよう、まず別々の人から選ぶ
+  const seen = new Set<string>();
+  const firstPerPerson = music.filter(t => {
+    const key = t.who || t.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const rest = music.filter(t => !firstPerPerson.includes(t));
+  const musicPicked = [...firstPerPerson, ...rest].slice(0, slots);
+  const topics = [...world.slice(0, limit), ...musicPicked].slice(0, limit);
+  const hiddenCount = world.length + music.length - topics.length;
+
+  let near: YearTopic | undefined;
+  if (topics.length === 0) {
+    const cand = ALL_EVENTS.filter(e => e.kind === 'world' && Math.abs(e.year - year) <= 6 && e.year !== year).sort(
+      (a, b) => Math.abs(a.year - year) - Math.abs(b.year - year)
+    )[0];
+    if (cand) near = toTopic(cand);
+  }
+  return { topics, hiddenCount: Math.max(0, hiddenCount), near };
+}

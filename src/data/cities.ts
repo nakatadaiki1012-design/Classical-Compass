@@ -192,13 +192,5 @@ export const EUROPEAN_CITIES: Record<string, EuropeanCity> = {
     countryJa: 'ドイツ',
     coordinates: [10.3204, 50.9753],
     description: 'バッハの生誕地であり、ヴァルトブルク城を臨むチューリンゲンの歴史的聖地。'
-  },
-  tokyo: {
-    id: 'tokyo',
-    name: 'Tokyo',
-    nameJa: '東京',
-    countryJa: '日本',
-    coordinates: [38.5, 42.0], // Positioned elegantly on map edge inset for Japanese composers
-    description: '武満徹が東洋と西洋の感性を融合させ『ノヴェンバー・ステップス』など世界の現代音楽史に不滅の足跡を残した都。'
   }
 };

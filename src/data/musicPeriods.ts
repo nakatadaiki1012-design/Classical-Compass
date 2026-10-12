@@ -510,3 +510,30 @@ export function getPeriodsAt(year: number, japan: boolean): MusicPeriod[] {
     (a, b) => b.start - a.start
   );
 }
+
+/** 時代の説明に添える画像（ウィキペディアの記事の代表画像を表示時に取得）。形式: '英語版の記事名|日本語版の記事名' */
+export const PERIOD_IMAGE: Record<string, string> = {
+  ancient: 'Seikilos epitaph|セイキロスの墓碑銘',
+  chant: 'Gregorian chant|グレゴリオ聖歌',
+  romanesque: 'Guido of Arezzo|グイド・ダレッツォ',
+  'notre-dame': 'Notre-Dame de Paris|ノートルダム大聖堂 (パリ)',
+  'ars-nova': 'Guillaume de Machaut|ギヨーム・ド・マショー',
+  burgundian: 'Guillaume Du Fay|ギヨーム・デュファイ',
+  'franco-flemish': 'Josquin des Prez|ジョスカン・デ・プレ',
+  'renaissance-late': 'Giovanni Pierluigi da Palestrina|ジョヴァンニ・ピエルルイージ・ダ・パレストリーナ',
+  'early-baroque': 'Claudio Monteverdi|クラウディオ・モンテヴェルディ',
+  'late-baroque': 'Johann Sebastian Bach|ヨハン・ゼバスティアン・バッハ',
+  galant: 'Carl Philipp Emanuel Bach|カール・フィリップ・エマヌエル・バッハ',
+  classical: 'Wolfgang Amadeus Mozart|ヴォルフガング・アマデウス・モーツァルト',
+  romantic: 'Frédéric Chopin|フレデリック・ショパン',
+  nationalism: 'Bedřich Smetana|ベドルジハ・スメタナ',
+  'late-romantic': 'Richard Wagner|リヒャルト・ワーグナー',
+  impressionism: 'Claude Debussy|クロード・ドビュッシー',
+  'modern-early': 'Igor Stravinsky|イーゴリ・ストラヴィンスキー',
+  contemporary: 'John Cage|ジョン・ケージ',
+  'jp-ancient': 'Gagaku|雅楽',
+  'jp-medieval': 'Noh|能',
+  'jp-edo': 'Shamisen|三味線',
+  'jp-modern': 'Kōsaku Yamada|山田耕筰',
+  'jp-contemporary': 'Tōru Takemitsu|武満徹'
+};

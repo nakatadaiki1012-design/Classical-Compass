@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Composition, Composer } from '../types';
+import { EventDetailModal } from './EventDetailModal';
 import { getYearTopics, YearTopic } from '../data/chronicle';
 
 interface YearTopicsBarProps {
@@ -6,6 +8,9 @@ interface YearTopicsBarProps {
   visibleComposerIds: Set<string> | null;
   /** 近い年のトピックを押したとき、その年へ移動する */
   onJumpToYear?: (year: number) => void;
+  /** トピックをタップして開く詳しい説明からの移動先 */
+  onOpenComposer?: (composerId: string, year?: number) => void;
+  onOpenWork?: (work: Composition, composer: Composer) => void;
 }
 
 const TAG_STYLE: Record<YearTopic['tag'], { label: string; className: string }> = {
@@ -21,8 +26,11 @@ const TAG_STYLE: Record<YearTopic['tag'], { label: string; className: string }> 
 export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
   year,
   visibleComposerIds,
-  onJumpToYear
+  onJumpToYear,
+  onOpenComposer,
+  onOpenWork
 }) => {
+  const [selected, setSelected] = useState<YearTopic | null>(null);
   const { topics, hiddenCount, near } = useMemo(
     () => getYearTopics(year, { limit: 4, composerIds: visibleComposerIds }),
     [year, visibleComposerIds]
@@ -55,10 +63,20 @@ export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
   return (
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1.5" aria-label={`${year}年のトピック`}>
       <span className="shrink-0 text-[11px] font-bold text-[#c99738] whitespace-nowrap">{year}年のトピック</span>
-      {topics.map(t => chip(t, t.id))}
-      {topics.length === 0 && near && chip(near, near.id, <span className="text-[#a3978a]">{near.year}年　</span>, () => onJumpToYear?.(near.year))}
+      {topics.map(t => chip(t, t.id, undefined, () => setSelected(t)))}
+      {topics.length === 0 && near && chip(near, near.id, <span className="text-[#a3978a]">{near.year}年　</span>, () => setSelected(near))}
       {topics.length === 0 && !near && <span className="text-xs text-[#a3978a]">この年の主なできごとの記録はありません</span>}
       {hiddenCount > 0 && <span className="shrink-0 text-xs text-[#a3978a] whitespace-nowrap">ほか{hiddenCount}件は下に</span>}
+      {selected && (
+        <EventDetailModal
+          event={selected.event}
+          currentYear={year}
+          onClose={() => setSelected(null)}
+          onOpenComposer={(id, y) => onOpenComposer?.(id, y)}
+          onOpenWork={(w, c) => (onOpenWork ? onOpenWork(w, c) : onOpenComposer?.(c.id, w.year))}
+          onJumpToYear={y => onJumpToYear?.(y)}
+        />
+      )}
     </div>
   );
 };

@@ -60,27 +60,31 @@ const fetchPortrait = (key: string): Promise<string> => {
   return p;
 };
 
-/** 画像ファイルがない作曲家の肖像画のURL（まだ・取れない場合は ''） */
-export function useWikiPortrait(composer: Composer): string {
-  const title = composer.portraitUrl ? '' : `${composer.originalName}|${composer.name.replace(/\s/g, '')}`;
-  const [url, setUrl] = useState<string>(() => {
-    if (!title) return '';
-    return memory.get(title) ?? loadStore()[title] ?? '';
-  });
+/** ウィキペディアの記事（英語名|日本語名）の代表画像のURL（まだ・取れない場合は ''） */
+export function useWikiImage(key: string): string {
+  const [url, setUrl] = useState<string>(() => (key ? memory.get(key) ?? loadStore()[key] ?? '' : ''));
 
   useEffect(() => {
-    if (!title) return;
+    if (!key) {
+      setUrl('');
+      return;
+    }
     let alive = true;
-    const known = memory.get(title) ?? loadStore()[title];
+    const known = memory.get(key) ?? loadStore()[key];
     if (known) {
       setUrl(known);
       return;
     }
-    fetchPortrait(title).then(u => alive && setUrl(u));
+    fetchPortrait(key).then(u => alive && setUrl(u));
     return () => {
       alive = false;
     };
-  }, [title]);
+  }, [key]);
 
   return url;
+}
+
+/** 画像ファイルがない作曲家の肖像画のURL */
+export function useWikiPortrait(composer: Composer): string {
+  return useWikiImage(composer.portraitUrl ? '' : `${composer.originalName}|${composer.name.replace(/\s/g, '')}`);
 }

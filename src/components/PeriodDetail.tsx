@@ -1,5 +1,6 @@
 import React from 'react';
-import { MusicPeriod } from '../data/musicPeriods';
+import { MusicPeriod, PERIOD_IMAGE } from '../data/musicPeriods';
+import { useWikiImage } from '../utils/useWikiPortrait';
 import { getComposerById } from '../data/composers';
 
 /** 年の表記（紀元前も読みやすく） */
@@ -13,6 +14,33 @@ interface PeriodDetailProps {
   onOpenComposer?: (composerId: string) => void;
 }
 
+/** 時代の画像（ウィキペディアの代表画像）。取れないときは何も出さない */
+export const PeriodImage: React.FC<{ periodId: string; className?: string; captionless?: boolean }> = ({
+  periodId,
+  className = '',
+  captionless
+}) => {
+  const key = PERIOD_IMAGE[periodId] || '';
+  const url = useWikiImage(key);
+  const [failed, setFailed] = React.useState(false);
+  if (!url || failed) return null;
+  return (
+    <figure className={className}>
+      <img
+        src={url}
+        alt={key.split('|')[1] || key.split('|')[0]}
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="w-full h-full object-cover rounded-lg border border-white/10"
+      />
+      {!captionless && (
+        <figcaption className="mt-1 text-[10px] text-[#8f8476]">画像：ウィキペディア「{key.split('|')[1]}」より</figcaption>
+      )}
+    </figure>
+  );
+};
+
 /** ひとつの時代の説明（主流の音楽・用語・できごと・作曲家） */
 export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '', onOpenComposer }) => {
   const q = filter.trim();
@@ -23,6 +51,7 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
 
   return (
     <div className="space-y-4 text-[#e8dec8]">
+      <PeriodImage periodId={period.id} className="max-h-56 overflow-hidden [&_img]:max-h-56" />
       <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: period.color + '88', background: period.color + '18' }}>
         <span className="text-[11px] font-bold text-[#e6b95c] mr-2">主流の音楽</span>
         <span className="font-bold text-[#f5ebd9]">{period.mainstream}</span>

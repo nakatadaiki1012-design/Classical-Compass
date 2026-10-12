@@ -139,10 +139,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         let y = baseY;
 
         if (groupSize > 1) {
-          const angle = (index / groupSize) * Math.PI * 2 - Math.PI / 2;
-          const radius = Math.min(32, 18 + groupSize * 4);
-          x = baseX + Math.cos(angle) * radius;
-          y = baseY + Math.sin(angle) * radius;
+          // Lay out side by side (max 3 per row) so the name labels under each pin don't collide
+          const cols = Math.min(groupSize, 3);
+          const col = index % cols;
+          const row = Math.floor(index / cols);
+          x = baseX + (col - (cols - 1) / 2) * 112;
+          y = baseY + row * 78;
         }
 
         const currentStay = composer.cities.find(
@@ -246,9 +248,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               style={{ backgroundColor: currentEra.color }}
             >
               <span>{currentEra.name}</span>
-              <span className="opacity-80 text-[10px]">({currentEra.nameEn})</span>
+              <span className="opacity-80 text-[11px]">({currentEra.nameEn})</span>
             </div>
-            <span className="text-xs text-[#9c9388] hidden sm:inline">
+            <span className="text-xs text-[#b5aa9b] hidden sm:inline">
               存命の巨匠: <strong className="text-[#f5ebd9] font-mono">{activeComposers.length}名</strong>
             </span>
           </div>
@@ -280,7 +282,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   className={`px-2.5 py-1 rounded transition-colors ${
                     playbackSpeed === spd
                       ? 'bg-[#c99738] text-[#161412] font-bold'
-                      : 'text-[#9c9388] hover:text-[#f5ebd9]'
+                      : 'text-[#b5aa9b] hover:text-[#f5ebd9]'
                   }`}
                 >
                   {spd}x
@@ -293,7 +295,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 setCurrentYear(1787);
                 setSelectedComposerId(null);
               }}
-              className="p-2 text-[#9c9388] hover:text-[#f5ebd9] hover:bg-[#241f19] rounded-lg transition-colors"
+              className="p-2 text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#241f19] rounded-lg transition-colors"
               title="1787年（モーツァルト絶頂期）へ戻る"
             >
               <RotateCcw className="w-4 h-4" />
@@ -303,7 +305,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
         {/* Timeline Range Slider */}
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#8a7f70]">1300年</span>
+          <span className="text-xs font-mono text-[#a3978a]">1300年</span>
           <input
             type="range"
             min={1300}
@@ -312,12 +314,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
             className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
           />
-          <span className="text-xs font-mono text-[#8a7f70]">1990年</span>
+          <span className="text-xs font-mono text-[#a3978a]">1990年</span>
         </div>
 
         {/* Historical Milestone Shortcut Badges */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
-          <span className="text-[#8a7f70] text-[10px] shrink-0 mr-1 font-bold flex items-center gap-1">
+          <span className="text-[#a3978a] text-[11px] shrink-0 mr-1 font-bold flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-[#c99738]" />
             歴史的画期:
           </span>
@@ -331,7 +333,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               className={`px-2.5 py-1 rounded-md border whitespace-nowrap transition-all text-xs ${
                 Math.abs(currentYear - m.year) <= 2
                   ? 'bg-[#c99738]/20 border-[#c99738] text-[#f5ebd9] font-bold'
-                  : 'bg-[#1e1b18] border-[#332c24] text-[#9c9388] hover:text-[#f5ebd9]'
+                  : 'bg-[#1e1b18] border-[#332c24] text-[#b5aa9b] hover:text-[#f5ebd9]'
               }`}
             >
               {m.year}年: {m.title.split(' ')[0]}
@@ -389,14 +391,14 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             {Object.values(EUROPEAN_CITIES).map(city => {
               const [cx, cy] = projectGeoToSvg(city.coordinates[0], city.coordinates[1]);
               return (
-                <g key={city.id} className="opacity-40 pointer-events-none">
+                <g key={city.id} className="opacity-70 pointer-events-none">
                   <circle cx={cx} cy={cy} r="2.5" fill="#8c7e6d" />
                   <text
                     x={cx}
                     y={cy + 10}
                     textAnchor="middle"
-                    fontSize="8.5"
-                    fill="#8c7e6d"
+                    fontSize="10"
+                    fill="#a89a88"
                     fontFamily="sans-serif"
                     fontWeight="500"
                   >
@@ -472,68 +474,53 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     </div>
                   </foreignObject>
 
-                  {/* ON-MAP COMPOSITION & LIFESPAN BADGE (生没年と作曲を記載したクリーンなタグ) */}
-                  <g transform={`translate(${x}, ${y + 24})`}>
-                    {topWork ? (
-                      /* Tag with Composer Name, Lifespan and Composition Title */
-                      <g>
+                  {/* ON-MAP LABEL: name on line 1, composition (or years) on line 2, box sized to fit */}
+                  {(() => {
+                    const line1 = composer.shortName;
+                    const workTitle = topWork
+                      ? topWork.title.length > 10 ? topWork.title.substring(0, 9) + '…' : topWork.title
+                      : '';
+                    const line2 = topWork ? `♪ ${workTitle}` : `${composer.birthYear}〜${composer.deathYear}`;
+                    // CJK glyphs are ~1em wide, digits/latin ~0.6em
+                    const textWidth = (text: string, size: number) =>
+                      [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
+                    const boxWidth = Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
+                    return (
+                      <g transform={`translate(${x}, ${y + 22})`}>
                         <rect
-                          x="-80"
+                          x={-boxWidth / 2}
                           y="0"
-                          width="160"
-                          height="22"
-                          rx="11"
-                          fill="#181410"
-                          stroke={isSelected ? '#ffffff' : '#c99738'}
-                          strokeWidth="1.2"
-                          opacity="0.95"
-                          className="shadow-lg"
-                        />
-                        <text
-                          x="0"
-                          y="14"
-                          textAnchor="middle"
-                          fontSize="9"
-                          fontWeight="bold"
-                          fill="#ffffff"
-                        >
-                          {composer.shortName} ({composer.birthYear}〜{composer.deathYear}): 『{topWork.title.length > 7 ? topWork.title.substring(0, 6) + '…' : topWork.title}』
-                        </text>
-                      </g>
-                    ) : (
-                      /* Tag with Composer Name, Lifespan and Current City */
-                      <g>
-                        <rect
-                          x="-65"
-                          y="0"
-                          width="130"
-                          height="18"
-                          rx="9"
+                          width={boxWidth}
+                          height="32"
+                          rx="7"
                           fill="#14110e"
-                          stroke={isSelected ? '#ffffff' : era.color}
-                          strokeWidth="1"
-                          opacity="0.85"
+                          stroke={isSelected ? '#ffffff' : topWork ? '#c99738' : era.color}
+                          strokeWidth={isSelected ? 1.6 : 1.1}
+                          opacity="0.94"
                         />
+                        <text x="0" y="14" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#ffffff">
+                          {line1}
+                        </text>
                         <text
                           x="0"
-                          y="12"
+                          y="27"
                           textAnchor="middle"
-                          fontSize="8.5"
-                          fontWeight="bold"
-                          fill={isSelected ? '#ffffff' : '#f5ebd9'}
+                          fontSize="10"
+                          fontWeight="600"
+                          fill={topWork ? '#e6b95c' : '#c9bfb0'}
                         >
-                          {composer.shortName} ({composer.birthYear}〜{composer.deathYear}) · {cityNameJa}
+                          {line2}
                         </text>
                       </g>
-                    )}
-                  </g>
+                    );
+                  })()}
                 </g>
               );
             })}
           </svg>
 
           {/* Map Status Bar */}
-          <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#9c9388] flex items-center gap-2 shadow-xl">
+          <div className="absolute bottom-3 left-3 bg-[#181512]/90 backdrop-blur-md border border-[#332c24] rounded-lg px-3 py-1.5 text-xs text-[#b5aa9b] flex items-center gap-2 shadow-xl">
             <span className="w-2 h-2 rounded-full bg-[#c99738] animate-ping" />
             <span>地図上のピンをタップすると、下の「生没エピソード & 作曲ストーリー」に絞り込まれます</span>
           </div>
@@ -554,7 +541,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </div>
             <h2 className="text-xl md:text-2xl font-classical-display font-bold text-[#f5ebd9] mt-1 flex items-center gap-2">
               <span>生誕・最期のエピソード & 代表曲</span>
-              <span className="text-xs font-mono font-normal text-[#9c9388] bg-[#241f19] px-2.5 py-0.5 rounded-full border border-[#382f25]">
+              <span className="text-xs font-mono font-normal text-[#b5aa9b] bg-[#241f19] px-2.5 py-0.5 rounded-full border border-[#382f25]">
                 {displayedStories.length}名の物語
               </span>
             </h2>
@@ -606,13 +593,13 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                           <span className="bg-[#292117] text-[#c99738] border border-[#c99738]/40 px-2 py-0.5 rounded font-mono font-bold text-[11px]">
                             生没年: {composer.birthYear}年 〜 {composer.deathYear}年（享年{lifespan}歳）
                           </span>
-                          <span className="bg-[#1f1a14] text-[#a89b8c] px-2 py-0.5 rounded font-mono text-[10px]">
+                          <span className="bg-[#1f1a14] text-[#bdb1a1] px-2 py-0.5 rounded font-mono text-[11px]">
                             {currentYear}年当時は{ageInYear}歳
                           </span>
                         </div>
 
                         {/* Birthplace & Deathplace */}
-                        <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-[#9c9388]">
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-[#b5aa9b]">
                           {composer.birthPlace && (
                             <span>誕生地: <strong className="text-[#d1c6b6]">{composer.birthPlace}</strong></span>
                           )}
@@ -673,7 +660,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                           <BookOpen className="w-3.5 h-3.5" />
                           <span>当時の作曲・活動エピソード</span>
                         </span>
-                        <span className="text-[10px] font-mono text-[#c99738] bg-[#292015] px-2 py-0.5 rounded">
+                        <span className="text-[11px] font-mono text-[#c99738] bg-[#292015] px-2 py-0.5 rounded">
                           {work.year}年 作曲 · 📍 {cityNameJa}
                         </span>
                       </div>
@@ -684,7 +671,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                         {work.description}
                       </p>
                       {cityStay?.notableEvent && (
-                        <p className="text-[11px] text-[#9c9388] border-t border-[#261f17] pt-1.5 mt-1 italic">
+                        <p className="text-[11px] text-[#b5aa9b] border-t border-[#261f17] pt-1.5 mt-1 italic">
                           💡 当時の滞在背景: {cityStay.notableEvent}
                         </p>
                       )}
@@ -708,7 +695,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           </div>
         ) : (
           <div className="bg-[#181512] border border-[#2e2820] rounded-2xl p-12 text-center space-y-3">
-            <p className="text-sm text-[#9c9388]">
+            <p className="text-sm text-[#b5aa9b]">
               {currentYear}年において存命の対象作曲家は登録されていません。
             </p>
             <button

@@ -43,7 +43,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
           <span className="font-classical-display font-bold text-[#f5ebd9] text-xs md:text-sm block">
             {composer.shortName.slice(0, 2)}
           </span>
-          <span className="text-[10px] text-[#c99738] block font-mono">
+          <span className="text-[11px] text-[#c99738] block font-mono">
             {composer.birthYear}
           </span>
         </div>

@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Composer, Composition } from '../types';
-import { COMPOSERS, getComposerById } from '../data/composers';
+import { getVisibleComposers, getComposerById } from '../data/composers';
 import { getEventsForYear, getNearbyMusicEvents, YearEvent, YearEventKind } from '../data/chronicle';
 import { KIND_LABEL } from './eventStyles';
 import { EventDetailModal } from './EventDetailModal';
+import { PeriodModal } from './PeriodModal';
+import { getPeriodsAt, MusicPeriod } from '../data/musicPeriods';
+import { useJapanMode } from '../utils/japanMode';
 
 interface YearEventsOverlayProps {
   year: number;
@@ -33,6 +36,10 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
   onJumpToYear
 }) => {
   const [selected, setSelected] = useState<YearEvent | null>(null);
+  const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
+  const japanMode = useJapanMode();
+  // この頃の主流の音楽（時代）。新しく始まった時代から最大2つ
+  const periods = useMemo(() => getPeriodsAt(year, japanMode).slice(0, 3), [year, japanMode]);
 
   const events = useMemo(() => {
     return getEventsForYear(year)
@@ -49,7 +56,7 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
 
   const alive = useMemo(
     () =>
-      COMPOSERS.filter(
+      getVisibleComposers().filter(
         c => c.birthYear <= year && year <= c.deathYear && (!visibleComposerIds || visibleComposerIds.has(c.id))
       ).sort((a, b) => a.birthYear - b.birthYear),
     [year, visibleComposerIds]
@@ -111,6 +118,26 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
           </div>
         </div>
 
+        {/* この頃の主流の音楽（時代）。タップで用語の解説 */}
+        {periods.length > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-[3px] border-b border-white/5 overflow-x-auto scrollbar-none">
+            <span className="shrink-0 text-[10px] font-bold text-[#e6b95c]">この頃の主流</span>
+            {periods.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setOpenPeriod(p)}
+                title={p.mainstream}
+                className="shrink-0 flex items-center gap-1 px-2 rounded-full border text-[11.5px] text-[#f5ebd9] whitespace-nowrap hover:bg-white/10"
+                style={{ borderColor: p.color + 'aa' }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: p.color }} />
+                <span className="font-bold">{p.name.replace('日本：', '日本・').split('（')[0]}</span>
+                <span className="text-[#b9ad9c] hidden md:inline">{p.mainstream.split('、')[0]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* 見出しの一覧（狭いときは1列、広いと2〜3列） */}
         <div
           className={`overflow-y-auto px-2 py-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-2 content-start ${
@@ -131,6 +158,14 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
           )}
         </div>
       </div>
+
+      {openPeriod && (
+        <PeriodModal
+          period={openPeriod}
+          onClose={() => setOpenPeriod(null)}
+          onOpenComposer={id => onSelectComposer(id, year)}
+        />
+      )}
 
       {selected && (
         <EventDetailModal

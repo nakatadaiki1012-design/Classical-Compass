@@ -1,6 +1,7 @@
 import React from 'react';
 import { ViewMode } from '../types';
 import { Compass } from 'lucide-react';
+import { setJapanMode, useJapanMode } from '../utils/japanMode';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -11,13 +12,15 @@ interface HeaderProps {
 const NAV_ITEMS: { view: ViewMode; label: string }[] = [
   { view: 'timeline', label: '年表' },
   { view: 'map', label: '地図' },
-  { view: 'catalog', label: '名鑑' }
+  { view: 'catalog', label: '名鑑' },
+  { view: 'history', label: '音楽史' }
 ];
 
 /** ヘッダーの高さ（px）。年表の高さ計算もこの値に合わせている */
 export const HEADER_HEIGHT = 45;
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
+  const japanMode = useJapanMode();
   return (
     <header
       className="sticky top-0 z-40 bg-[#161412]/95 backdrop-blur-md border-b border-[#2e2924] px-3 md:px-6"
@@ -44,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             <button
               key={item.view}
               onClick={() => onViewChange(item.view)}
-              className={`px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
+              className={`px-3 sm:px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
                 currentView === item.view
                   ? 'bg-[#c99738] text-[#161412]'
                   : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
@@ -54,6 +57,21 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             </button>
           ))}
         </nav>
+
+        {/* 日本音楽史オプション（八橋検校など日本の伝統音楽の人物と、日本音楽史のトピックを加える） */}
+        <button
+          onClick={() => setJapanMode(!japanMode)}
+          aria-pressed={japanMode}
+          title="日本の伝統音楽の人物と、日本音楽史のトピックを表示します"
+          className={`shrink-0 px-2 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+            japanMode
+              ? 'bg-[#b83b3b] border-[#b83b3b] text-white'
+              : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
+          }`}
+        >
+          <span className="sm:hidden">🇯🇵</span>
+          <span className="hidden sm:inline">🇯🇵 日本音楽史{japanMode ? ' ON' : ''}</span>
+        </button>
       </div>
     </header>
   );

@@ -1,6 +1,7 @@
 import { Composer } from '../types';
 import { LIFE_EPISODES } from './lifeEpisodes';
 import { MORE_COMPOSERS } from './moreComposers';
+import { isJapanMode } from '../utils/japanMode';
 
 const BASE_COMPOSERS: Composer[] = [
   // --- BAROQUE ---
@@ -2290,9 +2291,7 @@ const BASE_COMPOSERS: Composer[] = [
     country: '日本',
     nationalityJa: '日本',
     flag: '🇯🇵',
-    portraitUrl: '/portraits/takemitsu.jpg',
-    portraitPainter: '現代写真肖像',
-    portraitAttribution: '著作権フリー肖像データ',
+    portraitUrl: '',
     biography: '戦後日本の現代音楽を世界の頂点へと導いた偉大な作曲家。独学で音楽を学び、ストラヴィンスキーから絶賛された『弦楽のためのレクイエム』や、琵琶・尺八と西洋オーケストラが融合する『ノヴェンバー・ステップス』で世界を感嘆させた。「音のタペストリー」と称される静寂と余白の美学で世界的評価を一身に集めた。',
     musicalStyle: '静寂と余白の美学、伝統邦楽器（琵琶・尺八）とオーケストラの奇跡的融合、タケミツ・トーン（神秘的かつ豊かな音彩）。',
     keyFeatures: ['『ノヴェンバー・ステップス』による東西音楽の融合', 'ストラヴィンスキー絶賛の『弦楽のためのレクイエム』', '「静寂」を音楽の一部とする日本的美学'],
@@ -2954,3 +2953,7 @@ export const COMPOSERS: Composer[] = [
 export const getComposerById = (id: string): Composer | undefined => {
   return COMPOSERS.find(c => c.id === id);
 };
+
+/** いま表示してよい作曲家（日本の伝統音楽の人物は「日本音楽史」オプションがオンのときだけ） */
+export const getVisibleComposers = (): Composer[] =>
+  isJapanMode() ? COMPOSERS : COMPOSERS.filter(c => c.category !== 'japan-trad');

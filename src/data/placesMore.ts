@@ -56,4 +56,10 @@ export const PLACES_MORE: Record<string, Place> = {
   newyork: { ja: 'ニューヨーク', lon: -74.0, lat: 40.71, country: 'アメリカ' },
   losangeles: { ja: 'ロサンゼルス', lon: -118.24, lat: 34.05, country: 'アメリカ' },
   kuibyshev: { ja: 'クイビシェフ（現サマーラ）', lon: 50.1, lat: 53.2, country: 'ロシア' },
+  kyoto: { ja: '京都', lon: 135.77, lat: 35.01, country: '日本' },
+  edo: { ja: '江戸（東京）', lon: 139.77, lat: 35.69, country: '日本' },
+  oita: { ja: '大分', lon: 131.61, lat: 33.24, country: '日本' },
+  kobe: { ja: '神戸', lon: 135.2, lat: 34.69, country: '日本' },
+  incheon: { ja: '仁川（朝鮮）', lon: 126.7, lat: 37.46, country: '朝鮮（現韓国）' },
+  kushiro: { ja: '釧路', lon: 144.38, lat: 42.98, country: '日本' },
 };

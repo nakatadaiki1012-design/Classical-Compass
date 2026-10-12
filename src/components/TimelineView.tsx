@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Composer, Composition, EraId } from '../types';
-import { COMPOSERS } from '../data/composers';
+import { getVisibleComposers } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { YearEventsOverlay } from './YearEventsOverlay';
 import { hasAudio } from '../utils/hasAudio';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
+import { MUSIC_PERIODS, MusicPeriod } from '../data/musicPeriods';
+import { PeriodModal } from './PeriodModal';
+import { useJapanMode } from '../utils/japanMode';
 import {
   ZoomIn,
   ZoomOut,
@@ -51,11 +54,11 @@ interface StrandItem {
 export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
 
-  const MIN_YEAR = 1300;
+  const MIN_YEAR = 1000;
   const BASE_ZOOM = 7.0;
   const MIN_ZOOM = 3.0;
   const MAX_ZOOM = 36.0;
-  const MAX_YEAR = 1990;
+  const MAX_YEAR = 2010;
   const TOTAL_YEARS = MAX_YEAR - MIN_YEAR;
 
   // View style
@@ -110,7 +113,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
   // Filter composers
   const filteredComposers = useMemo(() => {
-    return COMPOSERS.filter(c => {
+    return getVisibleComposers().filter(c => {
       if (selectedEra !== 'all' && c.era !== selectedEra) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -134,9 +137,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     return ERAS.find(e => focalYear >= e.startYear && focalYear <= e.endYear) || ERAS[2];
   }, [focalYear]);
 
+  // 年を「指定して」移動したとき（ツマミ・±10・目盛りのタップ・ジャンプ）だけ、その年に生きている人の段が見える位置へ縦にも動かす。
+  // 自分で縦にスクロールしたり、横にドラッグしているときは動かさない。
+  const alignRowsRef = useRef<(year: number) => void>(() => {});
+  const alignTimerRef = useRef<number | undefined>(undefined);
+  const alignRows = useCallback((year: number) => {
+    window.clearTimeout(alignTimerRef.current);
+    alignTimerRef.current = window.setTimeout(() => alignRowsRef.current(year), 400);
+  }, []);
+
   // Jump to specific year smoothly
   const scrollToYear = useCallback((targetYear: number) => {
     if (!containerRef.current) return;
+    alignRows(targetYear);
     const clientWidth = containerRef.current.clientWidth;
     const targetPixel = (targetYear - MIN_YEAR) * zoomScale + horizontalPadding - clientWidth / 2;
     targetScrollPosRef.current = Math.max(0, targetPixel);
@@ -151,11 +164,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       if (!containerRef.current) return;
       const clientWidth = containerRef.current.clientWidth;
       const clamped = Math.max(MIN_YEAR, Math.min(MAX_YEAR, targetYear));
+      alignRows(clamped);
       const targetPixel = (clamped - MIN_YEAR) * zoomScale + horizontalPadding - clientWidth / 2;
       velocityRef.current = { vx: 0, vy: 0 };
       targetScrollPosRef.current = Math.max(0, targetPixel);
     },
-    [zoomScale, horizontalPadding]
+    [zoomScale, horizontalPadding, alignRows]
   );
 
   // 最初は1787年（モーツァルトの頃）に合わせる。拡大・縮小したときも、いま見ている年を中心に保つ
@@ -384,7 +398,32 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   }, [filteredComposers, rotationAngle, zoomScale, horizontalPadding, focalYear, cylinderRadius]);
 
   // 一覧表示: 生まれた年が遅い人ほど下の段に置く（1人1段）。左上から右下へ階段のように流れる
-  const PANO_TOP = 44;
+  // 時代の帯（年表の目盛りの下）。重なる時代は段を分けて並べる
+  const japanMode = useJapanMode();
+  const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
+  const BAND_LANE_H = 14;
+  const { bandSegments, bandLanes } = useMemo(() => {
+    const place = (list: MusicPeriod[], firstLane: number) => {
+      const laneEnds: number[] = [];
+      return list.map(p => {
+        let lane = laneEnds.findIndex(end => end <= p.start);
+        if (lane === -1) lane = laneEnds.length;
+        laneEnds[lane] = p.end;
+        return { period: p, lane: lane + firstLane };
+      });
+    };
+    const inRange = (p: MusicPeriod) => p.end > MIN_YEAR && p.start < MAX_YEAR;
+    const west = place(MUSIC_PERIODS.filter(p => p.region === 'west' && inRange(p)).sort((a, b) => a.start - b.start), 0);
+    const westLanes = west.reduce((m, s) => Math.max(m, s.lane + 1), 0);
+    const jp = japanMode
+      ? place(MUSIC_PERIODS.filter(p => p.region === 'japan' && inRange(p)).sort((a, b) => a.start - b.start), westLanes)
+      : [];
+    const all = [...west, ...jp];
+    return { bandSegments: all, bandLanes: all.reduce((m, s) => Math.max(m, s.lane + 1), 0) };
+  }, [japanMode]);
+  const BAND_H = bandLanes * BAND_LANE_H + 3;
+
+  const PANO_TOP = 44 + BAND_H;
   const PANO_ROW_HEIGHT = 34;
   const { panoramaBars, panoramaRowCount } = useMemo(() => {
     const bars = filteredComposers.map((composer, row) => {
@@ -395,6 +434,24 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     });
     return { panoramaBars: bars, panoramaRowCount: bars.length };
   }, [filteredComposers, zoomScale, horizontalPadding]);
+
+  alignRowsRef.current = (year: number) => {
+    const container = containerRef.current;
+    if (!container || viewStyle !== 'panorama') return;
+    const alive = panoramaBars.filter(b => b.composer.birthYear <= year && year <= b.composer.deathYear);
+    if (alive.length === 0) return;
+    const top = PANO_TOP + alive[0].row * PANO_ROW_HEIGHT;
+    const visibleFrom = container.scrollTop;
+    const visibleTo = container.scrollTop + container.clientHeight;
+    // すでに先頭の人が見える位置にあれば、動かさない
+    if (top >= visibleFrom + BAND_H && top < visibleTo - 120) return;
+    container.scrollTo({ top: Math.max(0, top - 42 - BAND_H), behavior: 'smooth' });
+  };
+
+  // 開いたときも、いま見ている年に生きている人の段が見える位置に合わせる
+  useEffect(() => {
+    alignRows(focalYearRef.current);
+  }, [alignRows]);
 
   // 2本指のピンチ（スマホ）や、Ctrl＋ホイール／トラックパッドのピンチで、年表を拡大・縮小する
   const zoomRef = useRef(zoomScale);
@@ -449,7 +506,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       label?: string;
     }[] = [];
 
-    for (let yr = 1300; yr <= 1990; yr++) {
+    for (let yr = MIN_YEAR; yr <= MAX_YEAR; yr++) {
       const x = (yr - MIN_YEAR) * zoomScale + horizontalPadding;
 
       if (yr % 50 === 0) {
@@ -565,7 +622,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                 onChange={e => setSelectedEra(e.target.value as EraId | 'all')}
                 className="bg-[#1e1711] border border-[#3d3021] rounded-lg px-3 py-2 text-sm text-[#f5ebd9] focus:outline-none focus:border-[#c99738] cursor-pointer"
               >
-                <option value="all" className="bg-[#1a140f]">全時代（{COMPOSERS.length}名）</option>
+                <option value="all" className="bg-[#1a140f]">全時代（{getVisibleComposers().length}名）</option>
                 {ERAS.map(era => (
                   <option key={era.id} value={era.id} className="bg-[#1a140f]">
                     {era.name}
@@ -807,8 +864,41 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
             })}
           </div>
 
+          {/* 時代の帯：タップすると、その時代の主流の音楽と用語が開く */}
+          <div className="sticky z-20 h-0" style={{ top: 36 }}>
+            <div
+              className="absolute left-0 top-0 w-full bg-[#0f0b08]/95 border-b border-[#2b2118]"
+              style={{ height: BAND_H }}
+            >
+              {bandSegments.map(({ period, lane }) => {
+                const s = Math.max(period.start, MIN_YEAR);
+                const e = Math.min(period.end, MAX_YEAR);
+                return (
+                  <button
+                    key={period.id}
+                    onClick={ev => {
+                      ev.stopPropagation();
+                      setOpenPeriod(period);
+                    }}
+                    title={`${period.name}：${period.mainstream}`}
+                    className="absolute rounded-sm text-left px-1 overflow-hidden whitespace-nowrap text-[10px] font-bold leading-[13px] text-white/95 hover:brightness-125"
+                    style={{
+                      left: (s - MIN_YEAR) * zoomScale + horizontalPadding,
+                      width: Math.max(6, (e - s) * zoomScale - 1),
+                      top: 1 + lane * BAND_LANE_H,
+                      height: BAND_LANE_H - 1,
+                      background: period.color + 'cc'
+                    }}
+                  >
+                    {period.name.replace('日本：', '日本・').split('（')[0]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Vertical Fine Grid Lines across canvas */}
-          <div className="absolute top-9 bottom-0 inset-x-0 pointer-events-none">
+          <div className="absolute bottom-0 inset-x-0 pointer-events-none" style={{ top: 36 + BAND_H }}>
             {yearTicks
               .filter(t => t.type === 'major-50' || t.type === 'decade-10')
               .map(t => (
@@ -1090,6 +1180,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           onJumpToYear={animateToYear}
         />
       </div>
+
+      {openPeriod && (
+        <PeriodModal
+          period={openPeriod}
+          onClose={() => setOpenPeriod(null)}
+          onOpenComposer={id => onSelectComposerWithYear(id, focalYear)}
+        />
+      )}
 
       {/* Partial Episode Modal (Single-Tap Action on composition points) */}
       {focusedEpisodeWork && (

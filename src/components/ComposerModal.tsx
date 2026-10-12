@@ -4,6 +4,7 @@ import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { getComposerEvents } from '../data/chronicle';
 import { KIND_LABEL } from './eventStyles';
+import { getWorkTrivia, COMPOSER_TRIVIA } from '../data/trivia';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import {
@@ -204,6 +205,12 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                     <p className="text-xs text-[#a39888] mt-3 leading-relaxed">
                       {work.description}
                     </p>
+                    {getWorkTrivia(composer.id, work) && (
+                      <p className="mt-2 rounded bg-[#241e17] border border-[#3a2f20] px-2.5 py-2 text-[12px] leading-relaxed text-[#d9cfbd]">
+                        <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
+                        {getWorkTrivia(composer.id, work)}
+                      </p>
+                    )}
 
                     <div className="mt-3 pt-2 border-t border-[#262019] flex items-center justify-between text-[11px] text-[#a3978a]">
                       <span className="flex items-center gap-1">
@@ -219,6 +226,23 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               })}
             </div>
           </div>
+
+          {/* Section: 蘊蓄 */}
+          {COMPOSER_TRIVIA[composer.id] && (
+            <div className="space-y-3">
+              <h3 className="text-base font-classical-display font-bold text-[#f5ebd9] flex items-center gap-2">
+                <span className="text-[#c99738]">✦</span>
+                <span>もっと知る（蘊蓄）</span>
+              </h3>
+              <ul className="space-y-2">
+                {COMPOSER_TRIVIA[composer.id].map(t => (
+                  <li key={t} className="rounded-lg bg-[#1b1713] border border-[#2e261e] px-3 py-2 text-[13px] leading-relaxed text-[#d9cfbd]">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Section: 年ごとの主要作品とエピソード */}
           <div className="space-y-4">

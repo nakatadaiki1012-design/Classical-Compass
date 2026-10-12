@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { yearText, yearTick } from '../utils/yearLabel';
 import React, { useEffect, useMemo } from 'react';
 import { MapPin, Music, UserRound, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
@@ -6,6 +8,7 @@ import { getWhereabouts } from '../data/itinerary';
 import { YearEvent } from '../data/chronicle';
 import { ComposerPortrait } from './ComposerPortrait';
 import { KIND_LABEL } from './eventStyles';
+import { getWorkTrivia } from '../data/trivia';
 
 interface EventDetailModalProps {
   event: YearEvent;
@@ -55,7 +58,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
     };
   }, [event, composer]);
 
-  return (
+  // 親の要素に隠れないよう、画面全体の一番上（body 直下）に出す
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
       onClick={onClose}
@@ -75,7 +79,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         <div className="p-5 space-y-3.5">
           {/* 新聞の欄外のような小さな見出し行 */}
           <div className="flex flex-wrap items-center gap-2 text-xs pr-8">
-            <span className="font-mono font-bold text-[#e6b95c] text-sm">{event.year}年</span>
+            <span className="font-mono font-bold text-[#e6b95c] text-sm">{yearText(event.year)}</span>
             <span className={`px-1.5 py-0.5 rounded border text-[11px] font-bold ${badge.className}`}>{badge.label}</span>
           </div>
 
@@ -97,6 +101,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             <p className="text-sm text-[#d6cdbd] leading-relaxed whitespace-pre-line">{body}</p>
           ) : (
             <p className="text-sm text-[#a3978a]">この見出しの、くわしい記事はまだありません。</p>
+          )}
+
+          {composer && event.playable && getWorkTrivia(composer.id, event.playable) && (
+            <p className="rounded-lg bg-[#241e17] border border-[#3a2f20] px-3 py-2 text-[12.5px] leading-relaxed text-[#d9cfbd]">
+              <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
+              {getWorkTrivia(composer.id, event.playable)}
+            </p>
           )}
 
           {extra && (
@@ -146,5 +157,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         </div>
       </article>
     </div>
+    ,
+    document.body
   );
 };

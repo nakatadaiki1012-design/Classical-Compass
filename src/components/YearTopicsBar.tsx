@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { yearText, yearTick } from '../utils/yearLabel';
 import { Composition, Composer } from '../types';
 import { EventDetailModal } from './EventDetailModal';
 import { getYearTopics, YearTopic } from '../data/chronicle';
@@ -62,7 +63,7 @@ export const YearTopicsBar: React.FC<YearTopicsBarProps> = ({
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1.5" aria-label={`${year}年のトピック`}>
-      <span className="shrink-0 text-[11px] font-bold text-[#c99738] whitespace-nowrap">{year}年のトピック</span>
+      <span className="shrink-0 text-[11px] font-bold text-[#c99738] whitespace-nowrap">{yearText(year)}のトピック</span>
       {topics.map(t => chip(t, t.id, undefined, () => setSelected(t)))}
       {topics.length === 0 && near && chip(near, near.id, <span className="text-[#a3978a]">{near.year}年　</span>, () => setSelected(near))}
       {topics.length === 0 && !near && <span className="text-xs text-[#a3978a]">この年の主なできごとの記録はありません</span>}

@@ -18,7 +18,7 @@ export const COMPOSER_YOMI: Record<string, string> = {
   bruckner: 'ブルックナー', smetana: 'スメタナ', bizet: 'ビゼー', mussorgsky: 'ムソルグスキー',
   'saint-saens': 'サンサーンス', faure: 'フォーレ', 'strauss-jr': 'シュトラウスヨハン', 'clara-schumann': 'シューマンクララ',
   donizetti: 'ドニゼッティ', 'rimsky-korsakov': 'リムスキーコルサコフ', elgar: 'エルガー', satie: 'サティ',
-  holst: 'ホルスト', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
+  holst: 'ホルスト', pythagoras: 'ピタゴラス', gregory1: 'グレゴリウス', guido: 'グイド', leonin: 'レオナン', perotin: 'ペロタン', ockeghem: 'オケゲム', willaert: 'ウィラールト', gabrieli: 'ガブリエリ', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
 };
 
 export type RegionId =

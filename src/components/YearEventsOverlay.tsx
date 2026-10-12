@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { yearText, yearTick } from '../utils/yearLabel';
 import { Composer, Composition } from '../types';
 import { getVisibleComposers, getComposerById } from '../data/composers';
 import { getEventsForYear, getNearbyMusicEvents, YearEvent, YearEventKind } from '../data/chronicle';
@@ -99,7 +100,7 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
       >
         {/* 見出し：年・件数・存命の作曲家（年齢つき）を1行に */}
         <div className="flex items-center gap-2 px-3 py-1 border-b border-white/5">
-          <span className="shrink-0 font-classical-display font-bold text-sm whitespace-nowrap">{year}年のできごと</span>
+          <span className="shrink-0 font-classical-display font-bold text-sm whitespace-nowrap">{yearText(year)}のできごと</span>
           <span className="shrink-0 text-[11px] text-[#b5aa9b] whitespace-nowrap">
             {events.length > 0 ? `${events.length}件・タップでくわしく` : '記録なし'}
           </span>

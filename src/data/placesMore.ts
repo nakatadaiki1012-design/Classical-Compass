@@ -62,4 +62,13 @@ export const PLACES_MORE: Record<string, Place> = {
   kobe: { ja: '神戸', lon: 135.2, lat: 34.69, country: '日本' },
   incheon: { ja: '仁川（朝鮮）', lon: 126.7, lat: 37.46, country: '朝鮮（現韓国）' },
   kushiro: { ja: '釧路', lon: 144.38, lat: 42.98, country: '日本' },
+  samos: { ja: 'サモス島', lon: 26.9, lat: 37.75, country: 'ギリシア' },
+  croton: { ja: 'クロトン（南イタリア）', lon: 17.13, lat: 39.08, country: 'イタリア' },
+  constantinople: { ja: 'コンスタンティノープル', lon: 28.98, lat: 41.01, country: '東ローマ帝国（現トルコ）' },
+  arezzo: { ja: 'アレッツォ', lon: 11.88, lat: 43.46, country: 'イタリア' },
+  pomposa: { ja: 'ポンポーザ修道院', lon: 12.2, lat: 44.83, country: 'イタリア' },
+  saintghislain: { ja: 'サン＝ギスラン', lon: 3.82, lat: 50.45, country: 'ベルギー' },
+  moulins: { ja: 'ムーラン', lon: 3.33, lat: 46.57, country: 'フランス' },
+  tours: { ja: 'トゥール', lon: 0.69, lat: 47.39, country: 'フランス' },
+  bruges: { ja: 'ブルッヘ', lon: 3.22, lat: 51.21, country: 'ベルギー' },
 };

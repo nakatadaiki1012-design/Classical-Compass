@@ -2,6 +2,18 @@ import { Era } from '../types';
 
 export const ERAS: Era[] = [
   {
+    id: 'ancient',
+    name: '古代・初期中世',
+    nameEn: 'Ancient / Early Medieval',
+    startYear: -800,
+    endYear: 1100,
+    color: '#9ca3af',
+    accentColor: '#d1d5db',
+    bgLight: 'rgba(156, 163, 175, 0.12)',
+    description: '古代ギリシアで音楽が数と結びついて考えられ、のちキリスト教の礼拝でグレゴリオ聖歌が歌われるようになった時代。楽譜の工夫もここから始まる。',
+    musicalFeatures: ['音程と数の比（ピタゴラス）', '単旋律聖歌（グレゴリオ聖歌）', 'ネウマ譜と譜線、階名（ドレミ）の誕生', '初期のオルガヌム']
+  },
+  {
     id: 'medieval',
     name: '中世西洋音楽',
     nameEn: 'Medieval',

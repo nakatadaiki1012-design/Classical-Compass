@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Composer } from '../types';
 import { getWhereabouts } from '../data/itinerary';
 import { getComposerEvents } from '../data/chronicle';
-import { KIND_LABEL } from './YearEventsPanel';
+import { KIND_LABEL } from './eventStyles';
 
 interface ComposerYearSnapshotProps {
   composer: Composer;

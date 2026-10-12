@@ -5,7 +5,8 @@ import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
-import { YearEventsPanel } from './YearEventsPanel';
+import { hasAudio } from '../utils/hasAudio';
+import { YearEventsOverlay } from './YearEventsOverlay';
 import { YearTopicsBar } from './YearTopicsBar';
 import { getWhereabouts, isOffMap, Whereabouts } from '../data/itinerary';
 import { SVG_W, SVG_H, projectGeoToSvg } from '../data/mapProjection';
@@ -617,8 +618,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
       {/* 3-a. その年の作曲と大きな出来事（音楽・世界） */}
       <div className="max-w-6xl mx-auto w-full px-4 md:px-8 pt-6">
-        <YearEventsPanel
-          embedded
+        <YearEventsOverlay
+          inline
           year={currentYear}
           visibleComposerIds={null}
           onSelectComposer={onSelectComposer}
@@ -770,7 +771,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     </div>
 
                     {/* Audio Play Button (if work available) */}
-                    {work && (
+                    {work && hasAudio(work) && (
                       <button
                         onClick={() => playTrack(work, composer)}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg transition-all shrink-0 ${

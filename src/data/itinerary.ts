@@ -1,5 +1,8 @@
 import { PLACES, Place } from './places';
-import { ITINERARY_RAW } from './itineraryData';
+import { ITINERARY_RAW as ITINERARY_BASE } from './itineraryData';
+import { ITINERARY_RAW_MORE } from './itineraryDataMore';
+
+const ITINERARY_RAW = { ...ITINERARY_BASE, ...ITINERARY_RAW_MORE };
 import { Composer } from '../types';
 import { isOffMapLonLat } from './mapProjection';
 

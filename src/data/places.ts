@@ -6,7 +6,9 @@ export interface Place {
   country: string;
 }
 
-export const PLACES: Record<string, Place> = {
+import { PLACES_MORE } from './placesMore';
+
+const BASE_PLACES: Record<string, Place> = {
   // イタリア
   rome: { ja: 'ローマ', lon: 12.5, lat: 41.9, country: 'イタリア' },
   naples: { ja: 'ナポリ', lon: 14.27, lat: 40.85, country: 'イタリア' },
@@ -114,3 +116,6 @@ export const PLACES: Record<string, Place> = {
   'beverly-hills': { ja: 'ビバリーヒルズ', lon: -118.4, lat: 34.07, country: 'アメリカ' },
   tokyo: { ja: '東京', lon: 139.69, lat: 35.68, country: '日本' }
 };
+
+/** 作曲家の滞在地・旅行先（追加分も含む全体） */
+export const PLACES: Record<string, Place> = { ...BASE_PLACES, ...PLACES_MORE };

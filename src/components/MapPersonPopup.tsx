@@ -3,8 +3,9 @@ import { ChevronRight, Pause, Play, X } from 'lucide-react';
 import { Composer } from '../types';
 import { Whereabouts } from '../data/itinerary';
 import { ComposerPortrait } from './ComposerPortrait';
-import { KIND_LABEL } from './YearEventsPanel';
+import { KIND_LABEL } from './eventStyles';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
+import { hasAudio } from '../utils/hasAudio';
 import { useAudio } from '../context/AudioContext';
 
 interface MapPersonPopupProps {
@@ -28,7 +29,7 @@ export const MapPersonPopup: React.FC<MapPersonPopupProps> = ({
 
   // 試聴: その年に一番近い作品
   const nearestWork = useMemo(
-    () => [...composer.works].sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year))[0],
+    () => composer.works.filter(hasAudio).sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year))[0],
     [composer.works, year]
   );
   const isThisPlaying = nearestWork ? isPlaying && currentTrack?.work.id === nearestWork.id : false;

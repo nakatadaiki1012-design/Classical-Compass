@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { MapPin, Play, UserRound, X } from 'lucide-react';
+import { MapPin, Music, UserRound, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { getComposerById } from '../data/composers';
 import { getWhereabouts } from '../data/itinerary';
@@ -107,7 +107,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           )}
 
           <div className="flex flex-wrap gap-2 pt-1">
-            {composer && event.playable && event.playable.audioSnippet.notes.length > 0 && (
+            {composer && event.playable && (
               <button
                 onClick={() => {
                   onClose();
@@ -115,8 +115,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#c99738] hover:bg-[#dbaa44] text-black text-xs font-bold"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>曲を聴く・解説</span>
+                <Music className="w-4 h-4" />
+                <span>曲の解説を見る</span>
               </button>
             )}
             {composer && (

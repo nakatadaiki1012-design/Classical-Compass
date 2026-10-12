@@ -94,7 +94,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                     </span>
                   </>
                 ) : (
-                  <span className="text-[11px] text-[#b5aa9b] block">肖像画は準備中です</span>
+                  <span className="text-[11px] text-[#b5aa9b] block">肖像画：ウィキペディアの画像（表示できないときは頭文字）</span>
                 )}
               </div>
             </div>
@@ -167,7 +167,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-base font-classical-display font-bold text-[#f5ebd9] flex items-center gap-2">
               <Music className="w-4 h-4 text-[#c99738]" />
-              <span>代表曲・主要作品（試聴プレーヤー連動）</span>
+              <span>代表曲・主要作品</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { getAssetUrl } from '../utils/assets';
+import { useWikiPortrait } from '../utils/useWikiPortrait';
 
 interface ComposerPortraitProps {
   composer: Composer;
@@ -18,6 +19,8 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   const era = getEraById(composer.era);
+  const wikiUrl = useWikiPortrait(composer);
+  const imageUrl = composer.portraitUrl ? getAssetUrl(composer.portraitUrl) : wikiUrl;
 
   const sizeClasses = {
     xs: 'w-6 h-6',
@@ -28,7 +31,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
   }[size];
 
   // If external portrait fails or image loading is restricted in sandbox, render exquisite classical medallion silhouette
-  if (hasError || !composer.portraitUrl) {
+  if (hasError || !imageUrl) {
     return (
       <div
         className={`relative rounded-full overflow-hidden shrink-0 flex items-center justify-center select-none ${sizeClasses} ${
@@ -58,7 +61,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
       } ${className}`}
     >
       <img
-        src={getAssetUrl(composer.portraitUrl)}
+        src={imageUrl}
         alt={composer.name}
         referrerPolicy="no-referrer"
         loading="lazy"

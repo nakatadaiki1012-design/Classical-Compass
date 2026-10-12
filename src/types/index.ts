@@ -72,6 +72,8 @@ export interface Composer {
   nationalityJa: string;
   flag: string;
   portraitUrl: string;
+  /** 'japan-trad'= 日本の伝統音楽の人物（「日本音楽史」オプションをオンにしたときだけ表示） */
+  category?: 'japan-trad';
   portraitPainter?: string;
   portraitYear?: string;
   portraitAttribution?: string;
@@ -98,4 +100,4 @@ export interface EuropeanCity {
   description: string;
 }
 
-export type ViewMode = 'timeline' | 'map' | 'catalog';
+export type ViewMode = 'timeline' | 'map' | 'catalog' | 'history';

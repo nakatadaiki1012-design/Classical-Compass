@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Composer, EraId } from '../types';
-import { COMPOSERS } from '../data/composers';
+import { getVisibleComposers } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
+import { COMPOSER_YOMI, REGIONS, regionOf, gyoOf } from '../data/composerMeta';
 import { useAudio } from '../context/AudioContext';
 import { Play, Pause, Search, Sparkles, Filter, ChevronRight } from 'lucide-react';
 
@@ -15,9 +16,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
 
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortMode, setSortMode] = useState<'birth' | 'kana' | 'region'>('birth');
 
   const filtered = useMemo(() => {
-    return COMPOSERS.filter(c => {
+    return getVisibleComposers().filter(c => {
       if (selectedEra !== 'all' && c.era !== selectedEra) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -28,6 +30,29 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
       return true;
     });
   }, [selectedEra, searchQuery]);
+
+  // 並べ替え（生まれ順／五十音順／出身地域順）。地域・五十音のときは見出しをつける
+  const groups = useMemo(() => {
+    const byBirth = (a: Composer, b: Composer) => a.birthYear - b.birthYear || a.deathYear - b.deathYear;
+    const yomi = (c: Composer) => COMPOSER_YOMI[c.id] || c.shortName;
+    if (sortMode === 'birth') return [{ key: '', title: '', items: [...filtered].sort(byBirth) }];
+    if (sortMode === 'kana') {
+      const sorted = [...filtered].sort((a, b) => yomi(a).localeCompare(yomi(b), 'ja'));
+      const out: { key: string; title: string; items: Composer[] }[] = [];
+      sorted.forEach(c => {
+        const g = gyoOf(yomi(c));
+        const last = out[out.length - 1];
+        if (last && last.key === g) last.items.push(c);
+        else out.push({ key: g, title: g, items: [c] });
+      });
+      return out;
+    }
+    return REGIONS.map(r => ({
+      key: r.id,
+      title: r.name + (r.note ? `（${r.note}）` : ''),
+      items: filtered.filter(c => regionOf(c) === r.id).sort(byBirth)
+    })).filter(g => g.items.length > 0);
+  }, [filtered, sortMode]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto space-y-6 pb-28">
@@ -55,6 +80,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
             />
           </div>
 
+          {/* 並べ替え */}
+          <div className="flex items-center gap-1 bg-[#241f19] border border-[#3d362e] rounded p-0.5 text-xs">
+            {([['birth', '生まれ順'], ['kana', '五十音順'], ['region', '出身地域順']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setSortMode(id)}
+                className={`px-2.5 py-1.5 rounded transition-colors ${
+                  sortMode === id ? 'bg-[#c99738] text-black font-bold' : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Era Filter */}
           <div className="flex items-center gap-1.5 bg-[#241f19] border border-[#3d362e] rounded px-2 py-1 text-xs">
             <Filter className="w-3.5 h-3.5 text-[#c99738]" />
@@ -63,7 +103,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
               onChange={e => setSelectedEra(e.target.value as EraId | 'all')}
               className="bg-transparent text-[#f5ebd9] focus:outline-none cursor-pointer"
             >
-              <option value="all" className="bg-[#1e1b18]">全ての時代 ({COMPOSERS.length})</option>
+              <option value="all" className="bg-[#1e1b18]">全ての時代 ({getVisibleComposers().length})</option>
               {ERAS.map(e => (
                 <option key={e.id} value={e.id} className="bg-[#1e1b18]">
                   {e.name}
@@ -75,8 +115,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
       </div>
 
       {/* Grid of Composers */}
+      {groups.map(group => (
+      <section key={group.key || 'all'} className="space-y-3">
+        {group.title && (
+          <h3 className="font-classical-display font-bold text-base text-[#e6b95c] border-b border-[#2e2924] pb-1.5">
+            {group.title}
+            <span className="ml-2 text-xs font-normal text-[#a3978a]">{group.items.length}人</span>
+          </h3>
+        )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map(composer => {
+        {group.items.map(composer => {
           const era = getEraById(composer.era);
           const age = composer.deathYear - composer.birthYear;
           const firstWork = composer.works[0];
@@ -176,6 +224,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
           );
         })}
       </div>
+      </section>
+      ))}
     </div>
   );
 };

@@ -1,4 +1,7 @@
 import { COMPOSERS } from './composers';
+import { JAPAN_EVENTS } from './historyJapan';
+import { HISTORY_WEST } from './historyWest';
+import { isJapanMode } from '../utils/japanMode';
 import {
   CHRONICLE_RAW,
   CHRONICLE_RAW_LATE,
@@ -18,6 +21,8 @@ export interface YearEvent {
   title: string;
   text?: string;
   composerId?: string;
+  /** 日本音楽史のオプションをオンにしたときだけ表示 */
+  japanOnly?: boolean;
   /** 試聴できる作品の場合、その作品（クリックで解説・試聴） */
   playable?: Composition;
 }
@@ -111,13 +116,31 @@ export function buildComposerEvents(composer: Composer): YearEvent[] {
   return events.sort((a, b) => a.year - b.year);
 }
 
-const WORLD: YearEvent[] = WORLD_EVENTS.map(([year, title, text], idx) => ({
-  id: `world-${idx}`,
-  year,
-  kind: 'world' as const,
-  title,
-  text
-}));
+const WORLD: YearEvent[] = [
+  ...[...WORLD_EVENTS, ...HISTORY_WEST].map(([year, title, text], idx) => ({
+    id: `world-${idx}`,
+    year,
+    kind: 'world' as const,
+    title,
+    text
+  })),
+  ...JAPAN_EVENTS.map(([year, title, text], idx) => ({
+    id: `japan-${idx}`,
+    year,
+    kind: 'world' as const,
+    title: `【音楽史】日本｜${title}`,
+    text,
+    japanOnly: true
+  }))
+];
+
+/** 日本音楽史のオプションがオフのときは、日本の伝統音楽の人物・トピックを除く */
+const COMPOSER_BY_ID = new Map(COMPOSERS.map(c => [c.id, c]));
+const isVisible = (e: YearEvent): boolean => {
+  if (isJapanMode()) return true;
+  if (e.japanOnly) return false;
+  return !(e.composerId && COMPOSER_BY_ID.get(e.composerId)?.category === 'japan-trad');
+};
 
 /** 全作曲家＋世界のできごと（年順） */
 export const ALL_EVENTS: YearEvent[] = [
@@ -134,12 +157,12 @@ ALL_EVENTS.forEach(ev => {
 
 /** その年のできごと */
 export function getEventsForYear(year: number): YearEvent[] {
-  return BY_YEAR.get(year) || [];
+  return (BY_YEAR.get(year) || []).filter(isVisible);
 }
 
 /** その年にできごとが無いときのための、前後で最も近いできごと（音楽のものを優先） */
 export function getNearestEvents(year: number): { prev?: YearEvent; next?: YearEvent } {
-  const music = ALL_EVENTS.filter(e => e.kind !== 'world');
+  const music = ALL_EVENTS.filter(e => e.kind !== 'world' && isVisible(e));
   let prev: YearEvent | undefined;
   let next: YearEvent | undefined;
   for (const ev of music) {
@@ -180,6 +203,7 @@ export function getNearbyMusicEvents(
   return ALL_EVENTS.filter(
     e =>
       e.kind !== 'world' &&
+      isVisible(e) &&
       e.year !== year &&
       Math.abs(e.year - year) <= range &&
       (!composerIds || (e.composerId && composerIds.has(e.composerId))) &&

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { COMPOSERS } from '../data/composers';
+import { COMPOSERS, getVisibleComposers } from '../data/composers';
 import { EUROPEAN_CITIES } from '../data/cities';
 import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
@@ -67,9 +67,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     if (isPlayingTimeTravel) {
       timerRef.current = window.setInterval(() => {
         setCurrentYear(prev => {
-          if (prev >= 1990) {
+          if (prev >= 2010) {
             setIsPlayingTimeTravel(false);
-            return 1990;
+            return 2010;
           }
           return prev + 1;
         });
@@ -90,7 +90,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
   // Active composers living in currentYear
   const activeComposers = useMemo(() => {
-    return COMPOSERS.filter(c => currentYear >= c.birthYear && currentYear <= c.deathYear);
+    return getVisibleComposers().filter(c => currentYear >= c.birthYear && currentYear <= c.deathYear);
   }, [currentYear]);
 
   // 地図に出す人物。その年の居場所（滞在・旅行）に合わせて位置が動く。
@@ -118,15 +118,16 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     const LABEL_W = 104;
     const LABEL_H = 62;
     const placed: { x: number; y: number }[] = [];
-    const offsets: [number, number][] = [];
-    [0, 1, 2, 3].forEach(ring => {
-      offsets.push([ring * LABEL_W, 0], [-ring * LABEL_W, 0]);
-      [1, 2].forEach(row => {
-        offsets.push([ring * LABEL_W, row * LABEL_H], [-ring * LABEL_W, row * LABEL_H]);
-        offsets.push([ring * LABEL_W, -row * LABEL_H], [-ring * LABEL_W, -row * LABEL_H]);
+    // 本当の場所のまわりに、斜めも含めてあらゆる向きの候補を作る（近い順）。
+    // 横長の札なので、横方向の距離は少し長めにとる
+    const offsets: [number, number][] = [[0, 0]];
+    const ANGLES = [-45, 45, -135, 135, -90, 90, 0, 180, -22, 22, -158, 158, -68, 68, -112, 112];
+    [1, 2, 3, 4, 5].forEach(ring => {
+      ANGLES.forEach(deg => {
+        const rad = (deg * Math.PI) / 180;
+        offsets.push([Math.cos(rad) * ring * 78, Math.sin(rad) * ring * 58]);
       });
     });
-    offsets.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
 
     entries
       .filter(e => !isOffMap(e.where.place))
@@ -319,16 +320,16 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
         {/* Timeline Range Slider */}
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#a3978a]">1300年</span>
+          <span className="text-xs font-mono text-[#a3978a]">1000年</span>
           <input
             type="range"
-            min={1300}
-            max={1990}
+            min={1000}
+            max={2010}
             value={currentYear}
             onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
             className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
           />
-          <span className="text-xs font-mono text-[#a3978a]">1990年</span>
+          <span className="text-xs font-mono text-[#a3978a]">2010年</span>
         </div>
 
         {/* その年の重要なできごとを短く（くわしくは下の欄） */}

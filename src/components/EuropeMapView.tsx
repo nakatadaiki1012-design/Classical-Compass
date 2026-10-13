@@ -450,6 +450,25 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     return composerLifeStories;
   }, [composerLifeStories, selectedComposerId, currentYear]);
 
+  // 地図の表示エリアの大きさ（小・中・大）。この端末に覚えておく
+  const MAP_SIZES = { s: { label: '小', vh: 30 }, m: { label: '中', vh: 46 }, l: { label: '大', vh: 70 } } as const;
+  const [mapSize, setMapSize] = useState<keyof typeof MAP_SIZES>(() => {
+    try {
+      const v = localStorage.getItem('cc-map-size');
+      return v === 's' || v === 'm' || v === 'l' ? v : 'm';
+    } catch {
+      return 'm';
+    }
+  });
+  const changeMapSize = (v: keyof typeof MAP_SIZES) => {
+    setMapSize(v);
+    try {
+      localStorage.setItem('cc-map-size', v);
+    } catch {
+      /* 保存できなくても動く */
+    }
+  };
+
   const handlePinClick = (composerId: string) => {
     if (didPanRef.current) return; // ドラッグで動かした直後のクリックは無視
     setSelectedComposerId(prev => (prev === composerId ? null : composerId));
@@ -597,10 +616,23 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       {/* 2. Main SVG Europe Map Canvas (地図のほう: 生没年＆その年の作曲を表示) */}
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
         <div className="w-full max-w-6xl relative">
+          <div className="absolute top-1 right-1 z-10 flex items-center gap-1 rounded-md bg-[#191613]/90 border border-[#3d362e] p-0.5 text-[11px]">
+            <span className="px-1 text-[#a3978a]">地図の大きさ</span>
+            {(Object.keys(MAP_SIZES) as (keyof typeof MAP_SIZES)[]).map(key => (
+              <button
+                key={key}
+                onClick={() => changeMapSize(key)}
+                className={`px-2 py-0.5 rounded ${mapSize === key ? 'bg-[#c99738] text-[#161412] font-bold' : 'text-[#bdb1a1] hover:text-[#f5ebd9]'}`}
+              >
+                {MAP_SIZES[key].label}
+              </button>
+            ))}
+          </div>
           <svg
             ref={svgRef}
             viewBox={`${vx} ${vy} ${SVG_W / k} ${SVG_H / k}`}
-            className={`w-full h-auto max-h-[640px] object-contain drop-shadow-2xl select-none ${k > 1 ? 'cursor-grab' : ''}`}
+            className={`w-full h-auto object-contain drop-shadow-2xl select-none ${k > 1 ? 'cursor-grab' : ''}`}
+            style={{ maxHeight: `max(220px, ${MAP_SIZES[mapSize].vh}vh)` }}
             onMouseDown={handleMapMouseDown}
           >
             <defs>

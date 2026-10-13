@@ -1,4 +1,5 @@
 import { Composition } from '../types';
+import { getExtraTrivia } from './workExtras';
 
 /**
  * 作品・作曲家にまつわる蘊蓄（うんちく）。
@@ -164,5 +165,8 @@ export const COMPOSER_TRIVIA: Record<string, string[]> = {
 
 /** 作品の蘊蓄（なければ undefined） */
 export function getWorkTrivia(composerId: string, work: Composition): string | undefined {
-  return WORK_TRIVIA.find(t => t.composer === composerId && (t.match === '' || work.title.includes(t.match)))?.text;
+  return (
+    WORK_TRIVIA.find(t => t.composer === composerId && (t.match === '' || work.title.includes(t.match)))?.text ??
+    getExtraTrivia(composerId, work)
+  );
 }

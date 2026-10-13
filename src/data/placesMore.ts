@@ -71,4 +71,9 @@ export const PLACES_MORE: Record<string, Place> = {
   moulins: { ja: 'ムーラン', lon: 3.33, lat: 46.57, country: 'フランス' },
   tours: { ja: 'トゥール', lon: 0.69, lat: 47.39, country: 'フランス' },
   bruges: { ja: 'ブルッヘ', lon: 3.22, lat: 51.21, country: 'ベルギー' },
+  nara: { ja: '奈良（大和）', lon: 135.83, lat: 34.69, country: '日本' },
+  shizuoka: { ja: '静岡（駿河）', lon: 138.38, lat: 34.98, country: '日本' },
+  sado: { ja: '佐渡島', lon: 138.35, lat: 38.02, country: '日本' },
+  osaka: { ja: '大坂（大阪）', lon: 135.5, lat: 34.69, country: '日本' },
+  fukuoka: { ja: '福岡（筑前）', lon: 130.4, lat: 33.59, country: '日本' },
 };

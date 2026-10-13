@@ -100,8 +100,22 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   const [view, setView] = useState<{ k: number; vx: number; vy: number }>({ k: 1, vx: 0, vy: 0 });
   const { k, vx, vy } = view;
   const MAX_K = 6;
-  const sc = 1 / k; // 拡大しても、札や文字の大きさが画面の上で変わらないようにするための倍率
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // 地図を小さく表示しているとき、札や文字まで小さくなってボケるので、その分だけ少し大きく描く
+  const [pxScale, setPxScale] = useState(1);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      // 地図は枠の中に縦横比を保って収まるので、幅と高さのうち小さいほうの比率が実際の縮尺
+      const r = el.getBoundingClientRect();
+      setPxScale(Math.min(r.width / SVG_W, r.height / SVG_H) || 1);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const boost = Math.min(1.35, Math.max(1, 0.7 / pxScale));
+  const sc = boost / k; // 拡大しても、札や文字の大きさが画面の上で変わらないようにするための倍率
   const hoverCardRef = useRef<HoverCardHandle>(null);
   const didPanRef = useRef(false);
   const viewRef = useRef(view);
@@ -631,9 +645,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           <svg
             ref={svgRef}
             viewBox={`${vx} ${vy} ${SVG_W / k} ${SVG_H / k}`}
-            className={`w-full h-auto object-contain drop-shadow-2xl select-none ${k > 1 ? 'cursor-grab' : ''}`}
+            className={`w-full h-auto object-contain select-none ${k > 1 ? 'cursor-grab' : ''}`}
             style={{ maxHeight: `max(220px, ${MAP_SIZES[mapSize].vh}vh)` }}
             onMouseDown={handleMapMouseDown}
+            textRendering="geometricPrecision"
           >
             <defs>
               <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
@@ -788,7 +803,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     hoverCardRef.current?.hide();
                   }}
                   className="cursor-pointer group"
-                  filter="url(#pinShadow)"
                 >
                   {/* Pulsating Era Glow Circle */}
                   <circle
@@ -952,8 +966,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               const W = c.w * k;
               const H = c.h * k;
               return (
-                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc})`} filter="url(#pinShadow)">
-                  <rect x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
+                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc})`}>
+                  <rect filter="url(#pinShadow)" x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
                   <text x={-W / 2 + 10} y={-H / 2 + 17} fontSize="12" fontWeight="bold" fill="#e6b95c">
                     {c.placeName}　{c.members.length}人
                   </text>

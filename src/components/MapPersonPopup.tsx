@@ -54,7 +54,7 @@ export const MapPersonPopup: React.FC<MapPersonPopupProps> = ({
           <ComposerPortrait composer={composer} size="md" showOrnateBorder={true} className="shrink-0" />
           <div className="min-w-0">
             <div className="text-base font-bold text-[#f5ebd9] font-classical-display leading-snug">
-              {composer.flag} {composer.shortName}
+              <span className="emoji">{composer.flag}</span> {composer.shortName}
             </div>
             <div className="text-xs text-[#d6cdbd] mt-0.5">
               {year}年・{age}歳　📍{where.place.ja}

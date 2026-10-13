@@ -1125,7 +1125,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
                       {/* Composer Name & Flag Label on Strand */}
                       <div className="pl-6 pr-3 flex items-center gap-1.5 overflow-hidden w-full pointer-events-none">
-                        <span className="text-[11px] drop-shadow-md shrink-0">{composer.flag}</span>
+                        <span className="text-[11px] drop-shadow-md shrink-0 emoji">{composer.flag}</span>
                         <span className="text-[11px] font-extrabold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] truncate tracking-wide">
                           {composer.shortName}
                         </span>

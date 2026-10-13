@@ -468,11 +468,11 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
   return (
     <div className="flex flex-col min-h-screen bg-[#121110] text-[#f5ebd9] select-none pb-16">
       {/* 1. Top Year Controller & Milestone Bar */}
-      <div className="bg-[#191613] border-b border-[#2e2924] px-4 md:px-8 py-3.5 flex flex-col gap-3 shadow-lg sticky top-0 z-30 backdrop-blur-md">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#191613] border-b border-[#2e2924] px-4 md:px-8 py-2 flex flex-col gap-1.5 shadow-lg sticky top-0 z-30 backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           {/* Year & Era badge */}
           <div className="flex items-center gap-3">
-            <span className="font-classical-display font-bold text-3xl md:text-4xl text-[#f5ebd9] tracking-wider font-mono">
+            <span className="font-classical-display font-bold text-2xl md:text-3xl text-[#f5ebd9] tracking-wider font-mono whitespace-nowrap">
               {yearText(currentYear)}
             </span>
             <div
@@ -487,7 +487,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           </div>
 
           {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
             <select
               value=""
               onChange={e => {
@@ -496,10 +496,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   setSelectedComposerId(null);
                 }
               }}
-              className="bg-[#241f19] border border-[#3d362e] rounded-lg px-2.5 py-1.5 text-xs text-[#e8dec8] focus:outline-none focus:border-[#c99738] cursor-pointer max-w-[150px] sm:max-w-[190px]"
+              className="bg-[#241f19] border border-[#3d362e] rounded-md px-1.5 py-0.5 text-[11px] text-[#e8dec8] focus:outline-none focus:border-[#c99738] cursor-pointer max-w-[120px] sm:max-w-[150px]"
               aria-label="有名な年へジャンプ"
             >
-              <option value="">有名な年へジャンプ</option>
+              <option value="">有名な年へ</option>
               {milestones.map(m => (
                 <option key={m.year} value={m.year} className="bg-[#1a140f]">
                   {m.year}年　{m.title}
@@ -509,17 +509,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
             <button
               onClick={() => setIsPlayingTimeTravel(!isPlayingTimeTravel)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#2b241c] hover:bg-[#382f23] border border-[#c99738]/50 text-[#f5ebd9] text-xs font-bold transition-all shadow-md active:scale-95"
+              title="年代を自動で進める" className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#2b241c] hover:bg-[#382f23] border border-[#c99738]/50 text-[#f5ebd9] text-[11px] font-bold whitespace-nowrap transition-all active:scale-95"
             >
               {isPlayingTimeTravel ? (
                 <>
-                  <Pause className="w-3.5 h-3.5 fill-current text-[#c99738]" />
+                  <Pause className="w-3 h-3 fill-current text-[#c99738]" />
                   <span>停止</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5 fill-current text-[#c99738]" />
-                  <span>年代を自動で進める</span>
+                  <Play className="w-3 h-3 fill-current text-[#c99738]" />
+                  <span>自動再生</span>
                 </>
               )}
             </button>
@@ -530,7 +530,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                   <button
                     key={spd}
                     onClick={() => setPlaybackSpeed(spd)}
-                    className={`px-2.5 py-1 rounded transition-colors ${
+                    className={`px-1.5 py-0.5 rounded transition-colors ${
                       playbackSpeed === spd
                         ? 'bg-[#c99738] text-[#161412] font-bold'
                         : 'text-[#b5aa9b] hover:text-[#f5ebd9]'
@@ -545,17 +545,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         </div>
 
         {/* Timeline Range Slider */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#a3978a]">{yearText(-600)}</span>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">{yearText(-600)}</span>
           <button
             onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 10)))}
-            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
           >
             −10
           </button>
           <button
             onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 1)))}
-            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
           >
             −1
           </button>
@@ -569,17 +569,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           />
           <button
             onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 1)))}
-            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
           >
             +1
           </button>
           <button
             onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 10)))}
-            className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
           >
             +10
           </button>
-          <span className="text-xs font-mono text-[#a3978a]">2030年</span>
+          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">2030年</span>
         </div>
 
         {/* その年の重要なできごとを短く（くわしくは下の欄） */}
@@ -1139,7 +1139,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-base">{composer.flag}</span>
+                          <span className="text-base emoji">{composer.flag}</span>
                           <span className="text-sm font-bold text-[#f5ebd9] truncate font-classical-display">
                             {composer.name}
                           </span>

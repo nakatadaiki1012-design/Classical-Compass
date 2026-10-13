@@ -5,7 +5,7 @@ import { getVisibleComposers } from '../data/composers';
 import { ERAS, getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
 import { YearEventsOverlay } from './YearEventsOverlay';
-import { hasAudio } from '../utils/hasAudio';
+import { WorkModal } from './WorkModal';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import { MUSIC_PERIODS, MusicPeriod } from '../data/musicPeriods';
@@ -1328,116 +1328,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         />
       )}
 
-      {/* Partial Episode Modal (Single-Tap Action on composition points) */}
+      {/* 曲の解説ポップアップ */}
       {focusedEpisodeWork && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setFocusedEpisodeWork(null)}
-        >
-          <div
-            className="bg-[#181512] border border-[#c99738] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-[#f5ebd9] space-y-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3 border-b border-[#2e261e] pb-3">
-              <div className="flex items-center gap-3">
-                <ComposerPortrait composer={focusedEpisodeWork.composer} size="sm" />
-                <div>
-                  <span className="text-[11px] text-[#c99738] font-bold">
-                    {focusedEpisodeWork.composer.name}
-                  </span>
-                  <h3 className="text-base font-bold text-white">
-                    {focusedEpisodeWork.work.title}
-                  </h3>
-                  <p className="text-xs text-[#b5aa9b] font-mono">
-                    {focusedEpisodeWork.work.originalTitle}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setFocusedEpisodeWork(null)}
-                className="text-[#b5aa9b] hover:text-white p-1 rounded-full text-lg leading-none"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Quick Metadata Badges */}
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono font-bold">
-                作曲年: {focusedEpisodeWork.work.year}年
-              </span>
-              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#c99738] border border-[#c99738]/40 font-mono">
-                生没年: {focusedEpisodeWork.composer.birthYear}〜{focusedEpisodeWork.composer.deathYear}年 (享年{focusedEpisodeWork.composer.deathYear - focusedEpisodeWork.composer.birthYear}歳)
-              </span>
-              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
-                作曲都市: {focusedEpisodeWork.work.city}
-              </span>
-              <span className="px-2.5 py-1 rounded bg-[#261f18] text-[#e8dec8] border border-[#382e23]">
-                ジャンル: {focusedEpisodeWork.work.genreJa}
-              </span>
-            </div>
-
-            {/* Audio Snippet Preview */}
-            {hasAudio(focusedEpisodeWork.work) ? (
-            <div className="bg-[#110f0d] p-3 rounded-lg border border-[#2e251c] flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => playTrack(focusedEpisodeWork.work, focusedEpisodeWork.composer)}
-                  className="w-8 h-8 rounded-full bg-[#c99738] text-black flex items-center justify-center font-bold shadow hover:bg-[#e6b95c] transition-colors"
-                >
-                  {isPlaying && currentTrack?.work.id === focusedEpisodeWork.work.id ? (
-                    <Pause className="w-4 h-4 fill-current" />
-                  ) : (
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
-                  )}
-                </button>
-                <div className="text-xs">
-                  <span className="font-bold text-[#f5ebd9] block">試聴・フレーズ再生</span>
-                  <span className="text-[11px] text-[#b5aa9b]">Web Audio API リアルタイムシンセ</span>
-                </div>
-              </div>
-            </div>
-            ) : null}
-
-            {/* Detailed Episode Text */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                作品誕生のエピソード・時代背景
-              </h4>
-              <p className="text-xs text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]">
-                {focusedEpisodeWork.work.description}
-              </p>
-              {getWorkTrivia(focusedEpisodeWork.composer.id, focusedEpisodeWork.work) && (
-                <p className="text-xs text-[#d9cfbd] leading-relaxed bg-[#241e17] p-3 rounded-lg border border-[#3a2f20]">
-                  <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
-                  {getWorkTrivia(focusedEpisodeWork.composer.id, focusedEpisodeWork.work)}
-                </p>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setFocusedEpisodeWork(null)}
-                className="px-4 py-2 rounded text-xs text-[#b5aa9b] hover:text-[#f5ebd9] transition-colors"
-              >
-                閉じる
-              </button>
-              <button
-                onClick={() => {
-                  const compId = focusedEpisodeWork.composer.id;
-                  setFocusedEpisodeWork(null);
-                  onSelectComposer(compId);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#c99738] text-black font-bold text-xs hover:bg-[#dbaa44] transition-all shadow-lg"
-              >
-                <span>作曲家「{focusedEpisodeWork.composer.shortName}」の全名鑑を開く</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <WorkModal
+          work={focusedEpisodeWork.work}
+          composer={focusedEpisodeWork.composer}
+          onClose={() => setFocusedEpisodeWork(null)}
+          onOpenComposer={id => onSelectComposer(id)}
+        />
       )}
     </div>
   );

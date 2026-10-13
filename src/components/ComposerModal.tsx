@@ -7,6 +7,8 @@ import { KIND_LABEL } from './eventStyles';
 import { getWorkTrivia, COMPOSER_TRIVIA } from '../data/trivia';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
+import { WorkModal } from './WorkModal';
+import { Composition } from '../types';
 import {
   X,
   Play,
@@ -35,6 +37,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
   onSelectComposer
 }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
+  const [openWork, setOpenWork] = React.useState<Composition | null>(null);
 
   if (!composer) return null;
 
@@ -177,7 +180,8 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 return (
                   <div
                     key={work.id}
-                    className={`p-4 rounded-lg border transition-all ${
+                    onClick={() => setOpenWork(work)}
+                    className={`p-4 rounded-lg border transition-all cursor-pointer ${
                       isCurrent
                         ? 'bg-[#241f19] border-[#c99738] ring-1 ring-[#c99738]'
                         : 'bg-[#1b1713] border-[#2e261e] hover:border-[#473c2f]'
@@ -212,6 +216,15 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                       </p>
                     )}
 
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setOpenWork(work);
+                      }}
+                      className="mt-3 w-full py-1.5 rounded bg-[#241e17] hover:bg-[#2f261c] border border-[#c99738]/40 text-[12px] font-bold text-[#e6b95c]"
+                    >
+                      解説・聴きどころ・無料音源リンクを見る
+                    </button>
                     <div className="mt-3 pt-2 border-t border-[#262019] flex items-center justify-between text-[11px] text-[#a3978a]">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-[#c99738]" />
@@ -351,6 +364,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
           )}
         </div>
       </div>
+      {openWork && <WorkModal work={openWork} composer={composer} onClose={() => setOpenWork(null)} />}
     </div>
   );
 };

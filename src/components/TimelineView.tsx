@@ -64,7 +64,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const BASE_ZOOM = 7.0;
   const MIN_ZOOM = 3.0;
   const MAX_ZOOM = 36.0;
-  const MAX_YEAR = 2010;
+  const MAX_YEAR = 2030;
   const TOTAL_YEARS = MAX_YEAR - MIN_YEAR;
 
   // View style
@@ -122,9 +122,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const timelineTotalWidth = TOTAL_YEARS * zoomScale;
 
   // Filter composers
+  // 国ごとの色分けのとき、凡例の国をタップして、その国だけに絞る（複数選べる）
+  const [countryFilter, setCountryFilter] = useState<string[]>([]);
+
   const filteredComposers = useMemo(() => {
     return getVisibleComposers().filter(c => {
       if (selectedEra !== 'all' && c.era !== selectedEra) return false;
+      if (countryFilter.length > 0 && !countryFilter.includes(countryOf(c))) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = c.name.toLowerCase().includes(q) || c.originalName.toLowerCase().includes(q);
@@ -134,7 +138,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       }
       return true;
     }).sort((a, b) => a.birthYear - b.birthYear || a.deathYear - b.deathYear);
-  }, [selectedEra, searchQuery]);
+  }, [selectedEra, searchQuery, countryFilter]);
 
   // 検索・時代で絞り込み中のときだけ、できごと欄もその作曲家に絞る
   const visibleComposerIds = useMemo(
@@ -419,9 +423,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const { colorBy } = useSettings();
   // 国ごとの色分けのときの凡例（いま表示している人の国だけ）
   const countryLegend = useMemo(() => {
-    const names = new Set(filteredComposers.map(c => countryOf(c)));
+    const names = new Set(getVisibleComposers().map(c => countryOf(c)));
     return [...names].sort((a, b) => a.localeCompare(b, 'ja'));
-  }, [filteredComposers]);
+  }, []);
   const BAND_LANE_H = 14;
   const { bandSegments, bandLanes } = useMemo(() => {
     const place = (list: MusicPeriod[], firstLane: number) => {
@@ -819,13 +823,35 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       {/* 国ごとの色分けのときの凡例 */}
       {colorBy === 'country' && (
         <div className="shrink-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none bg-[#100d0a] border-b border-[#261e14] px-4 md:px-6 py-1">
-          <span className="shrink-0 text-[11px] font-bold text-[#c99738]">色＝現在の国</span>
-          {countryLegend.map(name => (
-            <span key={name} className="shrink-0 flex items-center gap-1 text-[11px] text-[#d6cdbd]">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: countryColor(name) }} />
-              {name}
-            </span>
-          ))}
+          <span className="shrink-0 text-[11px] font-bold text-[#c99738]">色＝現在の国（タップで絞り込み）</span>
+          {countryFilter.length > 0 && (
+            <button
+              onClick={() => setCountryFilter([])}
+              className="shrink-0 px-2 rounded-full border border-[#c99738] text-[11px] font-bold text-[#c99738] hover:bg-[#c99738]/20"
+            >
+              すべて表示
+            </button>
+          )}
+          {countryLegend.map(name => {
+            const on = countryFilter.includes(name);
+            return (
+              <button
+                key={name}
+                onClick={() => setCountryFilter(prev => (prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]))}
+                aria-pressed={on}
+                className={`shrink-0 flex items-center gap-1 px-1.5 rounded-full border text-[11px] transition-colors ${
+                  on
+                    ? 'border-[#f5ebd9] bg-white/15 text-white font-bold'
+                    : countryFilter.length > 0
+                    ? 'border-transparent text-[#8f8476] hover:text-[#d6cdbd]'
+                    : 'border-transparent text-[#d6cdbd] hover:bg-white/10'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: countryColor(name) }} />
+                {name}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -1237,15 +1263,22 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                       </span>
                       {width >= 290 && (
                         <span className="text-xs font-mono text-white/85 pl-2 shrink-0 font-semibold drop-shadow">
-                          {composer.birthYear}年〜
+                          {yearText(composer.birthYear)}〜
                         </span>
                       )}
                       {width >= 290 && (
                         <span className="text-xs font-mono text-white/85 ml-auto pl-3 shrink-0 font-semibold drop-shadow">
-                          〜{composer.deathYear}年
+                          〜{yearText(composer.deathYear)}
                         </span>
                       )}
                     </div>
+
+                    {/* 短命の人など、帯が短くて年が入りきらないときは、帯の右側に生没年を出す */}
+                    {width < 290 && (
+                      <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap text-[11px] font-mono font-semibold text-[#e8dec8] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] pointer-events-none">
+                        {yearText(composer.birthYear)}〜{yearText(composer.deathYear)}
+                      </span>
+                    )}
 
                     {/* Composition Dots on the bar's lower edge (kept clear of the name) */}
                     {composer.works.map(w => {

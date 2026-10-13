@@ -25,7 +25,7 @@ export const ComposerPortrait: React.FC<ComposerPortraitProps> = ({
   // 画像の候補：手持ちのファイル → コモンズのファイル → ウィキペディアの代表画像。読み込めなければ次の候補へ
   const candidates = composer.portraitUrl
     ? [getAssetUrl(composer.portraitUrl)]
-    : [commonsPortraitUrl(composer.id), wikiUrl].filter(Boolean);
+    : [getAssetUrl(`/portraits/${composer.id}.jpg`), commonsPortraitUrl(composer.id), wikiUrl].filter(Boolean);
   const imageUrl = candidates[stage] || '';
 
   const sizeClasses = {

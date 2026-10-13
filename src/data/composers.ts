@@ -2,6 +2,7 @@ import { Composer } from '../types';
 import { LIFE_EPISODES } from './lifeEpisodes';
 import { MORE_COMPOSERS } from './moreComposers';
 import { isJapanMode } from '../utils/japanMode';
+import { isWorldMode } from '../utils/worldMode';
 
 const BASE_COMPOSERS: Composer[] = [
   // --- BAROQUE ---
@@ -2956,4 +2957,4 @@ export const getComposerById = (id: string): Composer | undefined => {
 
 /** いま表示してよい作曲家（日本の伝統音楽の人物は「日本音楽史」オプションがオンのときだけ） */
 export const getVisibleComposers = (): Composer[] =>
-  isJapanMode() ? COMPOSERS : COMPOSERS.filter(c => c.category !== 'japan-trad');
+  COMPOSERS.filter(c => (c.category !== 'japan-trad' || isJapanMode()) && (c.category !== 'world' || isWorldMode()));

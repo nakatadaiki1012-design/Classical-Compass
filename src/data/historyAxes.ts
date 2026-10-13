@@ -6,13 +6,17 @@
 export type AxisEntry = [sort: number, when: string, title: string, text: string, periodId: string];
 
 export interface HistoryAxis {
-  id: 'instrument' | 'texture' | 'theory' | 'form' | 'japan';
+  id: 'instrument' | 'texture' | 'theory' | 'form' | 'japan' | 'world';
   name: string;
   icon: string;
   intro: string;
   terms: [string, string][];
   entries: AxisEntry[];
 }
+
+import { WORLD_MUSIC_EVENTS } from './historyWorld';
+
+const worldPeriodAt = (y: number) => (y < 500 ? 'w-ancient' : y < 1800 ? 'w-classical' : y < 1945 ? 'w-modern' : 'w-global');
 
 export const HISTORY_AXES: HistoryAxis[] = [
   {
@@ -255,5 +259,32 @@ export const HISTORY_AXES: HistoryAxis[] = [
       [1967, '1967年', '【現代】武満徹『ノヴェンバー・ステップス』', '琵琶と尺八が、オーケストラと共演した作品。東西の楽器の出会いとして世界で高く評価された。', 'jp-contemporary'],
       [2008, '2008年（2009年）', '【世界遺産】能楽・文楽・歌舞伎（2008年）、雅楽（2009年）がユネスコ無形文化遺産に', '日本を代表する舞台芸術と音楽が、世界の無形文化遺産として認められた。', 'jp-contemporary']
     ]
+  }
+  ,{
+    id: 'world',
+    name: '世界の音楽',
+    icon: '🌍',
+    intro:
+      'クラシックや日本以外の地域でも、音楽は独自に育ち、互いに影響しあってきた。古代の笛から、ラーガ、ガムラン、ジャズ、ボサノヴァ、レゲエ、ワールドミュージックまで、世界の音楽の歴史を時代順にたどる。',
+    terms: [
+      ['ラーガ', 'インド音楽の旋法。音階、雰囲気、演奏する時間帯などが決まっている。'],
+      ['ターラ', 'インド音楽のリズムの周期。'],
+      ['シタール', '長い首に多数の絃を張った、北インドの代表的な弦楽器。ラヴィ・シャンカールが世界に広めた。'],
+      ['タブラ', '北インドの一対の太鼓。ターラを奏でる。'],
+      ['マカーム', 'アラブ・ペルシア・トルコの旋法の体系。四分音を使う。'],
+      ['ウード', 'アラブ世界の撥弦楽器。リュートの祖先。'],
+      ['ガムラン', 'インドネシアの青銅打楽器の合奏。ドビュッシーにも影響を与えた。'],
+      ['グリオ', '西アフリカの語り部・音楽家。コラを弾いて歴史を語り継ぐ。'],
+      ['二胡', '中国の2本絃の擦弦楽器。阿炳の『二泉映月』が有名。'],
+      ['ブルース', 'アフリカ系アメリカ人の音楽。12小節の形式。'],
+      ['ラグタイム', 'シンコペーションのピアノ音楽。ジョプリンが有名。'],
+      ['ジャズ', 'ニューオーリンズで生まれた、即興演奏が中心の音楽。'],
+      ['タンゴ', 'アルゼンチン・ウルグアイの踊りと音楽。バンドネオンが特徴。'],
+      ['ボサノヴァ', 'サンバとジャズを融合したブラジルの音楽。'],
+      ['レゲエ', 'ジャマイカの、裏拍を強調するリズムの音楽。'],
+      ['ウクレレ', 'ポルトガルのブラギーニャから、ハワイで生まれた小型の弦楽器。'],
+      ['ワールドミュージック', '欧米のポップス以外の、世界各地の音楽を紹介するための言葉（1987年ごろ）。']
+    ],
+    entries: WORLD_MUSIC_EVENTS.map(([y, title, text]) => [y, y < 0 ? `紀元前${-y}年` : y < 500 && y >= 0 ? `${y}年ごろ` : `${y}年`, title, text, worldPeriodAt(y)] as AxisEntry)
   }
 ];

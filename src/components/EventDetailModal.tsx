@@ -9,6 +9,8 @@ import { YearEvent } from '../data/chronicle';
 import { ComposerPortrait } from './ComposerPortrait';
 import { KIND_LABEL } from './eventStyles';
 import { getWorkTrivia } from '../data/trivia';
+import { getComposerEvents } from '../data/chronicle';
+import { getEraById } from '../data/eras';
 
 interface EventDetailModalProps {
   event: YearEvent;
@@ -52,6 +54,25 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
       if (event.kind === 'death' && composer.deathEpisode) text = composer.deathEpisode;
     }
     const where = composer ? getWhereabouts(composer, event.year) : null;
+
+    // 説明が用意されていないできごとは、その人の年譜・居場所・時代の情報から説明を組み立てる
+    if (!text && composer) {
+      const parts: string[] = [];
+      const ageNow = event.year - composer.birthYear;
+      parts.push(
+        `${composer.name}（${composer.birthYear}〜${composer.deathYear}年）が${ageNow}歳のときのできごと。` +
+          (where ? `この頃は、${where.place.ja}で暮らしていた。${where.note}。` : '')
+      );
+      const related = getComposerEvents(composer.id)
+        .filter(e => e.id !== event.id && e.text && e.kind !== 'birth' && e.kind !== 'death' && Math.abs(e.year - event.year) <= 3)
+        .sort((a, b) => Math.abs(a.year - event.year) - Math.abs(b.year - event.year))
+        .slice(0, 2);
+      related.forEach(e => parts.push(`【${e.year}年】${e.title}\n${e.text}`));
+      const era = getEraById(composer.era);
+      parts.push(`${composer.biography.split('。')[0]}。`);
+      parts.push(`この時代（${era.name}）：${era.description}`);
+      text = parts.join('\n\n');
+    }
     return {
       body: text,
       extra: where ? `${event.year}年ごろの居場所：${where.place.ja}（${where.note}）` : ''

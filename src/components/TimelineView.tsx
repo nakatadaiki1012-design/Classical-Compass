@@ -13,6 +13,7 @@ import { PeriodModal } from './PeriodModal';
 import { getWorkTrivia } from '../data/trivia';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { useJapanMode } from '../utils/japanMode';
+import { useWorldMode } from '../utils/worldMode';
 import { useSettings } from '../utils/appSettings';
 import { countryOf, countryColor } from '../data/composerMeta';
 import {
@@ -412,6 +413,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // 一覧表示: 生まれた年が遅い人ほど下の段に置く（1人1段）。左上から右下へ階段のように流れる
   // 時代の帯（年表の目盛りの下）。重なる時代は段を分けて並べる
   const japanMode = useJapanMode();
+  const worldMode = useWorldMode();
   const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
   const hoverCardRef = useRef<HoverCardHandle>(null);
   const { colorBy } = useSettings();
@@ -437,9 +439,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     const jp = japanMode
       ? place(MUSIC_PERIODS.filter(p => p.region === 'japan' && inRange(p)).sort((a, b) => a.start - b.start), westLanes)
       : [];
-    const all = [...west, ...jp];
+    const jpLanes = jp.reduce((m, s) => Math.max(m, s.lane + 1), westLanes);
+    const wd = worldMode
+      ? place(MUSIC_PERIODS.filter(p => p.region === 'world' && inRange(p)).sort((a, b) => a.start - b.start), jpLanes)
+      : [];
+    const all = [...west, ...jp, ...wd];
     return { bandSegments: all, bandLanes: all.reduce((m, s) => Math.max(m, s.lane + 1), 0) };
-  }, [japanMode]);
+  }, [japanMode, worldMode]);
   const BAND_H = bandLanes * BAND_LANE_H + 3;
 
   const PANO_TOP = 44 + BAND_H;

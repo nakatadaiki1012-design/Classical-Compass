@@ -18,11 +18,11 @@ export const COMPOSER_YOMI: Record<string, string> = {
   bruckner: 'ブルックナー', smetana: 'スメタナ', bizet: 'ビゼー', mussorgsky: 'ムソルグスキー',
   'saint-saens': 'サンサーンス', faure: 'フォーレ', 'strauss-jr': 'シュトラウスヨハン', 'clara-schumann': 'シューマンクララ',
   donizetti: 'ドニゼッティ', 'rimsky-korsakov': 'リムスキーコルサコフ', elgar: 'エルガー', satie: 'サティ',
-  holst: 'ホルスト', kanami: 'カンアミ', zeami: 'ゼアミ', 'takemoto-gidayu': 'タケモトギダユウ', 'ikuta-kengyo': 'イクタケンギョウ', 'kurosawa-kinko': 'クロサワキンコ', pythagoras: 'ピタゴラス', gregory1: 'グレゴリウス', guido: 'グイド', leonin: 'レオナン', perotin: 'ペロタン', ockeghem: 'オケゲム', willaert: 'ウィラールト', gabrieli: 'ガブリエリ', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
+  holst: 'ホルスト', tansen: 'ターンセーン', tyagaraja: 'ティヤーガラージャ', liliuokalani: 'リリウオカラニ', 'scott-joplin': 'ジョプリン', 'villa-lobos': 'ヴィラロボス', 'louis-armstrong': 'アームストロング', abing: 'アビン', 'umm-kulthum': 'ウムクルスーム', 'ravi-shankar': 'シャンカール', 'bob-marley': 'マーリー', piazzolla: 'ピアソラ', 'fela-kuti': 'フェラクティ', kanami: 'カンアミ', zeami: 'ゼアミ', 'takemoto-gidayu': 'タケモトギダユウ', 'ikuta-kengyo': 'イクタケンギョウ', 'kurosawa-kinko': 'クロサワキンコ', pythagoras: 'ピタゴラス', gregory1: 'グレゴリウス', guido: 'グイド', leonin: 'レオナン', perotin: 'ペロタン', ockeghem: 'オケゲム', willaert: 'ウィラールト', gabrieli: 'ガブリエリ', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
 };
 
 export type RegionId =
-  | 'italy' | 'germanic' | 'france' | 'lowlands' | 'britain' | 'eastern' | 'nordic' | 'iberia' | 'america' | 'japan' | 'other';
+  | 'italy' | 'germanic' | 'france' | 'lowlands' | 'britain' | 'eastern' | 'nordic' | 'iberia' | 'america' | 'japan' | 'asia' | 'mideast' | 'africa' | 'latin' | 'pacific' | 'other';
 
 export const REGIONS: { id: RegionId; name: string; note: string }[] = [
   { id: 'italy', name: 'イタリア', note: 'オペラとバロック器楽の本場' },
@@ -35,6 +35,11 @@ export const REGIONS: { id: RegionId; name: string; note: string }[] = [
   { id: 'iberia', name: 'スペイン・ポルトガル', note: '' },
   { id: 'america', name: 'アメリカ', note: '' },
   { id: 'japan', name: '日本', note: '' },
+  { id: 'asia', name: 'アジア（インド・中国など）', note: '' },
+  { id: 'mideast', name: '中東', note: 'エジプトなど' },
+  { id: 'africa', name: 'アフリカ', note: '' },
+  { id: 'latin', name: '中南米・カリブ', note: 'ブラジル、アルゼンチン、ジャマイカなど' },
+  { id: 'pacific', name: '太平洋（ハワイなど）', note: '' },
   { id: 'other', name: 'その他', note: '' }
 ];
 
@@ -44,6 +49,11 @@ export function regionOf(c: Composer): RegionId {
   const has = (...words: string[]) => words.some(w => p.includes(w));
   if (has('フランドル', 'ブラバント', 'ベルギー', 'オランダ')) return 'lowlands';
   if (has('日本')) return 'japan';
+  if (has('ハワイ')) return 'pacific';
+  if (has('インド', '中国', '朝鮮', 'インドネシア')) return 'asia';
+  if (has('エジプト', 'トルコ', 'イラン')) return 'mideast';
+  if (has('ナイジェリア', 'ガーナ', 'マリ', '南アフリカ')) return 'africa';
+  if (has('ブラジル', 'アルゼンチン', 'ジャマイカ', 'キューバ', 'メキシコ')) return 'latin';
   if (has('アメリカ')) return 'america';
   if (has('ボヘミア', 'チェコ', 'ハンガリー', 'ポーランド', 'ロシア', 'ウクライナ', 'ルーマニア', 'スロヴァキア')) return 'eastern';
   if (has('ノルウェー', 'フィンランド', 'スウェーデン', 'デンマーク')) return 'nordic';
@@ -78,6 +88,7 @@ const COUNTRY_OVERRIDE: Record<string, string> = {
   byrd: 'イギリス',
   lully: 'イタリア',
   pythagoras: 'ギリシア',
+  liliuokalani: 'ハワイ',
   gregory1: 'イタリア',
   guido: 'イタリア',
   yatsuhashi: '日本',
@@ -121,7 +132,15 @@ export const COUNTRY_COLORS: Record<string, string> = {
   スペイン: '#f43f5e',
   アメリカ: '#22c55e',
   日本: '#dc2626',
-  ギリシア: '#38bdf8'
+  ギリシア: '#38bdf8',
+  ハワイ: '#fb923c',
+  インド: '#facc15',
+  中国: '#b91c1c',
+  エジプト: '#a16207',
+  ブラジル: '#16a34a',
+  アルゼンチン: '#7dd3fc',
+  ジャマイカ: '#65a30d',
+  ナイジェリア: '#047857'
 };
 
 export const countryColor = (country: string): string => COUNTRY_COLORS[country] || '#9ca3af';

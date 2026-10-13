@@ -1,6 +1,8 @@
 import React from 'react';
 import { MusicPeriod, PERIOD_IMAGE } from '../data/musicPeriods';
 import { useWikiImage } from '../utils/useWikiPortrait';
+import { WikiThumb, HoverImage } from './WikiImage';
+import { imageKeyFor } from '../data/imageHints';
 import { getComposerById } from '../data/composers';
 
 /** 年の表記（紀元前も読みやすく） */
@@ -32,7 +34,7 @@ export const PeriodImage: React.FC<{ periodId: string; className?: string; capti
         referrerPolicy="no-referrer"
         loading="lazy"
         onError={() => setFailed(true)}
-        className="w-full h-full object-cover rounded-lg border border-white/10"
+        className="max-w-full max-h-72 w-auto h-auto mx-auto object-contain rounded-lg border border-white/10"
       />
       {!captionless && (
         <figcaption className="mt-1 text-[10px] text-[#8f8476]">画像：ウィキペディア「{key.split('|')[1]}」より</figcaption>
@@ -51,7 +53,7 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
 
   return (
     <div className="space-y-4 text-[#e8dec8]">
-      <PeriodImage periodId={period.id} className="max-h-56 overflow-hidden [&_img]:max-h-56" />
+      <PeriodImage periodId={period.id} />
       <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: period.color + '88', background: period.color + '18' }}>
         <span className="text-[11px] font-bold text-[#e6b95c] mr-2">主流の音楽</span>
         <span className="font-bold text-[#f5ebd9]">{period.mainstream}</span>
@@ -62,9 +64,14 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
         <h4 className="text-xs font-bold text-[#e6b95c] mb-1.5">覚えておきたい用語（{terms.length}）</h4>
         <dl className="space-y-1.5">
           {terms.map(([term, desc]) => (
-            <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5">
-              <dt className="text-[13px] font-bold text-[#f5ebd9]">{term}</dt>
-              <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+            <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5 flex gap-2.5">
+              <div className="min-w-0 flex-1">
+                <dt className="text-[13px] font-bold text-[#f5ebd9]">
+                  <HoverImage imageKey={imageKeyFor(term)}>{term}</HoverImage>
+                </dt>
+                <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+              </div>
+              <WikiThumb imageKey={imageKeyFor(term)} className="shrink-0 w-16 h-16 self-center" />
             </div>
           ))}
           {terms.length === 0 && <p className="text-xs text-[#a3978a]">「{q}」に当てはまる用語はありません。</p>}
@@ -77,7 +84,7 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
           {period.events.map(([when, text]) => (
             <li key={when + text} className="flex gap-2 text-[12.5px] leading-snug">
               <span className="shrink-0 w-24 font-mono font-bold text-[#e6b95c]">{when}</span>
-              <span className="text-[#d6cdbd]">{text}</span>
+              <HoverImage imageKey={imageKeyFor(when + text)} className="text-[#d6cdbd]">{text}</HoverImage>
             </li>
           ))}
         </ul>

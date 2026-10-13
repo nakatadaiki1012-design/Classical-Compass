@@ -3,6 +3,8 @@ import { Search } from 'lucide-react';
 import { MUSIC_PERIODS } from '../data/musicPeriods';
 import { HISTORY_AXES } from '../data/historyAxes';
 import { PeriodModal } from './PeriodModal';
+import { WikiThumb, HoverImage } from './WikiImage';
+import { imageKeyFor } from '../data/imageHints';
 import { useJapanMode } from '../utils/japanMode';
 import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
 
@@ -16,7 +18,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   // 学び方：時代ごと／テーマ（軸）ごと
-  const [mode, setMode] = useState<'periods' | 'instrument' | 'texture' | 'theory' | 'form'>('periods');
+  const [mode, setMode] = useState<'periods' | 'instrument' | 'texture' | 'theory' | 'form' | 'japan'>('periods');
   const [modalPeriodId, setModalPeriodId] = useState<string | null>(null);
   const axis = HISTORY_AXES.find(a => a.id === mode);
 
@@ -54,7 +56,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
 
       {/* 学び方の切り替え */}
       <div className="flex flex-wrap gap-1.5">
-        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES].map(t => (
+        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES.filter(a => a.id !== 'japan' || japanMode)].map(t => (
           <button
             key={t.id}
             onClick={() => {
@@ -82,9 +84,14 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
               {axis.terms
                 .filter(([t, d]) => !q || (t + d).includes(q))
                 .map(([term, desc]) => (
-                  <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5">
-                    <dt className="text-[13px] font-bold text-[#f5ebd9]">{term}</dt>
-                    <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+                  <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5 flex gap-2.5">
+                    <div className="min-w-0 flex-1">
+                      <dt className="text-[13px] font-bold text-[#f5ebd9]">
+                        <HoverImage imageKey={imageKeyFor(term)}>{term}</HoverImage>
+                      </dt>
+                      <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+                    </div>
+                    <WikiThumb imageKey={imageKeyFor(term)} className="shrink-0 w-16 h-16 self-center" />
                   </div>
                 ))}
             </dl>
@@ -114,8 +121,15 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
                         </button>
                       )}
                     </div>
-                    <div className="mt-1 text-[14px] font-bold text-[#f5ebd9] leading-snug">{title}</div>
-                    <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#c9bfb0]">{text}</p>
+                    <div className="mt-1 flex gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[14px] font-bold text-[#f5ebd9] leading-snug">
+                          <HoverImage imageKey={imageKeyFor(title)}>{title}</HoverImage>
+                        </div>
+                        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#c9bfb0]">{text}</p>
+                      </div>
+                      <WikiThumb imageKey={imageKeyFor(title)} className="shrink-0 w-24 h-24 self-start" />
+                    </div>
                   </li>
                 );
               })}

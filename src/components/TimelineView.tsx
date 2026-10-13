@@ -317,29 +317,25 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               // Manual continuous spinning option if explicitly toggled on
               rotAngleRef.current += 0.012;
             } else if (!isDraggingRef.current) {
-              // Compute target rotation angle to align focalYear composers to top/front
-              const activeIndices: number[] = [];
+              // いま見ている年にいちばん「ちょうど」生きている作曲家（生涯の中ほどが年に近い人）を、正面の真ん中に持ってくる
+              let focusIdx = -1;
+              let best = Infinity;
               filteredComposers.forEach((c, idx) => {
-                if (c.birthYear <= clamped && clamped <= c.deathYear) {
-                  activeIndices.push(idx);
+                const alive = c.birthYear <= clamped && clamped <= c.deathYear;
+                const score = alive
+                  ? Math.abs((c.birthYear + c.deathYear) / 2 - clamped)
+                  : 10000 + Math.min(Math.abs(c.birthYear - clamped), Math.abs(c.deathYear - clamped));
+                if (score < best) {
+                  best = score;
+                  focusIdx = idx;
                 }
               });
-
-              if (activeIndices.length > 0) {
-                let sumSin = 0;
-                let sumCos = 0;
-                activeIndices.forEach(idx => {
-                  const baseAngle = (idx / count) * Math.PI * 2;
-                  sumSin += Math.sin(baseAngle);
-                  sumCos += Math.cos(baseAngle);
-                });
-                const avgBaseAngle = Math.atan2(sumSin, sumCos);
-                // Bring active composers to top-front (-PI/4)
-                const desiredRotation = -avgBaseAngle - Math.PI / 4;
-
+              if (focusIdx >= 0) {
+                const baseAngle = (focusIdx / count) * Math.PI * 2;
+                const desiredRotation = -baseAngle;
                 let delta = desiredRotation - rotAngleRef.current;
                 delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-                rotAngleRef.current += delta * 0.1; // smooth rotation response to horizontal scroll
+                rotAngleRef.current += delta * 0.12; // なめらかに回って、フォーカスした人が真ん中に来る
               }
             }
             setRotationAngle(rotAngleRef.current);
@@ -354,12 +350,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     return () => cancelAnimationFrame(animId);
   }, [zoomScale, horizontalPadding, isAutoRotating, viewStyle, filteredComposers]);
 
+  // 3D：一人ひとりの間隔（前面で約 spacing px）を確保するよう、人数に合わせて筒を大きくする
+  const bundleSpacing = Math.round(cylinderRadius * 0.2); // スライダーで間隔を調整（初期値で約33px）
+  const bundleRadius = Math.max(120, Math.round((filteredComposers.length * bundleSpacing) / (2 * Math.PI)));
+  const bundleCenterY = bundleRadius + 60;
+  const bundleHeight = bundleRadius * 2 + 120;
+
   // Compute 3D strand layout and active proximity bubbles
   const { bundle3DData, activeNearComposer } = useMemo<{
     bundle3DData: StrandItem[];
     activeNearComposer: ActiveNearItem | null;
   }>(() => {
-    const centerY = 230; // Center offset for expanded 520px container
+    const centerY = bundleCenterY;
+    const cylinderRadius = bundleRadius;
     const count = filteredComposers.length;
 
     let nearest: ActiveNearItem | null = null;
@@ -377,7 +380,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
       const depthNorm = (z + cylinderRadius) / (cylinderRadius * 2);
       const opacity = 0.35 + depthNorm * 0.65;
-      const strokeThickness = Math.max(16, 18 + depthNorm * 20);
+      const strokeThickness = Math.max(14, 14 + depthNorm * 14);
       const isForeground = z > -15;
 
       // Proximity check for focal balloon
@@ -404,7 +407,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     }).sort((a, b) => a.z - b.z);
 
     return { bundle3DData: strands, activeNearComposer: nearest };
-  }, [filteredComposers, rotationAngle, zoomScale, horizontalPadding, focalYear, cylinderRadius]);
+  }, [filteredComposers, rotationAngle, zoomScale, horizontalPadding, focalYear, bundleRadius, bundleCenterY]);
 
   // 一覧表示: 生まれた年が遅い人ほど下の段に置く（1人1段）。左上から右下へ階段のように流れる
   // 時代の帯（年表の目盛りの下）。重なる時代は段を分けて並べる
@@ -464,6 +467,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     if (top >= visibleFrom + BAND_H && top < visibleTo - 120) return;
     container.scrollTo({ top: Math.max(0, top - 42 - BAND_H), behavior: 'smooth' });
   };
+
+  // 3Dに切り替えたとき・間隔を変えたときは、フォーカスする人が通る「中心線」が画面の真ん中に来るよう縦に合わせる
+  useEffect(() => {
+    if (viewStyle !== '3d-bundle') return;
+    const container = containerRef.current;
+    if (container) container.scrollTop = Math.max(0, bundleCenterY - container.clientHeight / 2 + 20);
+  }, [viewStyle, bundleCenterY]);
 
   // 開いたときも、いま見ている年に生きている人の段が見える位置に合わせる
   useEffect(() => {
@@ -772,7 +782,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                     value={cylinderRadius}
                     onChange={e => setCylinderRadius(parseInt(e.target.value))}
                     className="w-24 h-1.5 accent-[#c99738] cursor-pointer"
-                    title="3D筒の大きさ"
+                    title="3D：人どうしの間隔"
                   />
                   <button
                     onClick={() => setIsAutoRotating(!isAutoRotating)}
@@ -826,13 +836,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         }}
         onClick={handleCanvasClick}
         onScroll={handleContainerScroll}
-        className={`flex-1 min-h-0 overflow-x-auto ${viewStyle === 'panorama' ? 'overflow-y-auto' : 'overflow-y-hidden'} timeline-grab relative bg-[#0b0907] [touch-action:pan-x_pan-y]`}
+        className={`flex-1 min-h-0 overflow-x-auto overflow-y-auto timeline-grab relative bg-[#0b0907] [touch-action:pan-x_pan-y]`}
       >
         <div
           className="relative min-h-full"
           style={{
             width: `${timelineTotalWidth + horizontalPadding * 2}px`,
-            height: viewStyle === 'panorama' ? `${PANO_TOP + panoramaRowCount * PANO_ROW_HEIGHT + 240}px` : '520px'
+            height: viewStyle === 'panorama' ? `${PANO_TOP + panoramaRowCount * PANO_ROW_HEIGHT + 240}px` : `${bundleHeight}px`
           }}
         >
           {/* Center Golden Focal Needle */}
@@ -997,11 +1007,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
               MODE 1: 3D CYLINDRICAL TWISTED BUNDLE (広々とした3D筒年表)
              ======================================================== */}
           {viewStyle === '3d-bundle' && (
-            <div className="relative pt-2 h-[520px]">
+            <div className="relative pt-2" style={{ height: bundleHeight }}>
               {/* Central Glowing Core Line */}
               <div
-                className="absolute left-0 right-0 top-[230px] h-[2px] pointer-events-none bg-gradient-to-r from-transparent via-[#c99738]/40 to-transparent"
+                className="absolute left-0 right-0 h-[2px] pointer-events-none bg-gradient-to-r from-transparent via-[#c99738]/40 to-transparent"
                 style={{
+                  top: bundleCenterY,
                   boxShadow: '0 0 24px rgba(201, 151, 56, 0.3)'
                 }}
               />

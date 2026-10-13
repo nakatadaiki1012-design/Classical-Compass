@@ -258,7 +258,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       });
     });
 
-    type Pin = Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean; clusterId?: string; level: 0 | 1 | 2 };
+    type Pin = Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean; clusterId?: string; level: 0 | 1 | 2; compact?: boolean };
     interface Cluster {
       id: string;
       x: number;
@@ -275,13 +275,13 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     const clusters: Cluster[] = [];
 
     // 画面の上での大きさが変わらないよう、拡大しているときは地図の上での大きさを小さくして場所を探す
-    const s = 1 / k;
+    const s = boost / k;
     const placed: { x: number; y: number; w: number; h: number }[] = [];
     const free = (x: number, y: number, w: number, h: number) =>
-      placed.every(q => Math.abs(q.x - x) >= (q.w + w) / 2 || Math.abs(q.y - y) >= (q.h + h) / 2);
+      placed.every(q => Math.abs(q.x - x) >= (q.w + w) / 2 + 4 * s || Math.abs(q.y - y) >= (q.h + h) / 2 + 4 * s);
     const ANGLES = [-45, 45, -135, 135, -90, 90, 0, 180, -22, 22, -158, 158, -68, 68, -112, 112];
     /** 本当の場所のまわりで、斜めも含めて近い順に空いている場所を探す */
-    const findSpot = (tx: number, ty: number, w: number, h: number, firstRing: number, maxRing = 12): [number, number] | null => {
+    const findSpot = (tx: number, ty: number, w: number, h: number, firstRing: number, maxRing = 24): [number, number] | null => {
       for (let ring = firstRing; ring <= maxRing; ring++) {
         for (const deg of ANGLES) {
           const rad = (deg * Math.PI) / 180;
@@ -349,6 +349,16 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       });
     });
 
+    // 地図の外にいる人の枠（右下）も場所をふさぐので、先に押さえておく
+    {
+      const offCount = entries.filter(e => isOffMap(e.where.place)).length;
+      if (offCount > 0) {
+        const ow = Math.max(Math.min(offCount, 3) * 124 + 24, 240);
+        const oh = 34 + Math.ceil(offCount / 3) * 84;
+        placed.push({ x: SVG_W - 10 - ow / 2, y: SVG_H - 10 - oh / 2, w: ow, h: oh });
+      }
+    }
+
     // まとめ札を先に置く（大きいので、よい場所を先に取る）
     clusters
       .sort((a, b) => b.members.length - a.members.length)
@@ -365,11 +375,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     // 残りの人は、1人ずつの札。拡大して場所に余裕があるときは、肖像画の隣に名前（段階1）、
     // さらに余裕があれば、その頃にしていたこと・作曲したもの（段階2）まで広げる
     const LABEL_W = 104 * s;
-    const LABEL_H = 62 * s;
+    const LABEL_H = 82 * s; // 肖像（上）から名前の札（下）まで
+    const LABEL_DY = 14 * s; // 札の中心は、肖像の中心より少し下
     // [段階, 画面上の幅, 高さ, 探す範囲（リング数）]
     const LEVELS: [1 | 2, number, number, number][] = [
-      [2, 250, 66, 1],
-      [1, 150, 34, 2]
+      [2, 360, 95, 1],
+      [1, 210, 48, 2]
     ];
     singles
       .sort((a, b) => a.ty - b.ty || a.tx - b.tx)
@@ -391,9 +402,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           }
         }
         if (done) return;
-        const [x, y] = findSpot(tx, ty, LABEL_W, LABEL_H, 0) ?? [tx, ty];
-        placed.push({ x, y, w: LABEL_W, h: LABEL_H });
-        pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: tx, trueY: ty, offMap: false, level: 0 });
+        const spotFull = findSpot(tx, ty + LABEL_DY, LABEL_W, LABEL_H, 0);
+        if (spotFull) {
+          placed.push({ x: spotFull[0], y: spotFull[1], w: LABEL_W, h: LABEL_H });
+          pins.push({ ...e, x: Math.round(spotFull[0]), y: Math.round(spotFull[1] - LABEL_DY), trueX: tx, trueY: ty, offMap: false, level: 0 });
+          return;
+        }
+        // 札を置く場所がないときは、重ならないよう顔写真だけにする（名前はタップ・カーソルで見られる）
+        const AV = 32 * s;
+        const [ax, ay] = findSpot(tx, ty, AV, AV, 0) ?? [tx, ty];
+        placed.push({ x: ax, y: ay, w: AV, h: AV });
+        pins.push({ ...e, x: Math.round(ax), y: Math.round(ay), trueX: tx, trueY: ty, offMap: false, level: 0, compact: true });
       });
 
     // 地図の外の枠（右下）
@@ -414,7 +433,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       });
     }
     return { composerMapData: pins, offMapBox: box, clusters };
-  }, [activeComposers, currentYear, k]);
+  }, [activeComposers, currentYear, k, boost]);
 
   // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
   const composerLifeStories = useMemo(() => {
@@ -522,8 +541,46 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </span>
           </div>
 
-          <div className="flex-1 flex justify-center">
-<div className="flex items-center gap-1 rounded-md bg-[#241f19] border border-[#3d362e] p-0.5 text-[11px]">
+          <div className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1 min-w-0 flex items-center gap-1.5">
+          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">{yearText(-600)}</span>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 10)))}
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
+          >
+            −10
+          </button>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 1)))}
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
+          >
+            −1
+          </button>
+          <input
+            type="range"
+            min={-600}
+            max={2030}
+            value={currentYear}
+            onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
+            className="flex-1 min-w-0 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
+          />
+          <button
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 1)))}
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
+          >
+            +1
+          </button>
+          <button
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 10)))}
+            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
+          >
+            +10
+          </button>
+          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">2030年</span>
+        </div>
+
+          {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 rounded-md bg-[#241f19] border border-[#3d362e] p-0.5 text-[11px]">
             <span className="px-1 text-[#a3978a]">地図の大きさ</span>
             {(Object.keys(MAP_SIZES) as (keyof typeof MAP_SIZES)[]).map(key => (
               <button
@@ -534,11 +591,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                 {MAP_SIZES[key].label}
               </button>
             ))}
-          </div>
-          </div>
-
-          {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
-          <div className="flex items-center gap-1.5">
+            </div>
             <select
               value=""
               onChange={e => {
@@ -593,44 +646,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
               </div>
             )}
           </div>
-        </div>
-
-        {/* Timeline Range Slider */}
-        <div className="flex items-center gap-2">
-          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">{yearText(-600)}</span>
-          <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 10)))}
-            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
-          >
-            −10
-          </button>
-          <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 1)))}
-            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
-          >
-            −1
-          </button>
-          <input
-            type="range"
-            min={-600}
-            max={2030}
-            value={currentYear}
-            onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
-            className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
-          />
-          <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 1)))}
-            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
-          >
-            +1
-          </button>
-          <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 10)))}
-            className="px-1.5 py-0.5 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-[11px] font-mono shrink-0"
-          >
-            +10
-          </button>
-          <span className="hidden sm:inline shrink-0 whitespace-nowrap text-[11px] font-mono text-[#a3978a]">2030年</span>
         </div>
 
         {/* その年の重要なできごとを短く（くわしくは下の欄） */}
@@ -788,7 +803,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
             {/* MAP COMPOSER PINS WITH LIFESPAN & COMPOSITION (生没年＆作曲を地図上に明記) */}
             {composerMapData.filter(pin => !pin.clusterId).map(pin => {
-              const { composer, where, x, y, offMap, activeWorksInYear, level } = pin;
+              const { composer, where, x, y, offMap, activeWorksInYear, level, compact } = pin;
               const era = getEraById(composer.era);
               const isSelected = selectedComposerId === composer.id;
               const isHovered = hoveredComposerId === composer.id;
@@ -914,7 +929,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     );
                   })()}
 
-                  {level === 0 && (() => {
+                  {level === 0 && !(compact && !isSelected) && (() => {
                     const line1 = composer.shortName;
                     const workTitle = topWork
                       ? topWork.title.length > 10 ? topWork.title.substring(0, 9) + '…' : topWork.title
@@ -969,8 +984,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             {/* 人が集中している都市の「まとめ札」：中の名前をタップするとその人の説明が開く */}
             {clusters.map(c => {
               const rows = Math.ceil(c.members.length / c.cols);
-              const W = (c.w * k) / POPUP_ZOOM;
-              const H = (c.h * k) / POPUP_ZOOM;
+              const W = (c.w * k) / (POPUP_ZOOM * boost);
+              const H = (c.h * k) / (POPUP_ZOOM * boost);
               return (
                 <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc * POPUP_ZOOM})`}>
                   <rect filter="url(#pinShadow)" x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />

@@ -36,6 +36,9 @@ interface EuropeMapViewProps {
   onSelectComposer: (composerId: string, year?: number) => void;
 }
 
+/** 地図の上に出る説明の札（まとめ札・人物の説明）を、文字が読みやすいよう大きくする倍率 */
+const POPUP_ZOOM = 1.4;
+
 export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
 
@@ -324,8 +327,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       const cy = list.reduce((a, b) => a + b.ty, 0) / list.length;
       const cols = list.length > 7 ? 2 : 1;
       const rows = Math.ceil(list.length / cols);
-      const wScreen = cols * 108 + 16;
-      const hScreen = 26 + rows * CARD_ROW;
+      const wScreen = (cols * 108 + 16) * POPUP_ZOOM;
+      const hScreen = (26 + rows * CARD_ROW) * POPUP_ZOOM;
       const id = `cluster-${clusters.length}`;
       const nearest = list.reduce((best, cur) =>
         Math.hypot(cur.tx - cx, cur.ty - cy) < Math.hypot(best.tx - cx, best.ty - cy) ? cur : best
@@ -519,6 +522,21 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             </span>
           </div>
 
+          <div className="flex-1 flex justify-center">
+<div className="flex items-center gap-1 rounded-md bg-[#241f19] border border-[#3d362e] p-0.5 text-[11px]">
+            <span className="px-1 text-[#a3978a]">地図の大きさ</span>
+            {(Object.keys(MAP_SIZES) as (keyof typeof MAP_SIZES)[]).map(key => (
+              <button
+                key={key}
+                onClick={() => changeMapSize(key)}
+                className={`px-2 py-0.5 rounded ${mapSize === key ? 'bg-[#c99738] text-[#161412] font-bold' : 'text-[#bdb1a1] hover:text-[#f5ebd9]'}`}
+              >
+                {MAP_SIZES[key].label}
+              </button>
+            ))}
+          </div>
+          </div>
+
           {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
           <div className="flex items-center gap-1.5">
             <select
@@ -630,18 +648,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
       {/* 2. Main SVG Europe Map Canvas (地図のほう: 生没年＆その年の作曲を表示) */}
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
         <div className="w-full max-w-6xl relative">
-          <div className="absolute top-1 right-1 z-10 flex items-center gap-1 rounded-md bg-[#191613]/90 border border-[#3d362e] p-0.5 text-[11px]">
-            <span className="px-1 text-[#a3978a]">地図の大きさ</span>
-            {(Object.keys(MAP_SIZES) as (keyof typeof MAP_SIZES)[]).map(key => (
-              <button
-                key={key}
-                onClick={() => changeMapSize(key)}
-                className={`px-2 py-0.5 rounded ${mapSize === key ? 'bg-[#c99738] text-[#161412] font-bold' : 'text-[#bdb1a1] hover:text-[#f5ebd9]'}`}
-              >
-                {MAP_SIZES[key].label}
-              </button>
-            ))}
-          </div>
           <svg
             ref={svgRef}
             viewBox={`${vx} ${vy} ${SVG_W / k} ${SVG_H / k}`}
@@ -884,7 +890,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
                     const boxW = level === 2 ? 224 : 130;
                     const boxH = level === 2 ? 20 + lines.length * 13 + 16 : 28;
                     return (
-                      <g transform={`translate(${x + 20}, ${y - boxH / 2})`} className="pointer-events-none">
+                      <g transform={`translate(${x + 20}, ${y - (boxH * POPUP_ZOOM) / 2}) scale(${POPUP_ZOOM})`} className="pointer-events-none">
                         <rect width={boxW} height={boxH} rx="8" fill="#14110e" stroke={isSelected ? '#ffffff' : topWork ? '#c99738' : era.color} strokeWidth="1.1" opacity="0.94" />
                         <text x="12" y="17" fontSize="13" fontWeight="bold" fill="#ffffff">
                           {composer.shortName}
@@ -963,10 +969,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
             {/* 人が集中している都市の「まとめ札」：中の名前をタップするとその人の説明が開く */}
             {clusters.map(c => {
               const rows = Math.ceil(c.members.length / c.cols);
-              const W = c.w * k;
-              const H = c.h * k;
+              const W = (c.w * k) / POPUP_ZOOM;
+              const H = (c.h * k) / POPUP_ZOOM;
               return (
-                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc})`}>
+                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc * POPUP_ZOOM})`}>
                   <rect filter="url(#pinShadow)" x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
                   <text x={-W / 2 + 10} y={-H / 2 + 17} fontSize="12" fontWeight="bold" fill="#e6b95c">
                     {c.placeName}　{c.members.length}人

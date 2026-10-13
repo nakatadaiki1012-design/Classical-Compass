@@ -269,6 +269,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
     targetScrollPosRef.current = Math.max(0, targetScrollPosRef.current - dx);
 
+    // 縦方向のドラッグでも、上下にスクロールできるようにする
+    if (viewStyle !== '3d-bundle' && containerRef.current) {
+      containerRef.current.scrollTop -= dy;
+    }
+
     if (viewStyle === '3d-bundle') {
       rotAngleRef.current += dy * 0.008;
       setRotationAngle(rotAngleRef.current);

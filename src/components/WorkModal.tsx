@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, ExternalLink, Headphones, MapPin, Sparkles, X } from 'lucide-react';
+import { ChevronRight, ExternalLink, Film, Headphones, MapPin, Sparkles, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { ComposerPortrait } from './ComposerPortrait';
 import { getWorkTrivia } from '../data/trivia';
 import { getWorkGuide } from '../data/workGuides';
+import { getWorkMedia } from '../data/workExtras';
 import { getComposerEvents } from '../data/chronicle';
 import { getFreeMediaLinks, mayBeCopyrighted } from '../utils/freeMedia';
 import { yearText } from '../utils/yearLabel';
@@ -26,6 +27,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
 
   const trivia = getWorkTrivia(composer.id, work);
   const guide = getWorkGuide(composer.id, work);
+  const media = getWorkMedia(composer.id, work);
   const links = getFreeMediaLinks(composer, work);
   const age = work.year - composer.birthYear;
   // この曲の前後2年に、同じ人に起きた出来事（曲の背景として）
@@ -94,6 +96,22 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
               <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
               {trivia}
             </p>
+          )}
+
+          {media.length > 0 && (
+            <section className="space-y-2">
+              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+                <Film className="w-3.5 h-3.5" />
+                こんなところで使われている
+              </h4>
+              <ul className="space-y-1.5">
+                {media.map(m => (
+                  <li key={m} className="text-[13px] text-[#d9cfbd] leading-relaxed bg-[#1d1812] px-3 py-2 rounded-lg border border-[#2e251a]">
+                    {m}
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           {around.length > 0 && (

@@ -64,18 +64,19 @@ async function commonsSearch(query: string, keys: string[]): Promise<string[]> {
 
 /** 検索で見つけるときの手がかり（題名にこれらのどれかが含まれるファイルだけを使う） */
 const SEARCH_KEYS: Record<string, string[]> = {
-  takemitsu: ['takemitsu'],
-  leonin: ['leonin', 'magnus liber'],
-  perotin: ['perotin', 'viderunt'],
-  'ikuta-kengyo': ['ikuta kengyo', 'ikuta-kengyo', '生田検校'],
-  kanami: ["kan'ami", 'kanami', '観阿弥'],
-  zeami: ['zeami', '世阿弥']
+  takemitsu: ['takemitsu']
 };
+
+/**
+ * 正しい肖像画が見つからない（検索すると別のもの、たとえばキノコやクレーターの写真が出てしまう）人。
+ * 画像は取得せず、頭文字の表示にする。
+ */
+const NO_PORTRAIT = new Set(['leonin', 'perotin', 'zeami', 'kanami', 'ikuta-kengyo', 'gabrieli', 'pachelbel', 'takemoto-gidayu', 'yatsuhashi']);
 
 let got = 0;
 let missed: string[] = [];
 for (const c of COMPOSERS) {
-  if (c.portraitUrl) continue;
+  if (c.portraitUrl || NO_PORTRAIT.has(c.id)) continue;
   const file = path.join(OUT, `${c.id}.jpg`);
   if (fs.existsSync(file)) continue;
 
@@ -100,9 +101,8 @@ for (const c of COMPOSERS) {
     await sleep(300);
   }
   if (!buf) {
-    const last = c.originalName.split(/\s+/).pop() || c.originalName;
-    const keys = SEARCH_KEYS[c.id] || [last];
-    for (const q of [c.originalName, keys[0]]) {
+    const keys = SEARCH_KEYS[c.id];
+    for (const q of keys ? [c.originalName, keys[0]] : []) {
       for (const u of await commonsSearch(q, keys)) {
         buf = await download(u);
         if (buf) break;

@@ -86,3 +86,8 @@ html[data-theme="light"] video,
 html[data-theme="light"] iframe {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* ライトモードでも、絵文字（国旗など）は元の色のまま表示する（画面全体の反転を打ち消す） */
+html[data-theme="light"] .emoji {
+  filter: hue-rotate(180deg) invert(1);
+}

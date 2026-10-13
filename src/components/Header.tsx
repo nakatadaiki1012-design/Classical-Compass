@@ -72,8 +72,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
           }`}
         >
-          <span className="sm:hidden">🇯🇵</span>
-          <span className="hidden sm:inline">🇯🇵 日本音楽史{japanMode ? ' ON' : ''}</span>
+          <span className="sm:hidden emoji">🇯🇵</span>
+          <span className="hidden sm:inline"><span className="emoji">🇯🇵</span> 日本音楽史{japanMode ? ' ON' : ''}</span>
         </button>
         <button
           onClick={() => setWorldMode(!worldMode)}
@@ -85,8 +85,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
           }`}
         >
-          <span className="sm:hidden">🌍</span>
-          <span className="hidden sm:inline">🌍 世界の音楽{worldMode ? ' ON' : ''}</span>
+          <span className="sm:hidden emoji">🌍</span>
+          <span className="hidden sm:inline"><span className="emoji">🌍</span> 世界の音楽{worldMode ? ' ON' : ''}</span>
         </button>
         <SettingsMenu />
       </div>

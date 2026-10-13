@@ -174,7 +174,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                       </p>
                     </button>
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-[#b5aa9b]">
-                      <span>{composer.flag}</span>
+                      <span className="emoji">{composer.flag}</span>
                       <span>{composer.country}</span>
                     </div>
                   </div>

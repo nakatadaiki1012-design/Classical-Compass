@@ -80,7 +80,7 @@ export const ComposerHoverCard = forwardRef<HoverCardHandle>((_props, ref) => {
       <div className="mt-2 text-[11px] space-y-1">
         <div>
           <span className="font-bold" style={{ color: era.accentColor }}>{era.name}</span>
-          <span className="text-[#a3978a]">　{composer.flag} {composer.country}</span>
+          <span className="text-[#a3978a]">　<span className="emoji">{composer.flag}</span> {composer.country}</span>
         </div>
         {alive && where && (
           <div className="text-[#d6cdbd]">

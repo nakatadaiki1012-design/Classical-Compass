@@ -106,7 +106,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
             {/* Name, Bio highlights */}
             <div className="flex-1 text-center md:text-left min-w-0">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                <span className="text-xl">{composer.flag}</span>
+                <span className="text-xl emoji">{composer.flag}</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-[#241f19] text-[#c99738] font-mono">
                   {composer.country}
                 </span>

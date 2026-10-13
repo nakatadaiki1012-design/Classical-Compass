@@ -70,9 +70,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
     if (isPlayingTimeTravel) {
       timerRef.current = window.setInterval(() => {
         setCurrentYear(prev => {
-          if (prev >= 2010) {
+          if (prev >= 2030) {
             setIsPlayingTimeTravel(false);
-            return 2010;
+            return 2030;
           }
           return prev + 1;
         });
@@ -548,13 +548,13 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
         <div className="flex items-center gap-3">
           <span className="text-xs font-mono text-[#a3978a]">{yearText(-600)}</span>
           <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2010, y - 10)))}
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 10)))}
             className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
           >
             −10
           </button>
           <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2010, y - 1)))}
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y - 1)))}
             className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
           >
             −1
@@ -562,24 +562,24 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
           <input
             type="range"
             min={-600}
-            max={2010}
+            max={2030}
             value={currentYear}
             onChange={e => setCurrentYear(parseInt(e.target.value, 10))}
             className="flex-1 h-2 bg-[#2a241c] accent-[#c99738] rounded-lg cursor-pointer transition-all"
           />
           <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2010, y + 1)))}
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 1)))}
             className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
           >
             +1
           </button>
           <button
-            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2010, y + 10)))}
+            onClick={() => setCurrentYear(y => Math.max(-600, Math.min(2030, y + 10)))}
             className="px-2 py-1 rounded bg-[#1e1711] hover:bg-[#2b2118] border border-[#3d3021] text-[#bdb1a1] hover:text-[#f5ebd9] text-xs font-mono shrink-0"
           >
             +10
           </button>
-          <span className="text-xs font-mono text-[#a3978a]">2010年</span>
+          <span className="text-xs font-mono text-[#a3978a]">2030年</span>
         </div>
 
         {/* その年の重要なできごとを短く（くわしくは下の欄） */}

@@ -42,6 +42,36 @@ async function wikiThumb(lang: 'en' | 'ja', title: string): Promise<string> {
   }
 }
 
+/** コモンズのファイルを検索し、題名に人物名（または手がかり）が含まれる画像のURLを返す */
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+async function commonsSearch(query: string, keys: string[]): Promise<string[]> {
+  const api =
+    `https://commons.wikimedia.org/w/api.php?action=query&list=search&srnamespace=6&srlimit=15&format=json` +
+    `&srsearch=${encodeURIComponent(query)}`;
+  try {
+    const r = await fetch(api, { headers: { 'User-Agent': UA } });
+    if (!r.ok) return [];
+    const j: any = await r.json();
+    const titles: string[] = (j?.query?.search || []).map((x: { title: string }) => x.title);
+    return titles
+      .filter(t => /\.(jpe?g|png)$/i.test(t))
+      .filter(t => keys.some(k => norm(t).includes(norm(k))))
+      .map(t => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(t.replace(/^File:/, ''))}?width=500`);
+  } catch {
+    return [];
+  }
+}
+
+/** 検索で見つけるときの手がかり（題名にこれらのどれかが含まれるファイルだけを使う） */
+const SEARCH_KEYS: Record<string, string[]> = {
+  takemitsu: ['takemitsu'],
+  leonin: ['leonin', 'magnus liber'],
+  perotin: ['perotin', 'viderunt'],
+  'ikuta-kengyo': ['ikuta kengyo', 'ikuta-kengyo', '生田検校'],
+  kanami: ["kan'ami", 'kanami', '観阿弥'],
+  zeami: ['zeami', '世阿弥']
+};
+
 let got = 0;
 let missed: string[] = [];
 for (const c of COMPOSERS) {
@@ -68,6 +98,18 @@ for (const c of COMPOSERS) {
     const ja = await wikiThumb('ja', c.name.replace(/\s/g, ''));
     if (ja) buf = await download(ja);
     await sleep(300);
+  }
+  if (!buf) {
+    const last = c.originalName.split(/\s+/).pop() || c.originalName;
+    const keys = SEARCH_KEYS[c.id] || [last];
+    for (const q of [c.originalName, keys[0]]) {
+      for (const u of await commonsSearch(q, keys)) {
+        buf = await download(u);
+        if (buf) break;
+        await sleep(300);
+      }
+      if (buf) break;
+    }
   }
   if (buf) {
     fs.writeFileSync(file, buf);

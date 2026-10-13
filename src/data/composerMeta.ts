@@ -18,7 +18,7 @@ export const COMPOSER_YOMI: Record<string, string> = {
   bruckner: 'ブルックナー', smetana: 'スメタナ', bizet: 'ビゼー', mussorgsky: 'ムソルグスキー',
   'saint-saens': 'サンサーンス', faure: 'フォーレ', 'strauss-jr': 'シュトラウスヨハン', 'clara-schumann': 'シューマンクララ',
   donizetti: 'ドニゼッティ', 'rimsky-korsakov': 'リムスキーコルサコフ', elgar: 'エルガー', satie: 'サティ',
-  holst: 'ホルスト', tansen: 'ターンセーン', tyagaraja: 'ティヤーガラージャ', liliuokalani: 'リリウオカラニ', 'scott-joplin': 'ジョプリン', 'villa-lobos': 'ヴィラロボス', 'louis-armstrong': 'アームストロング', abing: 'アビン', 'umm-kulthum': 'ウムクルスーム', 'ravi-shankar': 'シャンカール', 'bob-marley': 'マーリー', piazzolla: 'ピアソラ', 'fela-kuti': 'フェラクティ', kanami: 'カンアミ', zeami: 'ゼアミ', 'takemoto-gidayu': 'タケモトギダユウ', 'ikuta-kengyo': 'イクタケンギョウ', 'kurosawa-kinko': 'クロサワキンコ', pythagoras: 'ピタゴラス', gregory1: 'グレゴリウス', guido: 'グイド', leonin: 'レオナン', perotin: 'ペロタン', ockeghem: 'オケゲム', willaert: 'ウィラールト', gabrieli: 'ガブリエリ', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
+  holst: 'ホルスト', berg: 'ベルク', webern: 'ヴェーベルン', ives: 'アイヴズ', varese: 'ヴァレーズ', hindemith: 'ヒンデミット', poulenc: 'プーランク', copland: 'コープランド', messiaen: 'メシアン', cage: 'ケージ', bernstein: 'バーンスタイン', britten: 'ブリテン', stockhausen: 'シュトックハウゼン', boulez: 'ブーレーズ', ligeti: 'リゲティ', xenakis: 'クセナキス', penderecki: 'ペンデレツキ', berio: 'ベリオ', mayuzumi: 'マユズミ', sakamoto: 'サカモト', morricone: 'モリコーネ', khachaturian: 'ハチャトゥリアン', schnittke: 'シュニトケ', tansen: 'ターンセーン', tyagaraja: 'ティヤーガラージャ', liliuokalani: 'リリウオカラニ', 'scott-joplin': 'ジョプリン', 'villa-lobos': 'ヴィラロボス', 'louis-armstrong': 'アームストロング', abing: 'アビン', 'umm-kulthum': 'ウムクルスーム', 'ravi-shankar': 'シャンカール', 'bob-marley': 'マーリー', piazzolla: 'ピアソラ', 'fela-kuti': 'フェラクティ', kanami: 'カンアミ', zeami: 'ゼアミ', 'takemoto-gidayu': 'タケモトギダユウ', 'ikuta-kengyo': 'イクタケンギョウ', 'kurosawa-kinko': 'クロサワキンコ', pythagoras: 'ピタゴラス', gregory1: 'グレゴリウス', guido: 'グイド', leonin: 'レオナン', perotin: 'ペロタン', ockeghem: 'オケゲム', willaert: 'ウィラールト', gabrieli: 'ガブリエリ', yatsuhashi: 'ヤツハシ', 'yamada-kengyo': 'ヤマダケンギョウ', 'taki-rentaro': 'タキレンタロウ', 'yamada-kosaku': 'ヤマダコウサク', 'miyagi-michio': 'ミヤギミチオ', 'ifukube-akira': 'イフクベアキラ', shostakovich: 'ショスタコーヴィチ', gershwin: 'ガーシュウィン', schoenberg: 'シェーンベルク'
 };
 
 export type RegionId =
@@ -140,7 +140,8 @@ export const COUNTRY_COLORS: Record<string, string> = {
   ブラジル: '#16a34a',
   アルゼンチン: '#7dd3fc',
   ジャマイカ: '#65a30d',
-  ナイジェリア: '#047857'
+  ナイジェリア: '#047857',
+  ジョージア: '#e11d48'
 };
 
 export const countryColor = (country: string): string => COUNTRY_COLORS[country] || '#9ca3af';

@@ -9,7 +9,7 @@ export interface AppSettings {
 }
 
 const KEY = 'cc-settings-v1';
-const DEFAULTS: AppSettings = { theme: 'dark', font: 'default', size: 'm', colorBy: 'era' };
+const DEFAULTS: AppSettings = { theme: 'light', font: 'default', size: 'm', colorBy: 'era' };
 
 const load = (): AppSettings => {
   try {

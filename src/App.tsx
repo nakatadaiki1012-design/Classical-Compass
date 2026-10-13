@@ -16,6 +16,7 @@ import { ComposerModal } from './components/ComposerModal';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { hasAudio } from './utils/hasAudio';
 import { useJapanMode } from './utils/japanMode';
+import { useWorldMode } from './utils/worldMode';
 
 function ClassicalAppContent() {
   const [currentView, setCurrentView] = useState<ViewMode>('timeline');
@@ -25,6 +26,8 @@ function ClassicalAppContent() {
   const { playTrack } = useAudio();
   // 「日本音楽史」オプションを切り替えたら、画面を作り直して表示を入れ替える
   const japanMode = useJapanMode();
+  const worldMode = useWorldMode();
+  const modeKey = `${japanMode}-${worldMode}`;
 
   const handleSelectComposer = useCallback((composerId: string, year?: number) => {
     setSelectedComposerId(composerId);
@@ -65,19 +68,19 @@ function ClassicalAppContent() {
       {/* Main View Area */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {currentView === 'timeline' && (
-          <TimelineView key={`tl-${japanMode}`} onSelectComposer={handleSelectComposer} />
+          <TimelineView key={`tl-${modeKey}`} onSelectComposer={handleSelectComposer} />
         )}
 
         {currentView === 'map' && (
-          <EuropeMapView key={`map-${japanMode}`} onSelectComposer={handleSelectComposer} />
+          <EuropeMapView key={`map-${modeKey}`} onSelectComposer={handleSelectComposer} />
         )}
 
         {currentView === 'history' && (
-          <PeriodsView key={`hist-${japanMode}`} onSelectComposer={handleSelectComposer} />
+          <PeriodsView key={`hist-${modeKey}`} onSelectComposer={handleSelectComposer} />
         )}
 
         {currentView === 'catalog' && (
-          <CatalogView key={`cat-${japanMode}`} onSelectComposer={handleSelectComposer} />
+          <CatalogView key={`cat-${modeKey}`} onSelectComposer={handleSelectComposer} />
         )}
       </main>
 

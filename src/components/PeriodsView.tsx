@@ -6,6 +6,7 @@ import { PeriodModal } from './PeriodModal';
 import { WikiThumb, HoverImage } from './WikiImage';
 import { imageKeyFor } from '../data/imageHints';
 import { useJapanMode } from '../utils/japanMode';
+import { useWorldMode } from '../utils/worldMode';
 import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
 
 interface PeriodsViewProps {
@@ -15,20 +16,24 @@ interface PeriodsViewProps {
 /** 音楽史の時代ごとに、主流の音楽と用語をまとめた画面（勉強用） */
 export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) => {
   const japanMode = useJapanMode();
+  const worldMode = useWorldMode();
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   // 学び方：時代ごと／テーマ（軸）ごと
-  const [mode, setMode] = useState<'periods' | 'instrument' | 'texture' | 'theory' | 'form' | 'japan'>('periods');
+  const [mode, setMode] = useState<'periods' | 'instrument' | 'texture' | 'theory' | 'form' | 'japan' | 'world'>('periods');
   const [modalPeriodId, setModalPeriodId] = useState<string | null>(null);
   const axis = HISTORY_AXES.find(a => a.id === mode);
 
   const q = query.trim();
   const periods = useMemo(
     () =>
-      MUSIC_PERIODS.filter(p => p.region === 'west' || japanMode)
+      MUSIC_PERIODS.filter(p => p.region === 'west' || (p.region === 'japan' && japanMode) || (p.region === 'world' && worldMode))
         .filter(p => !q || (p.name + p.mainstream + p.summary + p.terms.map(t => t.join('')).join('')).includes(q))
-        .sort((a, b) => (a.region === b.region ? a.start - b.start : a.region === 'west' ? -1 : 1)),
-    [japanMode, q]
+        .sort((a, b) => {
+          const rank = (r: string) => (r === 'west' ? 0 : r === 'japan' ? 1 : 2);
+          return a.region === b.region ? a.start - b.start : rank(a.region) - rank(b.region);
+        }),
+    [japanMode, worldMode, q]
   );
 
   return (
@@ -37,7 +42,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
         <h2 className="font-classical-display font-bold text-xl md:text-2xl text-[#f5ebd9]">音楽史（時代・テーマ別）</h2>
         <p className="text-xs text-[#b5aa9b]">
           古代から現代まで、その時代に主流だった音楽と、試験によく出る用語をまとめました。時代の名前をタップすると開きます。
-          {!japanMode && '（日本音楽史は、上の「日本音楽史」ボタンをオンにすると加わります）'}
+          {(!japanMode || !worldMode) && '（上の「日本音楽史」「世界の音楽」ボタンをオンにすると、日本の伝統音楽や世界各地の音楽も加わります）'}
         </p>
         <div className="relative pt-2">
           <Search className="w-3.5 h-3.5 text-[#b5aa9b] absolute left-2.5 top-1/2 translate-y-[-30%]" />
@@ -56,7 +61,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
 
       {/* 学び方の切り替え */}
       <div className="flex flex-wrap gap-1.5">
-        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES.filter(a => a.id !== 'japan' || japanMode)].map(t => (
+        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES.filter(a => (a.id !== 'japan' || japanMode) && (a.id !== 'world' || worldMode))].map(t => (
           <button
             key={t.id}
             onClick={() => {
@@ -144,7 +149,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
           <React.Fragment key={p.id}>
             {showRegionHead && (
               <h3 className="font-classical-display font-bold text-base text-[#e6b95c] pt-2">
-                {p.region === 'west' ? '西洋音楽史' : '日本音楽史'}
+                {p.region === 'west' ? '西洋音楽史' : p.region === 'japan' ? '日本音楽史' : '世界の音楽'}
               </h3>
             )}
             <section className="rounded-xl border bg-[#181512]" style={{ borderColor: p.color + '66' }}>

@@ -2,6 +2,7 @@ import React from 'react';
 import { ViewMode } from '../types';
 import { Compass } from 'lucide-react';
 import { setJapanMode, useJapanMode } from '../utils/japanMode';
+import { setWorldMode, useWorldMode } from '../utils/worldMode';
 import { SettingsMenu } from './SettingsMenu';
 
 interface HeaderProps {
@@ -22,6 +23,7 @@ export const HEADER_HEIGHT = 45;
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const japanMode = useJapanMode();
+  const worldMode = useWorldMode();
   return (
     <header
       className="sticky top-0 z-40 bg-[#161412]/95 backdrop-blur-md border-b border-[#2e2924] px-3 md:px-6"
@@ -72,6 +74,19 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
         >
           <span className="sm:hidden">🇯🇵</span>
           <span className="hidden sm:inline">🇯🇵 日本音楽史{japanMode ? ' ON' : ''}</span>
+        </button>
+        <button
+          onClick={() => setWorldMode(!worldMode)}
+          aria-pressed={worldMode}
+          title="クラシック・日本以外の地域の音楽（ハワイ、インド、中南米、アフリカ、ジャズなど）を表示します"
+          className={`shrink-0 px-2 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+            worldMode
+              ? 'bg-[#2563eb] border-[#2563eb] text-white'
+              : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
+          }`}
+        >
+          <span className="sm:hidden">🌍</span>
+          <span className="hidden sm:inline">🌍 世界の音楽{worldMode ? ' ON' : ''}</span>
         </button>
         <SettingsMenu />
       </div>

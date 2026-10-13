@@ -2,6 +2,8 @@ import { COMPOSERS } from './composers';
 import { JAPAN_EVENTS } from './historyJapan';
 import { HISTORY_WEST } from './historyWest';
 import { isJapanMode } from '../utils/japanMode';
+import { isWorldMode } from '../utils/worldMode';
+import { WORLD_MUSIC_EVENTS } from './historyWorld';
 import {
   CHRONICLE_RAW,
   CHRONICLE_RAW_LATE,
@@ -23,6 +25,8 @@ export interface YearEvent {
   composerId?: string;
   /** 日本音楽史のオプションをオンにしたときだけ表示 */
   japanOnly?: boolean;
+  /** 「世界の音楽」オプションをオンにしたときだけ表示 */
+  worldOnly?: boolean;
   /** 試聴できる作品の場合、その作品（クリックで解説・試聴） */
   playable?: Composition;
 }
@@ -131,15 +135,26 @@ const WORLD: YearEvent[] = [
     title: `【音楽史】日本｜${title}`,
     text,
     japanOnly: true
+  })),
+  ...WORLD_MUSIC_EVENTS.map(([year, title, text], idx) => ({
+    id: `worldmusic-${idx}`,
+    year,
+    kind: 'world' as const,
+    title: `【音楽史】世界｜${title}`,
+    text,
+    worldOnly: true
   }))
 ];
 
 /** 日本音楽史のオプションがオフのときは、日本の伝統音楽の人物・トピックを除く */
 const COMPOSER_BY_ID = new Map(COMPOSERS.map(c => [c.id, c]));
 const isVisible = (e: YearEvent): boolean => {
-  if (isJapanMode()) return true;
-  if (e.japanOnly) return false;
-  return !(e.composerId && COMPOSER_BY_ID.get(e.composerId)?.category === 'japan-trad');
+  const cat = e.composerId ? COMPOSER_BY_ID.get(e.composerId)?.category : undefined;
+  if (e.japanOnly && !isJapanMode()) return false;
+  if (e.worldOnly && !isWorldMode()) return false;
+  if (cat === 'japan-trad' && !isJapanMode()) return false;
+  if (cat === 'world' && !isWorldMode()) return false;
+  return true;
 };
 
 /** 全作曲家＋世界のできごと（年順） */

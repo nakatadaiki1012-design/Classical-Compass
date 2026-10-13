@@ -73,8 +73,8 @@ export interface Composer {
   nationalityJa: string;
   flag: string;
   portraitUrl: string;
-  /** 'japan-trad'= 日本の伝統音楽の人物（「日本音楽史」オプションをオンにしたときだけ表示） */
-  category?: 'japan-trad';
+  /** 'japan-trad'= 日本の伝統音楽の人物（「日本音楽史」オプション）、'world'= 世界の音楽の人物（「世界の音楽」オプション）をオンにしたときだけ表示 */
+  category?: 'japan-trad' | 'world';
   portraitPainter?: string;
   portraitYear?: string;
   portraitAttribution?: string;

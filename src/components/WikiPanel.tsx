@@ -14,9 +14,11 @@ import {
   targetKey,
   targetsIn,
   titleOf,
-  composerText
+  composerText,
+  periodShortName
 } from '../data/glossary';
 import { MUSIC_PERIODS } from '../data/musicPeriods';
+import { CATEGORY_NAME, TermCategory } from '../data/glossaryExtra';
 import { HISTORY_AXES } from '../data/historyAxes';
 import { imageKeyFor } from '../data/imageHints';
 import { closeWiki, openComposerDetail, openWiki, useWikiState, wikiBack, wikiForward, wikiJump } from '../utils/wikiStore';
@@ -54,25 +56,52 @@ const wikipediaUrl = (q: string) => `https://ja.wikipedia.org/w/index.php?search
 const TermPage: React.FC<{ id: string }> = ({ id }) => {
   const term = getTerm(id);
   if (!term) return <p className="text-sm text-[#a3978a]">このページは見つかりません。</p>;
-  const joined = term.texts.map(t => t.text).join('\n');
-  const related = targetsIn(joined, [targetKeyOfTerm(id)]);
+  const self = targetKeyOfTerm(id);
+  const joined = [term.short, term.detail, ...term.texts.map(t => t.text)].filter(Boolean).join('\n');
+  const related = targetsIn(joined, [self]);
   const back = backlinksOf({ kind: 'term', id });
   const periods = term.texts.filter(t => t.periodId).map(t => ({ kind: 'period', id: t.periodId! }) as WikiTarget);
+  // ひとことの説明：基礎用語なら short、なければ最初の説明
+  const lead = term.short ?? term.texts[0]?.text;
+  const otherTexts = term.short ? term.texts : term.texts.slice(1);
   return (
     <div className="space-y-4">
       <div className="flex gap-3">
-        <div className="min-w-0 flex-1 space-y-2">
-          {term.texts.map((t, i) => (
+        <div className="min-w-0 flex-1 space-y-3">
+          {lead && (
+            <p className="text-[15px] leading-relaxed font-bold text-[#f5ebd9] border-l-4 border-[#c99738] pl-3">
+              <LinkedText text={lead} exclude={[self]} />
+            </p>
+          )}
+          {term.detail && (
+            <p className="text-sm leading-relaxed text-[#e1d8c7]">
+              <LinkedText text={term.detail} exclude={[self]} />
+            </p>
+          )}
+        </div>
+        <WikiThumb imageKey={imageKeyFor(id)} className="shrink-0 w-24 h-24 self-start" />
+      </div>
+      {term.examples && term.examples.length > 0 && (
+        <Section title="代表的な曲・例">
+          <ul className="space-y-0.5 text-[13px] text-[#d6cdbd]">
+            {term.examples.map(x => (
+              <li key={x}>・<LinkedText text={x} exclude={[self]} /></li>
+            ))}
+          </ul>
+        </Section>
+      )}
+      {otherTexts.length > 0 && (
+        <Section title="音楽史の中での説明">
+          {otherTexts.map((t, i) => (
             <div key={i}>
-              <p className="text-sm leading-relaxed text-[#e1d8c7]">
-                <LinkedText text={t.text} exclude={[targetKeyOfTerm(id)]} />
+              <p className="text-[13px] leading-relaxed text-[#d6cdbd]">
+                <LinkedText text={t.text} exclude={[self]} />
               </p>
               <p className="text-[11px] text-[#8f8476]">出典：{t.from}</p>
             </div>
           ))}
-        </div>
-        <WikiThumb imageKey={imageKeyFor(id)} className="shrink-0 w-24 h-24 self-start" />
-      </div>
+        </Section>
+      )}
       {periods.length > 0 && (
         <Section title="この用語が出てくる時代">
           <div className="flex flex-wrap gap-1.5">
@@ -91,15 +120,7 @@ const TermPage: React.FC<{ id: string }> = ({ id }) => {
           </div>
         </Section>
       )}
-      {back.length > 0 && (
-        <Section title={`この言葉に触れているページ（${back.length}）`}>
-          <div className="flex flex-wrap gap-1.5">
-            {back.slice(0, 30).map(t => (
-              <Chip key={targetKey(t)} target={t} />
-            ))}
-          </div>
-        </Section>
-      )}
+      {back.length > 0 && <MoreChips title="この言葉に触れているページ" items={back} />}
       <a
         href={wikipediaUrl(id.replace(/（.*?）/g, ''))}
         target="_blank"
@@ -112,6 +133,20 @@ const TermPage: React.FC<{ id: string }> = ({ id }) => {
     </div>
   );
 };
+
+/** 数が多い一覧は、たたんでおく（開くと全部見られる） */
+const MoreChips: React.FC<{ title: string; items: WikiTarget[] }> = ({ title, items }) => (
+  <details className="rounded-lg border border-white/10 px-3 py-2">
+    <summary className="cursor-pointer text-xs font-bold text-[#e6b95c]">
+      {title}（{items.length}）
+    </summary>
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {items.map(t => (
+        <Chip key={targetKey(t)} target={t} />
+      ))}
+    </div>
+  </details>
+);
 const targetKeyOfTerm = (id: string) => `term:${id}`;
 
 const ComposerPage: React.FC<{ id: string }> = ({ id }) => {
@@ -179,23 +214,35 @@ const ComposerPage: React.FC<{ id: string }> = ({ id }) => {
         </Section>
       )}
       <Section title="代表曲">
-        <ul className="text-[13px] text-[#d6cdbd] space-y-0.5">
+        <div className="space-y-1">
           {c.works.map(w => (
-            <li key={w.id}>
-              ・{w.title}（{w.year}年）
-            </li>
+            <details key={w.id} className="rounded bg-white/[0.04] px-2.5 py-1.5">
+              <summary className="cursor-pointer text-[13px] text-[#e8dec8]">
+                {w.title}<span className="text-[11px] text-[#a3978a]">（{w.year}年・{w.genreJa}）</span>
+              </summary>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-[#c9bfb0]">
+                <LinkedText text={w.description} exclude={[self]} />
+              </p>
+            </details>
           ))}
-        </ul>
+        </div>
       </Section>
-      {back.length > 0 && (
-        <Section title={`この人の名前が出てくるページ（${back.length}）`}>
-          <div className="flex flex-wrap gap-1.5">
-            {back.slice(0, 30).map(t => (
-              <Chip key={targetKey(t)} target={t} />
+      {c.milestones && c.milestones.length > 0 && (
+        <details className="rounded-lg border border-white/10 px-3 py-2">
+          <summary className="cursor-pointer text-xs font-bold text-[#e6b95c]">年譜（{c.milestones.length}）</summary>
+          <ul className="mt-2 space-y-1">
+            {c.milestones.map(m => (
+              <li key={m.year + m.event} className="flex gap-2 text-[12.5px] leading-snug">
+                <span className="shrink-0 w-14 font-mono font-bold text-[#e6b95c]">{m.year}年</span>
+                <span className="text-[#d6cdbd]">
+                  <LinkedText text={m.event} exclude={[self]} />
+                </span>
+              </li>
             ))}
-          </div>
-        </Section>
+          </ul>
+        </details>
       )}
+      {back.length > 0 && <MoreChips title="この人の名前が出てくるページ" items={back} />}
       <button
         onClick={() => openComposerDetail(id)}
         className="px-3 py-2 rounded-lg bg-[#c99738] hover:bg-[#dbaa44] text-black text-xs font-bold"
@@ -270,24 +317,16 @@ const PeriodPage: React.FC<{ id: string }> = ({ id }) => {
       <div className="flex flex-wrap gap-2">
         {prev && (
           <button onClick={() => openWiki({ kind: 'period', id: prev.id })} className="px-2.5 py-1 rounded border border-white/15 text-xs text-[#d6cdbd] hover:bg-white/10">
-            ← 前の時代：{prev.name.split(/[：（]/)[0]}
+            ← 前の時代：{periodShortName(prev)}
           </button>
         )}
         {next && (
           <button onClick={() => openWiki({ kind: 'period', id: next.id })} className="px-2.5 py-1 rounded border border-white/15 text-xs text-[#d6cdbd] hover:bg-white/10">
-            次の時代：{next.name.split(/[：（]/)[0]} →
+            次の時代：{periodShortName(next)} →
           </button>
         )}
       </div>
-      {back.length > 0 && (
-        <Section title={`この時代に触れているページ（${back.length}）`}>
-          <div className="flex flex-wrap gap-1.5">
-            {back.slice(0, 30).map(t => (
-              <Chip key={targetKey(t)} target={t} />
-            ))}
-          </div>
-        </Section>
-      )}
+      {back.length > 0 && <MoreChips title="この時代に触れているページ" items={back} />}
     </div>
   );
 };
@@ -316,24 +355,25 @@ const HomePage: React.FC = () => {
           </div>
         </Section>
       )}
+      {(Object.keys(CATEGORY_NAME) as TermCategory[]).map(cat => {
+        const list = [...TERMS.values()].filter(e => e.cat === cat);
+        return list.length ? (
+          <Section key={cat} title={`基礎用語：${CATEGORY_NAME[cat]}（${list.length}）`}>
+            <div className="flex flex-wrap gap-1.5">
+              {list.map(e => (
+                <Chip key={e.id} target={{ kind: 'term', id: e.id }} />
+              ))}
+            </div>
+          </Section>
+        ) : null;
+      })}
       {HISTORY_AXES.map(a => (
-        <Section key={a.id} title={`${a.icon} ${a.name}の用語`}>
-          <div className="flex flex-wrap gap-1.5">
-            {a.terms.map(([n]) => (
-              <Chip key={n} target={{ kind: 'term', id: n }} />
-            ))}
-          </div>
-        </Section>
+        <MoreChips key={a.id} title={`${a.icon} ${a.name}の用語`} items={a.terms.map(([n]) => ({ kind: 'term', id: n }) as WikiTarget)} />
       ))}
-      <Section title={`すべての用語（${TERMS.size}）`}>
-        <div className="flex flex-wrap gap-1.5">
-          {[...TERMS.keys()]
-            .sort((a, b) => a.localeCompare(b, 'ja'))
-            .map(n => (
-              <Chip key={n} target={{ kind: 'term', id: n }} />
-            ))}
-        </div>
-      </Section>
+      <MoreChips
+        title="すべての用語（あいうえお順）"
+        items={[...TERMS.keys()].sort((a, b) => a.localeCompare(b, 'ja')).map(n => ({ kind: 'term', id: n }) as WikiTarget)}
+      />
     </div>
   );
 };

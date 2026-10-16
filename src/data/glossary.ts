@@ -2,6 +2,7 @@ import { MUSIC_PERIODS, MusicPeriod } from './musicPeriods';
 import { HISTORY_AXES } from './historyAxes';
 import { COMPOSERS } from './composers';
 import { Composer } from '../types';
+import { EXTRA_TERMS, TERM_DETAILS, TermCategory } from './glossaryExtra';
 
 /**
  * ウィキペディアのように、文章の中の言葉から、用語・作曲家・時代のページへ飛ぶための索引。
@@ -26,6 +27,15 @@ export interface TermEntry {
   id: string; // 用語そのもの
   texts: TermText[];
   aliases: string[];
+  /** ひとことで（基礎用語のみ） */
+  short?: string;
+  /** くわしく */
+  detail?: string;
+  /** 代表的な曲・人 */
+  examples?: string[];
+  cat?: TermCategory;
+  /** 文章の中で自動リンクにしない */
+  nolink?: boolean;
 }
 
 export const TERMS = new Map<string, TermEntry>();
@@ -50,6 +60,25 @@ const addTerm = (name: string, text: string, from: string, periodId?: string) =>
 MUSIC_PERIODS.forEach(p => p.terms.forEach(([n, t]) => addTerm(n, t, p.name, p.id)));
 HISTORY_AXES.forEach(a => a.terms.forEach(([n, t]) => addTerm(n, t, `テーマ：${a.name}`)));
 
+// 基礎用語（楽器・形式・理論など）を加える
+EXTRA_TERMS.forEach(x => {
+  const e = TERMS.get(x.name) ?? { id: x.name, texts: [], aliases: aliasesOf(x.name) };
+  e.short = x.short;
+  e.detail = e.detail ?? x.detail;
+  e.examples = e.examples ?? x.examples;
+  e.cat = x.cat;
+  e.nolink = x.nolink;
+  x.aliases?.forEach(a => !e.aliases.includes(a) && e.aliases.push(a));
+  TERMS.set(x.name, e);
+});
+// すでにある用語に「くわしく」「例」を足す
+Object.entries(TERM_DETAILS).forEach(([name, d]) => {
+  const e = TERMS.get(name);
+  if (!e) return;
+  e.detail = d.detail ?? e.detail;
+  e.examples = d.examples ?? e.examples;
+});
+
 // ----- 作曲家・時代の別名 -----
 const composerAliases = (c: Composer): string[] => {
   const out = new Set<string>();
@@ -58,15 +87,18 @@ const composerAliases = (c: Composer): string[] => {
   if (last) out.add(last);
   return [...out].filter(a => a.length >= 3);
 };
+/** 時代の短い名前（「日本：」「世界：」の頭は外す） */
+export const periodShortName = (p: MusicPeriod): string =>
+  p.name.replace(/^(日本|世界)：/, '').split(/[：（]/)[0].trim();
 const periodAliases = (p: MusicPeriod): string[] => {
-  const base = p.name.split(/[：（]/)[0].trim();
+  const base = periodShortName(p);
   return [...new Set([p.name, base])].filter(a => a.length >= 3);
 };
 
 // ----- 文章の中から探すための索引（別名 → 行き先） -----
 const ALIAS = new Map<string, WikiTarget>();
 COMPOSERS.forEach(c => composerAliases(c).forEach(a => !ALIAS.has(a) && ALIAS.set(a, { kind: 'composer', id: c.id })));
-TERMS.forEach(e => e.aliases.forEach(a => !ALIAS.has(a) && ALIAS.set(a, { kind: 'term', id: e.id })));
+TERMS.forEach(e => !e.nolink && e.aliases.forEach(a => !ALIAS.has(a) && ALIAS.set(a, { kind: 'term', id: e.id })));
 MUSIC_PERIODS.forEach(p => periodAliases(p).forEach(a => !ALIAS.has(a) && ALIAS.set(a, { kind: 'period', id: p.id })));
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -129,7 +161,7 @@ export function backlinksOf(target: WikiTarget): WikiTarget[] {
     };
     TERMS.forEach(e => {
       const from: WikiTarget = { kind: 'term', id: e.id };
-      e.texts.forEach(t => targetsIn(t.text).forEach(to => add(to, from)));
+      [...e.texts.map(t => t.text), e.short ?? '', e.detail ?? ''].forEach(t => targetsIn(t).forEach(to => add(to, from)));
     });
     MUSIC_PERIODS.forEach(p => {
       const from: WikiTarget = { kind: 'period', id: p.id };
@@ -147,7 +179,7 @@ export function backlinksOf(target: WikiTarget): WikiTarget[] {
 export function titleOf(t: WikiTarget): string {
   if (t.kind === 'term') return t.id;
   if (t.kind === 'composer') return getComposer(t.id)?.shortName ?? t.id;
-  if (t.kind === 'period') return getPeriod(t.id)?.name.split(/[：（]/)[0] ?? t.id;
+  if (t.kind === 'period') { const p = getPeriod(t.id); return p ? periodShortName(p) : t.id; }
   return '用語集';
 }
 
@@ -159,7 +191,7 @@ export function searchWiki(query: string): WikiTarget[] {
   const out: { t: WikiTarget; score: number }[] = [];
   TERMS.forEach(e => {
     const nameHit = hit(e.id);
-    if (nameHit || e.texts.some(x => hit(x.text))) out.push({ t: { kind: 'term', id: e.id }, score: nameHit ? 0 : 2 });
+    if (nameHit || e.aliases.some(hit) || [e.short, e.detail, ...e.texts.map(x => x.text)].some(x => x && hit(x))) out.push({ t: { kind: 'term', id: e.id }, score: nameHit ? 0 : 2 });
   });
   COMPOSERS.forEach(c => {
     if (hit(c.name) || hit(c.shortName) || hit(c.originalName)) out.push({ t: { kind: 'composer', id: c.id }, score: 1 });

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ViewMode } from './types';
 import { COMPOSERS, getComposerById } from './data/composers';
 import { AudioProvider, useAudio } from './context/AudioContext';
@@ -13,6 +13,8 @@ import { EuropeMapView } from './components/EuropeMapView';
 import { CatalogView } from './components/CatalogView';
 import { PeriodsView } from './components/PeriodsView';
 import { ComposerModal } from './components/ComposerModal';
+import { WikiPanel } from './components/WikiPanel';
+import { setComposerOpener } from './utils/wikiStore';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { hasAudio } from './utils/hasAudio';
 import { useJapanMode } from './utils/japanMode';
@@ -54,6 +56,10 @@ function ClassicalAppContent() {
     }
   }, [playTrack]);
 
+  useEffect(() => {
+    setComposerOpener(id => handleSelectComposer(id));
+  }, [handleSelectComposer]);
+
   const selectedComposer = selectedComposerId ? getComposerById(selectedComposerId) || null : null;
 
   return (
@@ -83,6 +89,9 @@ function ClassicalAppContent() {
           <CatalogView key={`cat-${modeKey}`} onSelectComposer={handleSelectComposer} />
         )}
       </main>
+
+      {/* 用語・作曲家・時代のウィキ風ページ（行ったり来たりできる） */}
+      <WikiPanel />
 
       {/* Composer Full Profile Modal */}
       <ComposerModal

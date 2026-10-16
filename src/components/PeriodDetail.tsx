@@ -4,6 +4,7 @@ import { useWikiImage } from '../utils/useWikiPortrait';
 import { WikiThumb, HoverImage } from './WikiImage';
 import { imageKeyFor } from '../data/imageHints';
 import { getComposerById } from '../data/composers';
+import { LinkedText, WikiLink } from './LinkedText';
 
 /** 年の表記（紀元前も読みやすく） */
 export const yearLabel = (y: number) => (y < 0 ? `紀元前${-y}年` : y >= 2030 ? '現在' : `${y}年`);
@@ -56,9 +57,9 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
       <PeriodImage periodId={period.id} />
       <div className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: period.color + '88', background: period.color + '18' }}>
         <span className="text-[11px] font-bold text-[#e6b95c] mr-2">主流の音楽</span>
-        <span className="font-bold text-[#f5ebd9]">{period.mainstream}</span>
+        <span className="font-bold text-[#f5ebd9]"><LinkedText text={period.mainstream} exclude={[`period:${period.id}`]} /></span>
       </div>
-      <p className="text-sm leading-relaxed text-[#d6cdbd]">{period.summary}</p>
+      <p className="text-sm leading-relaxed text-[#d6cdbd]"><LinkedText text={period.summary} exclude={[`period:${period.id}`]} /></p>
 
       <section>
         <h4 className="text-xs font-bold text-[#e6b95c] mb-1.5">覚えておきたい用語（{terms.length}）</h4>
@@ -67,9 +68,9 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
             <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5 flex gap-2.5">
               <div className="min-w-0 flex-1">
                 <dt className="text-[13px] font-bold text-[#f5ebd9]">
-                  <HoverImage imageKey={imageKeyFor(term)}>{term}</HoverImage>
+                  <HoverImage imageKey={imageKeyFor(term)}><WikiLink target={{ kind: 'term', id: term }}>{term}</WikiLink></HoverImage>
                 </dt>
-                <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+                <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]"><LinkedText text={desc} exclude={[`period:${period.id}`, `term:${term}`]} /></dd>
               </div>
               <WikiThumb imageKey={imageKeyFor(term)} className="shrink-0 w-16 h-16 self-center" />
             </div>
@@ -84,7 +85,7 @@ export const PeriodDetail: React.FC<PeriodDetailProps> = ({ period, filter = '',
           {period.events.map(([when, text]) => (
             <li key={when + text} className="flex gap-2 text-[12.5px] leading-snug">
               <span className="shrink-0 w-24 font-mono font-bold text-[#e6b95c]">{when}</span>
-              <HoverImage imageKey={imageKeyFor(when + text)} className="text-[#d6cdbd]">{text}</HoverImage>
+              <HoverImage imageKey={imageKeyFor(when + text)} className="text-[#d6cdbd]"><LinkedText text={text} exclude={[`period:${period.id}`]} /></HoverImage>
             </li>
           ))}
         </ul>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronRight, ExternalLink, Film, Headphones, MapPin, Sparkles, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { ComposerPortrait } from './ComposerPortrait';
+import { LinkedText } from './LinkedText';
 import { getWorkTrivia } from '../data/trivia';
 import { getWorkGuide } from '../data/workGuides';
 import { getWorkMedia } from '../data/workExtras';
@@ -25,6 +26,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const ex = [`composer:${composer.id}`];
   const trivia = getWorkTrivia(composer.id, work);
   const guide = getWorkGuide(composer.id, work);
   const media = getWorkMedia(composer.id, work);
@@ -78,7 +80,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
               <Sparkles className="w-3.5 h-3.5" />
               どんな曲？
             </h4>
-            <p className="text-[13px] text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]">{work.description}</p>
+            <p className="text-[13px] text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]"><LinkedText text={work.description} exclude={ex} /></p>
           </section>
 
           {guide.text && (
@@ -87,14 +89,14 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
                 <Headphones className="w-3.5 h-3.5" />
                 {guide.specific ? '聴きどころ' : '聴き方のヒント'}
               </h4>
-              <p className="text-[13px] text-[#d9cfbd] leading-relaxed bg-[#1d1812] p-3 rounded-lg border border-[#2e251a]">{guide.text}</p>
+              <p className="text-[13px] text-[#d9cfbd] leading-relaxed bg-[#1d1812] p-3 rounded-lg border border-[#2e251a]"><LinkedText text={guide.text} exclude={ex} /></p>
             </section>
           )}
 
           {trivia && (
             <p className="text-[13px] text-[#d9cfbd] leading-relaxed bg-[#241e17] p-3 rounded-lg border border-[#3a2f20]">
               <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
-              {trivia}
+              <LinkedText text={trivia} exclude={ex} />
             </p>
           )}
 
@@ -107,7 +109,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
               <ul className="space-y-1.5">
                 {media.map(m => (
                   <li key={m} className="text-[13px] text-[#d9cfbd] leading-relaxed bg-[#1d1812] px-3 py-2 rounded-lg border border-[#2e251a]">
-                    {m}
+                    <LinkedText text={m} exclude={ex} />
                   </li>
                 ))}
               </ul>
@@ -120,7 +122,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
               {around.map(e => (
                 <p key={e.id} className="text-xs text-[#b5aa9b] leading-relaxed">
                   <span className="font-mono text-[#e6b95c]">{yearText(e.year)}</span>　{e.title}
-                  <span className="block text-[#a3978a] mt-0.5">{e.text}</span>
+                  <span className="block text-[#a3978a] mt-0.5"><LinkedText text={e.text!} exclude={ex} /></span>
                 </p>
               ))}
             </section>

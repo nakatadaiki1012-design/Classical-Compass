@@ -8,6 +8,7 @@ import { imageKeyFor } from '../data/imageHints';
 import { useJapanMode } from '../utils/japanMode';
 import { useWorldMode } from '../utils/worldMode';
 import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
+import { LinkedText, WikiLink } from './LinkedText';
 
 interface PeriodsViewProps {
   onSelectComposer: (composerId: string) => void;
@@ -82,7 +83,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
 
       {axis && (
         <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-[#d6cdbd]">{axis.intro}</p>
+          <p className="text-sm leading-relaxed text-[#d6cdbd]"><LinkedText text={axis.intro} /></p>
           <details className="rounded-xl border border-[#3a2f20] bg-[#181512] px-4 py-2" open={!!q}>
             <summary className="cursor-pointer text-sm font-bold text-[#e6b95c]">覚えておきたい用語（{axis.terms.length}）</summary>
             <dl className="mt-2 space-y-1.5">
@@ -92,9 +93,9 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
                   <div key={term} className="rounded bg-white/[0.04] px-2.5 py-1.5 flex gap-2.5">
                     <div className="min-w-0 flex-1">
                       <dt className="text-[13px] font-bold text-[#f5ebd9]">
-                        <HoverImage imageKey={imageKeyFor(term)}>{term}</HoverImage>
+                        <HoverImage imageKey={imageKeyFor(term)}><WikiLink target={{ kind: 'term', id: term }}>{term}</WikiLink></HoverImage>
                       </dt>
-                      <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]">{desc}</dd>
+                      <dd className="text-[12.5px] leading-relaxed text-[#c9bfb0]"><LinkedText text={desc} exclude={[`term:${term}`]} /></dd>
                     </div>
                     <WikiThumb imageKey={imageKeyFor(term)} className="shrink-0 w-16 h-16 self-center" />
                   </div>
@@ -131,7 +132,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
                         <div className="text-[14px] font-bold text-[#f5ebd9] leading-snug">
                           <HoverImage imageKey={imageKeyFor(title)}>{title}</HoverImage>
                         </div>
-                        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#c9bfb0]">{text}</p>
+                        <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#c9bfb0]"><LinkedText text={text} /></p>
                       </div>
                       <WikiThumb imageKey={imageKeyFor(title)} className="shrink-0 w-24 h-24 self-start" />
                     </div>

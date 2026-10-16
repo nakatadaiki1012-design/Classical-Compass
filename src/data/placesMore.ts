@@ -126,4 +126,6 @@ export const PLACES_MORE: Record<string, Place> = {
   yokohama: { ja: '横浜', lon: 139.64, lat: 35.44, country: '日本' },
   tbilisi: { ja: 'トビリシ', lon: 44.8, lat: 41.7, country: 'ジョージア' },
   engels: { ja: 'エンゲルス（ヴォルガ川沿い）', lon: 46.1, lat: 51.5, country: 'ロシア' },
+  awaji: { ja: '淡路島', lon: 134.85, lat: 34.35, country: '日本' },
+  aomori: { ja: '青森（津軽）', lon: 140.74, lat: 40.82, country: '日本' },
 };

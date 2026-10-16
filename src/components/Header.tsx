@@ -30,11 +30,11 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
       className="sticky top-0 z-40 bg-[#161412]/95 backdrop-blur-md border-b border-[#2e2924] px-3 md:px-6"
       style={{ height: HEADER_HEIGHT }}
     >
-      <div className="h-full max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div className="h-full max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
         {/* ロゴ（狭い画面ではアイコンだけ） */}
         <button
           onClick={() => onViewChange('timeline')}
-          className="flex items-center gap-2 text-left transition-opacity hover:opacity-90 shrink-0"
+          className="hidden min-[400px]:flex items-center gap-2 text-left transition-opacity hover:opacity-90 shrink-0"
           aria-label="Classical Compass（年表へ）"
         >
           <div className="w-7 h-7 rounded-full border border-[#c99738]/50 flex items-center justify-center bg-[#241f19]">
@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
             <button
               key={item.view}
               onClick={() => onViewChange(item.view)}
-              className={`px-3 sm:px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
+              className={`px-2 sm:px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
                 currentView === item.view
                   ? 'bg-[#c99738] text-[#161412]'
                   : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           onClick={() => setJapanMode(!japanMode)}
           aria-pressed={japanMode}
           title="日本の伝統音楽の人物と、日本音楽史のトピックを表示します"
-          className={`shrink-0 px-2 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+          className={`shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
             japanMode
               ? 'bg-[#b83b3b] border-[#b83b3b] text-white'
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
@@ -80,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           onClick={() => setWorldMode(!worldMode)}
           aria-pressed={worldMode}
           title="クラシック・日本以外の地域の音楽（ハワイ、インド、中南米、アフリカ、ジャズなど）を表示します"
-          className={`shrink-0 px-2 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+          className={`shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
             worldMode
               ? 'bg-[#2563eb] border-[#2563eb] text-white'
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           onClick={() => openWiki({ kind: 'home' })}
           title="用語集（用語・作曲家・時代をリンクでたどる）"
           aria-label="用語集を開く"
-          className="shrink-0 px-2 sm:px-2.5 py-1 rounded-md border border-[#2e2924] bg-[#1e1a16] text-[#bdb1a1] hover:text-[#f5ebd9] text-[12px] font-bold whitespace-nowrap flex items-center gap-1"
+          className="shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border border-[#2e2924] bg-[#1e1a16] text-[#bdb1a1] hover:text-[#f5ebd9] text-[12px] font-bold whitespace-nowrap flex items-center gap-1"
         >
           <BookOpen className="w-3.5 h-3.5" />
           <span className="hidden md:inline">用語集</span>

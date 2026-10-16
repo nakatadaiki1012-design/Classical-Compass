@@ -8,6 +8,7 @@ import { getWorkTrivia, COMPOSER_TRIVIA } from '../data/trivia';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import { WorkModal } from './WorkModal';
+import { LinkedText } from './LinkedText';
 import { Composition } from '../types';
 import {
   X,
@@ -136,7 +137,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                     className="text-xs px-2.5 py-1 rounded bg-[#241f19] border border-[#383025] text-[#e8dec8] flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3 h-3 text-[#c99738]" />
-                    <span>{feat}</span>
+                    <span><LinkedText text={feat} exclude={[`composer:${composer.id}`]} /></span>
                   </span>
                 ))}
               </div>
@@ -207,7 +208,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                     </div>
 
                     <p className="text-xs text-[#a39888] mt-3 leading-relaxed">
-                      {work.description}
+                      <LinkedText text={work.description} exclude={[`composer:${composer.id}`]} />
                     </p>
                     {getWorkTrivia(composer.id, work) && (
                       <p className="mt-2 rounded bg-[#241e17] border border-[#3a2f20] px-2.5 py-2 text-[12px] leading-relaxed text-[#d9cfbd]">
@@ -250,7 +251,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               <ul className="space-y-2">
                 {COMPOSER_TRIVIA[composer.id].map(t => (
                   <li key={t} className="rounded-lg bg-[#1b1713] border border-[#2e261e] px-3 py-2 text-[13px] leading-relaxed text-[#d9cfbd]">
-                    {t}
+                    <LinkedText text={t} exclude={[`composer:${composer.id}`]} />
                   </li>
                 ))}
               </ul>
@@ -280,7 +281,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                       </span>
                     </div>
                     <div className="text-sm font-bold text-[#f5ebd9] mt-1 leading-snug">{ev.title}</div>
-                    {ev.text && <p className="text-xs text-[#b5aa9b] mt-0.5 leading-relaxed">{ev.text}</p>}
+                    {ev.text && <p className="text-xs text-[#b5aa9b] mt-0.5 leading-relaxed"><LinkedText text={ev.text} exclude={[`composer:${composer.id}`]} /></p>}
                   </li>
                 );
               })}
@@ -294,7 +295,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               <span>生涯と経歴</span>
             </h3>
             <p className="text-sm text-[#d4cbbe] leading-relaxed whitespace-pre-line p-4 rounded-lg bg-[#191612] border border-[#2b241c]">
-              {composer.biography}
+              <LinkedText text={composer.biography} exclude={[`composer:${composer.id}`]} />
             </p>
           </div>
 
@@ -306,7 +307,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
             </h3>
             <div className="p-4 rounded-lg bg-[#191612] border border-[#2b241c]">
               <p className="text-sm text-[#d4cbbe] leading-relaxed">
-                {composer.musicalStyle}
+                <LinkedText text={composer.musicalStyle} exclude={[`composer:${composer.id}`]} />
               </p>
             </div>
           </div>

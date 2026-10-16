@@ -11,6 +11,7 @@ import { KIND_LABEL } from './eventStyles';
 import { getWorkTrivia } from '../data/trivia';
 import { getComposerEvents } from '../data/chronicle';
 import { getEraById } from '../data/eras';
+import { LinkedText } from './LinkedText';
 
 interface EventDetailModalProps {
   event: YearEvent;
@@ -119,7 +120,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           )}
 
           {body ? (
-            <p className="text-sm text-[#d6cdbd] leading-relaxed whitespace-pre-line">{body}</p>
+            <p className="text-sm text-[#d6cdbd] leading-relaxed whitespace-pre-line"><LinkedText text={body} exclude={composer ? [`composer:${composer.id}`] : undefined} /></p>
           ) : (
             <p className="text-sm text-[#a3978a]">この見出しの、くわしい記事はまだありません。</p>
           )}
@@ -127,7 +128,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           {composer && event.playable && getWorkTrivia(composer.id, event.playable) && (
             <p className="rounded-lg bg-[#241e17] border border-[#3a2f20] px-3 py-2 text-[12.5px] leading-relaxed text-[#d9cfbd]">
               <span className="font-bold text-[#e6b95c] mr-1">蘊蓄</span>
-              {getWorkTrivia(composer.id, event.playable)}
+              <LinkedText text={getWorkTrivia(composer.id, event.playable)!} exclude={[`composer:${composer.id}`]} />
             </p>
           )}
 

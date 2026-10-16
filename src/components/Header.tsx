@@ -1,6 +1,7 @@
 import React from 'react';
 import { ViewMode } from '../types';
-import { Compass } from 'lucide-react';
+import { BookOpen, Compass } from 'lucide-react';
+import { openWiki } from '../utils/wikiStore';
 import { setJapanMode, useJapanMode } from '../utils/japanMode';
 import { setWorldMode, useWorldMode } from '../utils/worldMode';
 import { SettingsMenu } from './SettingsMenu';
@@ -87,6 +88,15 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
         >
           <span className="sm:hidden emoji">🌍</span>
           <span className="hidden sm:inline"><span className="emoji">🌍</span> 世界の音楽{worldMode ? ' ON' : ''}</span>
+        </button>
+        <button
+          onClick={() => openWiki({ kind: 'home' })}
+          title="用語集（用語・作曲家・時代をリンクでたどる）"
+          aria-label="用語集を開く"
+          className="shrink-0 px-2 sm:px-2.5 py-1 rounded-md border border-[#2e2924] bg-[#1e1a16] text-[#bdb1a1] hover:text-[#f5ebd9] text-[12px] font-bold whitespace-nowrap flex items-center gap-1"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">用語集</span>
         </button>
         <SettingsMenu />
       </div>

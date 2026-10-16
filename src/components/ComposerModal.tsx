@@ -8,6 +8,7 @@ import { getWorkTrivia, COMPOSER_TRIVIA } from '../data/trivia';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import { WorkModal } from './WorkModal';
+import { useBackClose } from '../utils/backStack';
 import { LinkedText } from './LinkedText';
 import { Composition } from '../types';
 import {
@@ -39,6 +40,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
 }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
   const [openWork, setOpenWork] = React.useState<Composition | null>(null);
+  useBackClose(!!composer, onClose);
 
   if (!composer) return null;
 
@@ -85,23 +87,6 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 showOrnateBorder={true}
                 className="shadow-2xl ring-4 ring-[#c99738]/40"
               />
-              <div className="mt-3 text-center max-w-[200px] bg-[#1a1714] border border-[#332a20] rounded-lg p-2">
-                {composer.portraitUrl ? (
-                  <>
-                    <span className="text-[11px] font-semibold text-[#c99738] block">
-                      著作権フリー（パブリックドメイン）
-                    </span>
-                    <span className="text-[11px] text-[#b5aa9b] block mt-0.5">
-                      {composer.portraitPainter || '歴史的肖像画（18〜19世紀原画）'}
-                    </span>
-                    <span className="text-[10px] text-[#a3978a] block">
-                      {composer.portraitAttribution || '没後70年以上経過・公有財産'}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[11px] text-[#b5aa9b] block">肖像画：ウィキペディアの画像（表示できないときは頭文字）</span>
-                )}
-              </div>
             </div>
 
             {/* Name, Bio highlights */}
@@ -224,7 +209,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                       }}
                       className="mt-3 w-full py-1.5 rounded bg-[#241e17] hover:bg-[#2f261c] border border-[#c99738]/40 text-[12px] font-bold text-[#e6b95c]"
                     >
-                      解説・聴きどころ・無料音源リンクを見る
+                      解説・聴きどころを見る
                     </button>
                     <div className="mt-3 pt-2 border-t border-[#262019] flex items-center justify-between text-[11px] text-[#a3978a]">
                       <span className="flex items-center gap-1">

@@ -6,6 +6,7 @@ import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
+import { useBackClose } from '../utils/backStack';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { hasAudio } from '../utils/hasAudio';
 import { YearEventsOverlay } from './YearEventsOverlay';
@@ -50,6 +51,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
   const timerRef = useRef<number | null>(null);
   const [showStories, setShowStories] = useState<boolean>(false);
+  useBackClose(showStories, () => setShowStories(false));
+  useBackClose(!!selectedComposerId, () => setSelectedComposerId(null));
 
   // Historical milestones across 700 years
   const milestones = [

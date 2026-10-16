@@ -24,22 +24,22 @@ export function getFreeMediaLinks(composer: Composer, work: Composition): FreeLi
   return [
     {
       label: 'ウィキメディア・コモンズで音源を探す',
-      note: '自由に使える録音が集まる公共サイト',
+      note: '演奏の録音',
       url: `https://commons.wikimedia.org/w/index.php?search=${q}&title=Special%3AMediaSearch&type=audio`
     },
     {
       label: 'ウィキメディア・コモンズで動画を探す',
-      note: '自由に使える動画・演奏映像',
+      note: '演奏の映像',
       url: `https://commons.wikimedia.org/w/index.php?search=${q}&title=Special%3AMediaSearch&type=video`
     },
     {
       label: 'インターネット・アーカイブで音源を探す',
-      note: '古い録音などの公共ライブラリ',
+      note: '古い録音など',
       url: `https://archive.org/search?query=${q}&and%5B%5D=mediatype%3A%22audio%22`
     },
     {
       label: 'IMSLP（楽譜ライブラリ）で探す',
-      note: '著作権の切れた楽譜と、一部の録音',
+      note: '楽譜と録音',
       url: `https://imslp.org/index.php?search=${q}&title=Special%3ASearch`
     },
     {

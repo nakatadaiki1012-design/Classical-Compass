@@ -11,6 +11,7 @@ import { KIND_LABEL } from './eventStyles';
 import { getWorkTrivia } from '../data/trivia';
 import { getComposerEvents } from '../data/chronicle';
 import { getEraById } from '../data/eras';
+import { useBackClose } from '../utils/backStack';
 import { LinkedText } from './LinkedText';
 
 interface EventDetailModalProps {
@@ -34,6 +35,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   onOpenWork,
   onJumpToYear
 }) => {
+  useBackClose(true, onClose);
   // Escキーで閉じる
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();

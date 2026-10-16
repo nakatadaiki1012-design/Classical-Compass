@@ -19,6 +19,7 @@ import {
 } from '../data/glossary';
 import { MUSIC_PERIODS } from '../data/musicPeriods';
 import { CATEGORY_NAME, TermCategory } from '../data/glossaryExtra';
+import { isJapanOnly } from '../utils/japanMode';
 import { HISTORY_AXES } from '../data/historyAxes';
 import { imageKeyFor } from '../data/imageHints';
 import { closeWiki, openComposerDetail, openWiki, useWikiState, wikiBack, wikiForward, wikiJump } from '../utils/wikiStore';
@@ -355,7 +356,9 @@ const HomePage: React.FC = () => {
           </div>
         </Section>
       )}
-      {(Object.keys(CATEGORY_NAME) as TermCategory[]).map(cat => {
+      {(Object.keys(CATEGORY_NAME) as TermCategory[])
+        .sort((a, b) => (isJapanOnly() ? (a === 'japan' ? -1 : b === 'japan' ? 1 : 0) : 0))
+        .map(cat => {
         const list = [...TERMS.values()].filter(e => e.cat === cat);
         return list.length ? (
           <Section key={cat} title={`基礎用語：${CATEGORY_NAME[cat]}（${list.length}）`}>

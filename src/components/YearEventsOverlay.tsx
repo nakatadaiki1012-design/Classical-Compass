@@ -7,7 +7,7 @@ import { KIND_LABEL } from './eventStyles';
 import { EventDetailModal } from './EventDetailModal';
 import { PeriodModal } from './PeriodModal';
 import { getPeriodsAt, MusicPeriod } from '../data/musicPeriods';
-import { useJapanMode } from '../utils/japanMode';
+import { useJapanMode, useJapanOnly } from '../utils/japanMode';
 import { useWorldMode } from '../utils/worldMode';
 
 interface YearEventsOverlayProps {
@@ -40,9 +40,10 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
   const [selected, setSelected] = useState<YearEvent | null>(null);
   const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
   const japanMode = useJapanMode();
+  const japanOnly = useJapanOnly();
   const worldMode = useWorldMode();
   // この頃の主流の音楽（時代）。新しく始まった時代から最大2つ
-  const periods = useMemo(() => getPeriodsAt(year, japanMode, worldMode).slice(0, 3), [year, japanMode, worldMode]);
+  const periods = useMemo(() => getPeriodsAt(year, japanMode, worldMode, japanOnly).slice(0, 3), [year, japanMode, worldMode, japanOnly]);
 
   const events = useMemo(() => {
     return getEventsForYear(year)

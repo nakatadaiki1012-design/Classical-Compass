@@ -7,6 +7,9 @@ import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
 import { useBackClose } from '../utils/backStack';
+import { isJapanOnly } from '../utils/japanMode';
+import { getPeriodsAt } from '../data/musicPeriods';
+import { periodShortName } from '../data/glossary';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
 import { hasAudio } from '../utils/hasAudio';
 import { YearEventsOverlay } from './YearEventsOverlay';
@@ -43,7 +46,7 @@ const POPUP_ZOOM = 1.4;
 export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
 
-  const [currentYear, setCurrentYear] = useState<number>(1787); // Default to Mozart's iconic year
+  const [currentYear, setCurrentYear] = useState<number>(isJapanOnly() ? 1620 : 1787); // 最初はモーツァルトの頃（日本音楽史のみなら江戸初め）
   const [isPlayingTimeTravel, setIsPlayingTimeTravel] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [hoveredComposerId, setHoveredComposerId] = useState<string | null>(null);
@@ -94,6 +97,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }
 
   // Current era based on year
   const currentEra = useMemo(() => {
+    const jp = isJapanOnly() ? getPeriodsAt(currentYear, true, false, true)[0] : undefined;
+    if (jp) return { name: periodShortName(jp), color: jp.color };
     return ERAS.find(e => currentYear >= e.startYear && currentYear <= e.endYear) || ERAS[2];
   }, [currentYear]);
 

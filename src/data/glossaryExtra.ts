@@ -4,7 +4,7 @@
  * - すでにある用語には「くわしく」「例」を足す（name が同じなら合体する）
  * nolink: true の言葉は、文章の中で自動リンクにしない（よく出てくる言葉で、リンクだらけになるのを防ぐ）
  */
-export type TermCategory = 'instrument' | 'form' | 'genre' | 'theory' | 'performance';
+export type TermCategory = 'instrument' | 'form' | 'genre' | 'theory' | 'performance' | 'japan';
 
 export interface ExtraTerm {
   name: string;
@@ -25,7 +25,8 @@ export const CATEGORY_NAME: Record<TermCategory, string> = {
   form: '形式・曲の種類',
   genre: 'ジャンル・声楽',
   theory: '音楽理論・楽譜',
-  performance: '演奏・オーケストラ'
+  performance: '演奏・オーケストラ',
+  japan: '日本の伝統音楽'
 };
 
 export const EXTRA_TERMS: ExtraTerm[] = [

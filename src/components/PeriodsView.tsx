@@ -5,7 +5,7 @@ import { HISTORY_AXES } from '../data/historyAxes';
 import { PeriodModal } from './PeriodModal';
 import { WikiThumb, HoverImage } from './WikiImage';
 import { imageKeyFor } from '../data/imageHints';
-import { useJapanMode } from '../utils/japanMode';
+import { useJapanMode, useJapanOnly } from '../utils/japanMode';
 import { useWorldMode } from '../utils/worldMode';
 import { PeriodDetail, PeriodImage, periodRange } from './PeriodDetail';
 import { LinkedText, WikiLink } from './LinkedText';
@@ -17,6 +17,7 @@ interface PeriodsViewProps {
 /** 音楽史の時代ごとに、主流の音楽と用語をまとめた画面（勉強用） */
 export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) => {
   const japanMode = useJapanMode();
+  const japanOnly = useJapanOnly();
   const worldMode = useWorldMode();
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
@@ -28,13 +29,13 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
   const q = query.trim();
   const periods = useMemo(
     () =>
-      MUSIC_PERIODS.filter(p => p.region === 'west' || (p.region === 'japan' && japanMode) || (p.region === 'world' && worldMode))
+      MUSIC_PERIODS.filter(p => (japanOnly ? p.region === 'japan' : p.region === 'west' || (p.region === 'japan' && japanMode) || (p.region === 'world' && worldMode)))
         .filter(p => !q || (p.name + p.mainstream + p.summary + p.terms.map(t => t.join('')).join('')).includes(q))
         .sort((a, b) => {
           const rank = (r: string) => (r === 'west' ? 0 : r === 'japan' ? 1 : 2);
           return a.region === b.region ? a.start - b.start : rank(a.region) - rank(b.region);
         }),
-    [japanMode, worldMode, q]
+    [japanMode, worldMode, japanOnly, q]
   );
 
   return (
@@ -62,7 +63,7 @@ export const PeriodsView: React.FC<PeriodsViewProps> = ({ onSelectComposer }) =>
 
       {/* 学び方の切り替え */}
       <div className="flex flex-wrap gap-1.5">
-        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES.filter(a => (a.id !== 'japan' || japanMode) && (a.id !== 'world' || worldMode))].map(t => (
+        {[{ id: 'periods', name: '時代ごと', icon: '🕰' }, ...HISTORY_AXES.filter(a => (japanOnly ? a.id === 'japan' : true) && (a.id !== 'japan' || japanMode) && (a.id !== 'world' || worldMode))].map(t => (
           <button
             key={t.id}
             onClick={() => {

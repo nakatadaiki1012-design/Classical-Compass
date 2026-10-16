@@ -2,7 +2,7 @@ import React from 'react';
 import { ViewMode } from '../types';
 import { BookOpen, Compass } from 'lucide-react';
 import { openWiki } from '../utils/wikiStore';
-import { setJapanMode, useJapanMode } from '../utils/japanMode';
+import { setJapanLevel, useJapanLevel } from '../utils/japanMode';
 import { setWorldMode, useWorldMode } from '../utils/worldMode';
 import { SettingsMenu } from './SettingsMenu';
 
@@ -23,7 +23,7 @@ const NAV_ITEMS: { view: ViewMode; label: string }[] = [
 export const HEADER_HEIGHT = 45;
 
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
-  const japanMode = useJapanMode();
+  const japanLevel = useJapanLevel();
   const worldMode = useWorldMode();
   return (
     <header
@@ -62,25 +62,38 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           ))}
         </nav>
 
-        {/* 日本音楽史オプション（八橋検校など日本の伝統音楽の人物と、日本音楽史のトピックを加える） */}
+        {/* 日本音楽史オプション：押すたびに「オフ → 加える → 日本のみ → オフ」と切り替わる */}
         <button
-          onClick={() => setJapanMode(!japanMode)}
-          aria-pressed={japanMode}
-          title="日本の伝統音楽の人物と、日本音楽史のトピックを表示します"
+          onClick={() => setJapanLevel(japanLevel === 'off' ? 'on' : japanLevel === 'on' ? 'only' : 'off')}
+          aria-pressed={japanLevel !== 'off'}
+          title={
+            japanLevel === 'off'
+              ? '押すと、日本の伝統音楽の人物とトピックを加えます'
+              : japanLevel === 'on'
+              ? 'もう一度押すと、日本の音楽だけを表示します'
+              : 'もう一度押すと、元（西洋音楽）に戻ります'
+          }
           className={`shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
-            japanMode
+            japanLevel === 'only'
+              ? 'bg-[#7f1d1d] border-[#fca5a5] text-white ring-1 ring-[#fca5a5]'
+              : japanLevel === 'on'
               ? 'bg-[#b83b3b] border-[#b83b3b] text-white'
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
           }`}
         >
-          <span className="sm:hidden emoji">🇯🇵</span>
-          <span className="hidden sm:inline"><span className="emoji">🇯🇵</span> 日本音楽史{japanMode ? ' ON' : ''}</span>
+          <span className="sm:hidden">
+            <span className="emoji">🇯🇵</span>
+            {japanLevel === 'only' && <span className="ml-0.5 text-[10px]">のみ</span>}
+          </span>
+          <span className="hidden sm:inline">
+            <span className="emoji">🇯🇵</span> 日本音楽史{japanLevel === 'on' ? ' ON' : japanLevel === 'only' ? 'のみ' : ''}
+          </span>
         </button>
         <button
           onClick={() => setWorldMode(!worldMode)}
           aria-pressed={worldMode}
           title="クラシック・日本以外の地域の音楽（ハワイ、インド、中南米、アフリカ、ジャズなど）を表示します"
-          className={`shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+          className={`${japanLevel === 'only' ? 'hidden' : ''} shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
             worldMode
               ? 'bg-[#2563eb] border-[#2563eb] text-white'
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'

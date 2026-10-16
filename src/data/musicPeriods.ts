@@ -609,9 +609,9 @@ export const MUSIC_PERIODS: MusicPeriod[] = [
 ];
 
 /** 指定した年に当てはまる時代（新しく始まった順）。日本音楽史は japan が true のときだけ */
-export function getPeriodsAt(year: number, japan: boolean, world = false): MusicPeriod[] {
+export function getPeriodsAt(year: number, japan: boolean, world = false, japanOnly = false): MusicPeriod[] {
   return MUSIC_PERIODS.filter(
-    p => (p.region === 'west' || (p.region === 'japan' && japan) || (p.region === 'world' && world)) && year >= p.start && year <= p.end
+    p => (japanOnly ? p.region === 'japan' : p.region === 'west' || (p.region === 'japan' && japan) || (p.region === 'world' && world)) && year >= p.start && year <= p.end
   ).sort(
     (a, b) => b.start - a.start
   );

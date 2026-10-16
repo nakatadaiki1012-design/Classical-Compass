@@ -79,7 +79,16 @@ html[data-size="l"] { font-size: 115%; }
 /* ライトモード：全体の色を反転し、色相は元に戻す。写真・画像は二重に反転して元の色にする */
 html[data-theme="light"] {
   filter: invert(1) hue-rotate(180deg);
-  background: #ffffff;
+  /* 反転すると明るい色になるよう、元は暗い色にしておく（画面の端や下の余白が黒くならないように） */
+  background: #121110;
+}
+/* 横にはみ出した分で、画面が横にずれないようにする */
+html,
+body {
+  overflow-x: clip;
+}
+body {
+  background: #121110;
 }
 html[data-theme="light"] img,
 html[data-theme="light"] video,

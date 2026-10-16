@@ -1640,6 +1640,281 @@ const SEEDS: ComposerSeed[] = [
       ['schnittke-cg1', '『合奏協奏曲 第1番』', 'Concerto Grosso No.1', 1977, 'Concerto', '合奏協奏曲', 'moscow', 'バロック風の様式が、突然、ジャズや現代音楽に崩れていく。タンゴが突然現れる、多様式主義の代表作。']
     ]
   },
+  {
+    id: 'fujiwara-moronaga', category: 'japan-trad', name: '藤原師長', en: 'Fujiwara no Moronaga', short: '藤原師長',
+    birth: 1138, death: 1192, era: 'medieval', country: '日本', flag: '🇯🇵',
+    bio: '平安時代末期の貴族で、太政大臣にまでなった人物。琵琶と箏の名手として知られ、琵琶の楽譜集『三五要録』と、箏の楽譜集『仁智要録』をまとめた。これらは雅楽の古い姿を伝える貴重な資料になっている。平清盛と対立して、一時、尾張に流された。',
+    style: '宮廷の雅楽、とくに琵琶と箏の演奏。',
+    features: ['琵琶・箏の名手', '『三五要録』『仁智要録』を編む', '平安末期の太政大臣'],
+    peers: ['ヒルデガルト・フォン・ビンゲン', 'レオナン'],
+    birthPlace: '日本・京都', deathPlace: '日本・京都',
+    birthEp: '1138年、藤原頼長の子として京都の貴族の家に生まれた。',
+    deathEp: '1192年に亡くなった。音楽に生きた貴族として、後世の物語にもたびたび描かれた。',
+    milestones: [[1177, '太政大臣になる'], [1179, '平清盛と対立し、尾張に流される']],
+    works: [
+      ['moronaga-sango', '琵琶譜『三五要録』', 'Sango Yōroku', 1170, 'Solo', '雅楽の楽譜集', 'kyoto', '雅楽の琵琶の楽譜をまとめた書。平安時代の雅楽の演奏を知る手がかりになる。']
+    ]
+  },
+  {
+    id: 'onami', category: 'japan-trad', name: '音阿弥（観世元重）', en: "On'ami", short: '音阿弥',
+    birth: 1398, death: 1467, era: 'medieval', country: '日本', flag: '🇯🇵',
+    bio: '世阿弥の甥で、観世座の三代目大夫。将軍足利義教に重用され、世阿弥父子に代わって能の第一人者となった。当時「当代随一の名人」とたたえられ、観世流の繁栄の基礎を築いた。',
+    style: '華やかで、観客を引きつける舞台芸。',
+    features: ['世阿弥の甥', '足利義教に重用される', '観世流の繁栄を築く'],
+    peers: ['世阿弥', '金春禅竹', 'デュファイ'],
+    birthPlace: '日本（大和）', deathPlace: '日本・京都',
+    birthEp: '1398年、世阿弥の弟・四郎の子として生まれた。',
+    deathEp: '1467年、応仁の乱が始まった年に亡くなった。',
+    milestones: [[1433, '観世大夫となる'], [1464, '糺河原で勧進能を催す']],
+    works: [
+      ['onami-kanjin', '糺河原の勧進能', 'Tadasugawara Kanjin Nō', 1464, 'Opera', '能', 'kyoto', '将軍足利義政も観た大規模な勧進能。音阿弥の名声の頂点を示す。']
+    ]
+  },
+  {
+    id: 'konparu-zenchiku', category: 'japan-trad', name: '金春禅竹', en: 'Konparu Zenchiku', short: '金春禅竹',
+    birth: 1405, death: 1470, era: 'medieval', country: '日本', flag: '🇯🇵',
+    bio: '金春座の大夫で、世阿弥の娘婿。世阿弥から能の奥義を受け継ぎ、『六輪一露之記』などの理論書で、能の美を仏教や和歌の思想と結びつけて説いた。金春流は大和猿楽の最も古い流れとされる。',
+    style: '静かで深い、幽玄を重んじる能。',
+    features: ['世阿弥の娘婿', '『六輪一露之記』', '金春流の大成者'],
+    peers: ['世阿弥', '音阿弥', 'ダンスタブル'],
+    birthPlace: '日本（大和）', deathPlace: '日本（大和）',
+    birthEp: '1405年、大和猿楽の金春座の家に生まれた。',
+    deathEp: '1470年ごろ亡くなったとされる。',
+    milestones: [[1428, '世阿弥から伝書『六義』『拾玉得花』を授かる'], [1455, '『六輪一露之記』を著す']],
+    works: [
+      ['zenchiku-rokurin', '理論書『六輪一露之記』', 'Rokurin Ichiro no Ki', 1455, 'Solo', '能の理論書', 'nara', '能の芸の段階を、6つの輪と1つの露にたとえて説いた書。']
+    ]
+  },
+  {
+    id: 'toyohara-muneaki', category: 'japan-trad', name: '豊原統秋', en: 'Toyohara Muneaki', short: '豊原統秋',
+    birth: 1450, death: 1524, era: 'renaissance', country: '日本', flag: '🇯🇵',
+    bio: '室町時代の雅楽の楽人で、笙の名家・豊原家の人。応仁の乱で雅楽が衰えるなか、その伝統を守ろうと、雅楽の百科事典ともいえる『體源鈔（たいげんしょう）』を著した。',
+    style: '宮廷雅楽、とくに笙の演奏。',
+    features: ['笙の名家・豊原家', '『體源鈔』を著す', '応仁の乱後の雅楽を守る'],
+    peers: ['ジョスカン・デ・プレ', 'オケゲム'],
+    birthPlace: '日本・京都', deathPlace: '日本・京都',
+    birthEp: '1450年、代々笙を伝える楽家・豊原家に生まれた。',
+    deathEp: '1524年に亡くなった。',
+    milestones: [[1512, '『體源鈔』を完成させる']],
+    works: [
+      ['muneaki-taigensho', '『體源鈔』', 'Taigenshō', 1512, 'Solo', '雅楽の書', 'kyoto', '雅楽の楽器・曲・故事などを集めた13巻の書。中世の雅楽を知る基本資料。']
+    ]
+  },
+  {
+    id: 'chikamatsu', category: 'japan-trad', name: '近松門左衛門', en: 'Chikamatsu Monzaemon', short: '近松門左衛門',
+    birth: 1653, death: 1724, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '人形浄瑠璃と歌舞伎の作者。武士の家に生まれたが、京都で芝居の道に入り、竹本義太夫のために多くの浄瑠璃を書いた。実際の心中事件などを題材に、義理と人情に引き裂かれる町人を描いた「世話物」を確立した。「日本のシェイクスピア」とも呼ばれる。',
+    style: '義理と人情のはざまで苦しむ人間を描く、詩的な語りの台本。',
+    features: ['人形浄瑠璃の大作家', '世話物を確立', '竹本義太夫と名コンビ'],
+    peers: ['竹本義太夫', '坂田藤十郎', 'パーセル'],
+    birthPlace: '日本・越前（福井）', deathPlace: '日本・大坂',
+    birthEp: '1653年、越前国の武士・杉森家に生まれた（本名は杉森信盛）。のち一家で京都に移った。',
+    deathEp: '1724年、大坂で亡くなった。約100の浄瑠璃と、多くの歌舞伎の台本を残した。',
+    milestones: [[1685, '『出世景清』を竹本座で上演'], [1703, '『曽根崎心中』'], [1705, '竹本座の専属作者になる'], [1715, '『国性爺合戦』が17か月のロングラン'], [1720, '『心中天網島』']],
+    works: [
+      ['chikamatsu-sonezaki', '『曽根崎心中』', 'Sonezaki Shinjū', 1703, 'Opera', '人形浄瑠璃（世話物）', 'osaka', '醤油屋の手代・徳兵衛と遊女・お初の悲恋。実際の事件をもとにした最初の世話物で、大評判となった。'],
+      ['chikamatsu-kokusenya', '『国性爺合戦』', 'Kokusen\'ya Kassen', 1715, 'Opera', '人形浄瑠璃（時代物）', 'osaka', '明の復興のために戦う英雄・和藤内（鄭成功がモデル）の物語。17か月も続く大ヒットとなった。'],
+      ['chikamatsu-amijima', '『心中天網島』', 'Shinjū Ten no Amijima', 1720, 'Opera', '人形浄瑠璃（世話物）', 'osaka', '紙屋治兵衛と遊女小春、治兵衛の妻おさんの三人の苦しみを描いた、世話物の最高傑作の一つ。']
+    ]
+  },
+  {
+    id: 'sakata-tojuro', category: 'japan-trad', name: '坂田藤十郎（初代）', en: 'Sakata Tōjūrō I', short: '坂田藤十郎',
+    birth: 1647, death: 1709, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '京都の歌舞伎役者。恋に悩む優男などを、柔らかく写実的に演じる「和事（わごと）」の芸を確立し、上方歌舞伎の第一人者となった。近松門左衛門と組んで、多くの歌舞伎を上演した。',
+    style: '柔らかく、自然で写実的な演技（和事）。',
+    features: ['和事の創始者', '上方歌舞伎の名優', '近松門左衛門と協力'],
+    peers: ['市川團十郎（初代）', '近松門左衛門', 'リュリ'],
+    birthPlace: '日本・京都', deathPlace: '日本・京都',
+    birthEp: '1647年、京都に生まれた。',
+    deathEp: '1709年に亡くなった。',
+    milestones: [[1678, '『夕霧名残の正月』で伊左衛門を演じ、和事の芸で評判をとる'], [1699, '近松作『けいせい仏の原』に主演']],
+    works: [
+      ['tojuro-hotokenohara', '『けいせい仏の原』（近松門左衛門作）', 'Keisei Hotoke no Hara', 1699, 'Opera', '歌舞伎', 'kyoto', '藤十郎の和事の芸が生かされた、上方歌舞伎の代表作。']
+    ]
+  },
+  {
+    id: 'danjuro1', category: 'japan-trad', name: '市川團十郎（初代）', en: 'Ichikawa Danjūrō I', short: '市川團十郎（初代）',
+    birth: 1660, death: 1704, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '江戸歌舞伎を代表する役者。顔に隈取をして、超人的な力を持つヒーローを豪快に演じる「荒事（あらごと）」の芸を始めた。屋号は「成田屋」。舞台の上で、共演の役者に刺されて亡くなった。',
+    style: '隈取と見得による、勇ましく豪快な演技（荒事）。',
+    features: ['荒事の創始者', '屋号・成田屋の初代', '江戸歌舞伎の祖'],
+    peers: ['坂田藤十郎', '近松門左衛門', 'コレッリ'],
+    birthPlace: '日本・江戸', deathPlace: '日本・江戸',
+    birthEp: '1660年、江戸に生まれた。',
+    deathEp: '1704年、江戸の市村座で上演中に、共演していた役者の生島半六に刺されて亡くなった。',
+    milestones: [[1673, '14歳で初舞台。荒事の芸を見せる'], [1697, '成田山新勝寺の不動明王を演じて大当たり']],
+    works: [
+      ['danjuro-aragoto', '荒事の芸（隈取・見得）', 'Aragoto', 1673, 'Opera', '歌舞伎', 'edo', '江戸の人々の好みに合った、力強く華やかな演技の型。現在まで成田屋の芸として受け継がれている。']
+    ]
+  },
+  {
+    id: 'toyotake-wakatayu', category: 'japan-trad', name: '豊竹若太夫（初代）', en: 'Toyotake Wakatayū I', short: '豊竹若太夫',
+    birth: 1681, death: 1764, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '竹本義太夫の弟子の浄瑠璃語り。1703年に大坂・道頓堀に豊竹座を開き、竹本座と人気を競った。この「竹豊（ちくほう）時代」の競争が、人形浄瑠璃の黄金期を生んだ。華やかな語り口が特徴だった。',
+    style: '華やかで派手な語り口の義太夫節（東風）。',
+    features: ['豊竹座を開く', '竹本座と競い合う', '竹豊時代を築く'],
+    peers: ['竹本義太夫', '近松門左衛門', 'ヘンデル'],
+    birthPlace: '日本・大坂', deathPlace: '日本・大坂',
+    birthEp: '1681年、大坂に生まれた。竹本義太夫に弟子入りした。',
+    deathEp: '1764年に亡くなった。',
+    milestones: [[1703, '道頓堀に豊竹座を開く']],
+    works: [
+      ['wakatayu-toyotakeza', '豊竹座の旗揚げ', 'Toyotake-za', 1703, 'Opera', '人形浄瑠璃', 'osaka', '竹本座（西）と豊竹座（東）の競争が始まり、名作が次々に生まれた。']
+    ]
+  },
+  {
+    id: 'takeda-izumo2', category: 'japan-trad', name: '竹田出雲（二代目）', en: 'Takeda Izumo II', short: '竹田出雲',
+    birth: 1691, death: 1756, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '竹本座の座元（経営者）で、浄瑠璃の作者。三好松洛・並木千柳らと合作して、「三大名作」と呼ばれる『菅原伝授手習鑑』『義経千本桜』『仮名手本忠臣蔵』を次々に世に送った。これらはすぐに歌舞伎にも移され、今も上演され続けている。',
+    style: '複数の作者による合作で作る、壮大な時代物の浄瑠璃。',
+    features: ['人形浄瑠璃の三大名作', '竹本座の座元', '合作制度で名作を生む'],
+    peers: ['近松門左衛門', 'J.S.バッハ', 'ヘンデル'],
+    birthPlace: '日本・大坂', deathPlace: '日本・大坂',
+    birthEp: '1691年、竹本座の座元だった初代竹田出雲の子として生まれた。',
+    deathEp: '1756年に亡くなった。',
+    milestones: [[1746, '『菅原伝授手習鑑』'], [1747, '『義経千本桜』'], [1748, '『仮名手本忠臣蔵』']],
+    works: [
+      ['izumo-sugawara', '『菅原伝授手習鑑』（合作）', 'Sugawara Denju Tenarai Kagami', 1746, 'Opera', '人形浄瑠璃', 'osaka', '菅原道真の左遷をめぐる物語。「寺子屋」の段が特に有名。'],
+      ['izumo-senbonzakura', '『義経千本桜』（合作）', 'Yoshitsune Senbon Zakura', 1747, 'Opera', '人形浄瑠璃', 'osaka', '源義経と、平家の生き残りの武将たちを描く。狐忠信が活躍する場面が人気。'],
+      ['izumo-chushingura', '『仮名手本忠臣蔵』（合作）', 'Kanadehon Chūshingura', 1748, 'Opera', '人形浄瑠璃', 'osaka', '赤穂浪士の討ち入りを、時代を室町に移して描いた作品。「独参湯（どくじんとう：よく効く薬）」と呼ばれるほど、必ず客が入る演目になった。']
+    ]
+  },
+  {
+    id: 'tokiwazu-mojidayu', category: 'japan-trad', name: '常磐津文字太夫（初代）', en: 'Tokiwazu Mojitayū I', short: '常磐津文字太夫',
+    birth: 1709, death: 1781, era: 'baroque', country: '日本', flag: '🇯🇵',
+    bio: '江戸で常磐津節を始めた浄瑠璃の語り手。歌舞伎の舞踊の伴奏として、語りと唄の中間のような、重厚で品のある語り口を作り上げた。常磐津節は、いまも歌舞伎の舞踊に欠かせない。',
+    style: '中棹三味線による、語りと唄の中間のような浄瑠璃。',
+    features: ['常磐津節の創始者', '歌舞伎舞踊の伴奏', '江戸浄瑠璃'],
+    peers: ['竹田出雲', 'C.P.E.バッハ', 'ハイドン'],
+    birthPlace: '日本・京都', deathPlace: '日本・江戸',
+    birthEp: '1709年、京都に生まれた。のち江戸に出た。',
+    deathEp: '1781年に亡くなった。',
+    milestones: [[1747, '常磐津節を始める']],
+    works: [
+      ['tokiwazu-bushi', '常磐津節の創始', 'Tokiwazu-bushi', 1747, 'Choral', '浄瑠璃（常磐津節）', 'edo', '江戸の歌舞伎舞踊の音楽として発展。『積恋雪関扉（関の扉）』などが代表作。']
+    ]
+  },
+  {
+    id: 'uemura-bunrakuken', category: 'japan-trad', name: '植村文楽軒（初代）', en: 'Uemura Bunrakuken I', short: '植村文楽軒',
+    birth: 1751, death: 1810, era: 'classical', country: '日本', flag: '🇯🇵',
+    bio: '淡路島出身の人形浄瑠璃の興行主。竹本座・豊竹座が衰えたあとの大坂で、人形浄瑠璃の小屋を開いて伝統を守った。のちにその座が「文楽座」と呼ばれ、「文楽」が人形浄瑠璃そのものを指す言葉になった。',
+    style: '人形浄瑠璃の興行と、伝統の継承。',
+    features: ['「文楽」の名の由来', '淡路の人形浄瑠璃', '衰退期の伝統を守る'],
+    peers: ['モーツァルト', 'ハイドン', '黒沢琴古'],
+    birthPlace: '日本・淡路島', deathPlace: '日本・大坂',
+    birthEp: '1751年、人形浄瑠璃が盛んな淡路島に生まれた。',
+    deathEp: '1810年に亡くなった。子孫が興行を受け継ぎ、1872年に「文楽座」と名づけられた。',
+    milestones: [[1790, '大坂で人形浄瑠璃の興行を始める']],
+    works: [
+      ['bunrakuken-za', '大坂での人形浄瑠璃の興行', 'Bunraku-za', 1790, 'Opera', '人形浄瑠璃', 'osaka', 'この小屋の流れが文楽座となり、現在の国立文楽劇場へとつながっている。']
+    ]
+  },
+  {
+    id: 'tsuruya-nanboku', category: 'japan-trad', name: '鶴屋南北（四代目）', en: 'Tsuruya Nanboku IV', short: '鶴屋南北',
+    birth: 1755, death: 1829, era: 'classical', country: '日本', flag: '🇯🇵',
+    bio: '江戸の歌舞伎作者。幽霊や殺人、江戸の下層の人々の暮らしを生々しく描く「生世話物（きぜわもの）」を得意とした。早変わりや、仕掛けを使った怪談の演出でも、観客を驚かせた。',
+    style: '怪談や悪人を生々しく描く、仕掛けの多い歌舞伎。',
+    features: ['『東海道四谷怪談』', '生世話物の名手', '大がかりな仕掛けの演出'],
+    peers: ['ベートーヴェン', 'シューベルト', '常磐津'],
+    birthPlace: '日本・江戸', deathPlace: '日本・江戸',
+    birthEp: '1755年、江戸の日本橋の紺屋（染物屋）の子として生まれた。',
+    deathEp: '1829年、江戸で亡くなった。',
+    milestones: [[1804, '『天竺徳兵衛韓噺』で大当たり'], [1811, '四代目鶴屋南北を名乗る'], [1825, '『東海道四谷怪談』']],
+    works: [
+      ['nanboku-yotsuya', '『東海道四谷怪談』', 'Tōkaidō Yotsuya Kaidan', 1825, 'Opera', '歌舞伎（生世話物）', 'edo', '夫の伊右衛門に裏切られて死んだお岩が、幽霊となって復讐する物語。提灯から幽霊が現れる「提灯抜け」など、仕掛けが評判になった。']
+    ]
+  },
+  {
+    id: 'kineya-rokusaburo4', category: 'japan-trad', name: '杵屋六三郎（四代目）', en: 'Kineya Rokusaburō IV', short: '杵屋六三郎',
+    birth: 1779, death: 1855, era: 'classical', country: '日本', flag: '🇯🇵',
+    bio: '江戸の長唄の三味線方・作曲家。歌舞伎の伴奏から離れて、座敷で聴く長唄（お座敷長唄）の名曲を作り、長唄を独立した音楽として高めた。',
+    style: '細棹三味線と唄による、品のある長唄。',
+    features: ['お座敷長唄の名曲', '『吾妻八景』', '長唄の名作曲家'],
+    peers: ['ベートーヴェン', 'シューベルト', '鶴屋南北'],
+    birthPlace: '日本・江戸', deathPlace: '日本・江戸',
+    birthEp: '1779年、江戸に生まれた。',
+    deathEp: '1855年に亡くなった。',
+    milestones: [[1820, '長唄『老松』を作曲'], [1829, '長唄『吾妻八景』を作曲']],
+    works: [
+      ['rokusaburo-azuma', '長唄『吾妻八景』', 'Azuma Hakkei', 1829, 'Chamber', '長唄', 'edo', '江戸の名所八景を歌い込んだ、お座敷長唄の代表作。']
+    ]
+  },
+  {
+    id: 'kiyomoto-enjudayu', category: 'japan-trad', name: '清元延寿太夫（初代）', en: 'Kiyomoto Enjudayū I', short: '清元延寿太夫',
+    birth: 1777, death: 1825, era: 'classical', country: '日本', flag: '🇯🇵',
+    bio: '江戸で清元節を始めた浄瑠璃の語り手。高く澄んだ声で、粋で艶やかな語り口を作り上げた。清元節は、常磐津節と並ぶ歌舞伎舞踊の伴奏音楽として、今も使われている。',
+    style: '高い声を生かした、粋で艶やかな浄瑠璃。',
+    features: ['清元節の創始者', '歌舞伎舞踊の伴奏', '粋な江戸の浄瑠璃'],
+    peers: ['ベートーヴェン', '鶴屋南北', '杵屋六三郎'],
+    birthPlace: '日本・江戸', deathPlace: '日本・江戸',
+    birthEp: '1777年、江戸に生まれた。富本節を学んだ。',
+    deathEp: '1825年、江戸で何者かに襲われて亡くなった。',
+    milestones: [[1814, '清元節を始める']],
+    works: [
+      ['kiyomoto-bushi', '清元節の創始', 'Kiyomoto-bushi', 1814, 'Choral', '浄瑠璃（清元節）', 'edo', '歌舞伎舞踊の音楽として発展。『三社祭』『保名』などが知られる。']
+    ]
+  },
+  {
+    id: 'danjuro7', category: 'japan-trad', name: '市川團十郎（七代目）', en: 'Ichikawa Danjūrō VII', short: '市川團十郎（七代目）',
+    birth: 1791, death: 1859, era: 'classical', country: '日本', flag: '🇯🇵',
+    bio: '江戸後期の名優。市川家の得意な演目を「歌舞伎十八番」として定め、能の『安宅』をもとにした『勧進帳』を初演した。天保の改革で、ぜいたくを理由に江戸から追放されたこともある。',
+    style: '荒事を中心に、時代物・世話物・舞踊まで幅広い芸。',
+    features: ['「歌舞伎十八番」を制定', '『勧進帳』を初演', '天保の改革で江戸追放'],
+    peers: ['鶴屋南北', 'シューベルト', 'ショパン'],
+    birthPlace: '日本・江戸', deathPlace: '日本・江戸',
+    birthEp: '1791年、江戸に生まれた。五代目團十郎の孫。',
+    deathEp: '1859年に亡くなった。',
+    milestones: [[1832, '「歌舞伎十八番」を定める'], [1840, '『勧進帳』を初演'], [1842, '天保の改革で江戸を追放される']],
+    works: [
+      ['danjuro7-kanjincho', '『勧進帳』', 'Kanjinchō', 1840, 'Opera', '歌舞伎（長唄）', 'edo', '能の『安宅』をもとに、義経と弁慶の関所越えを描く。長唄の伴奏と、弁慶の「飛び六方」が見どころ。']
+    ]
+  },
+  {
+    id: 'kawatake-mokuami', category: 'japan-trad', name: '河竹黙阿弥', en: 'Kawatake Mokuami', short: '河竹黙阿弥',
+    birth: 1816, death: 1893, era: 'romantic', country: '日本', flag: '🇯🇵',
+    bio: '江戸末期から明治にかけての歌舞伎作者。盗賊を主人公にした「白浪物（しらなみもの）」が得意で、七五調のリズミカルな名台詞で人気を集めた。生涯に約360の作品を書いたとされる。',
+    style: '七五調の美しい台詞と、黒御簾の音楽を生かした世話物。',
+    features: ['白浪物の名手', '七五調の名台詞', '江戸と明治をつなぐ作者'],
+    peers: ['ヴェルディ', 'ワーグナー', '市川團十郎（七代目）'],
+    birthPlace: '日本・江戸', deathPlace: '日本・東京',
+    birthEp: '1816年、江戸・日本橋の商家に生まれた。',
+    deathEp: '1893年、東京で亡くなった。明治の新しい時代にも、多くの作品を書いた。',
+    milestones: [[1860, '『三人吉三廓初買』'], [1862, '『青砥稿花紅彩画（白浪五人男）』'], [1881, '黙阿弥と名乗る']],
+    works: [
+      ['mokuami-sanninkichisa', '『三人吉三廓初買』', 'Sannin Kichisa', 1860, 'Opera', '歌舞伎（白浪物）', 'edo', '同じ「吉三」の名を持つ3人の盗賊の物語。「月も朧に白魚の…」の名台詞で知られる。'],
+      ['mokuami-shiranami', '『青砥稿花紅彩画（白浪五人男）』', 'Shiranami Gonin Otoko', 1862, 'Opera', '歌舞伎（白浪物）', 'edo', '5人の盗賊が名乗りを上げる「稲瀬川勢揃いの場」が有名。']
+    ]
+  },
+  {
+    id: 'nakao-tozan', category: 'japan-trad', name: '中尾都山（初代）', en: 'Nakao Tozan I', short: '中尾都山',
+    birth: 1876, death: 1956, era: 'late-romantic', country: '日本', flag: '🇯🇵',
+    bio: '尺八奏者・作曲家で、都山流尺八の創始者。普化宗が廃止されたあとの明治時代に、大阪で都山流を興した。西洋音楽の要素も取り入れた新しい本曲を作り、楽譜を整えて、尺八を広く一般に広めた。',
+    style: '明快な旋律と、整った楽譜による新しい尺八音楽。',
+    features: ['都山流の創始者', '新しい本曲を作曲', '尺八の普及'],
+    peers: ['宮城道雄', '滝廉太郎', 'ドビュッシー'],
+    birthPlace: '日本・大阪', deathPlace: '日本',
+    birthEp: '1876年、大阪府に生まれた。',
+    deathEp: '1956年に亡くなった。都山流は現在、琴古流と並ぶ尺八の二大流派となっている。',
+    milestones: [[1896, '大阪で都山流を興す']],
+    works: [
+      ['tozan-ryu', '都山流の本曲', 'Tozan-ryū honkyoku', 1896, 'Solo', '尺八曲', 'osaka', '普化宗の本曲とは別に、新しく作曲された独奏曲。明治以降の尺八の発展を支えた。']
+    ]
+  },
+  {
+    id: 'takahashi-chikuzan', category: 'japan-trad', name: '高橋竹山（初代）', en: 'Takahashi Chikuzan I', short: '高橋竹山',
+    birth: 1910, death: 1998, era: 'modern', country: '日本', flag: '🇯🇵',
+    bio: '津軽三味線の名人。幼いころの病気でほとんど視力を失い、三味線を習って、門付け（家々を回って演奏すること）をしながら東北を回った。のち民謡の伴奏者として活躍し、1970年代に独奏の演奏会で全国的な人気を集め、津軽三味線を広く知らしめた。',
+    style: '太棹三味線を叩きつけるように弾く、力強く即興的な津軽三味線。',
+    features: ['津軽三味線を全国に広める', '門付けの芸から出発', '独奏の演奏会で人気'],
+    peers: ['宮城道雄', '伊福部昭', 'ルイ・アームストロング'],
+    birthPlace: '日本・青森（津軽）', deathPlace: '日本・青森',
+    birthEp: '1910年、青森県に生まれた。幼いころ、はしかでほとんど視力を失った。',
+    deathEp: '1998年に亡くなった。',
+    milestones: [[1924, '三味線を習い始め、門付けで東北を回る'], [1973, '東京・渋谷の小劇場での演奏会で評判になる']],
+    works: [
+      ['chikuzan-tsugaru', '津軽三味線の独奏', 'Tsugaru-jamisen solo', 1973, 'Solo', '津軽三味線', 'aomori', '民謡「津軽じょんがら節」などをもとにした、即興的な独奏。']
+    ]
+  },
 ];
 
 export const MORE_COMPOSERS: Composer[] = SEEDS.map(build);

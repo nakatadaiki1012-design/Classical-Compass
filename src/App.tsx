@@ -15,6 +15,7 @@ import { PeriodsView } from './components/PeriodsView';
 import { ComposerModal } from './components/ComposerModal';
 import { WikiPanel } from './components/WikiPanel';
 import { setComposerOpener } from './utils/wikiStore';
+import { pushBack, useBackClose } from './utils/backStack';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { hasAudio } from './utils/hasAudio';
 import { useJapanMode } from './utils/japanMode';
@@ -39,6 +40,18 @@ function ClassicalAppContent() {
   const handleCloseModal = useCallback(() => {
     setSelectedComposerId(null);
   }, []);
+  useBackClose(!!selectedComposerId, handleCloseModal);
+
+  // 画面（年表・地図・名鑑・音楽史）を切り替えたら、スマホの戻るボタンで前の画面に戻れるようにする
+  const handleViewChange = useCallback(
+    (v: ViewMode) => {
+      if (v === currentView) return;
+      const prev = currentView;
+      setCurrentView(v);
+      pushBack(() => setCurrentView(prev));
+    },
+    [currentView]
+  );
 
   // Pick a random masterpiece across all composers
   const handleRandomPlay = useCallback(() => {
@@ -67,7 +80,7 @@ function ClassicalAppContent() {
       {/* Top Bar Header */}
       <Header
         currentView={currentView}
-        onViewChange={setCurrentView}
+        onViewChange={handleViewChange}
         onRandomPlay={handleRandomPlay}
       />
 

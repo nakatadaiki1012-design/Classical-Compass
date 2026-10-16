@@ -3,12 +3,13 @@ import { createPortal } from 'react-dom';
 import { ChevronRight, ExternalLink, Film, Headphones, MapPin, Sparkles, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { ComposerPortrait } from './ComposerPortrait';
+import { useBackClose } from '../utils/backStack';
 import { LinkedText } from './LinkedText';
 import { getWorkTrivia } from '../data/trivia';
 import { getWorkGuide } from '../data/workGuides';
 import { getWorkMedia } from '../data/workExtras';
 import { getComposerEvents } from '../data/chronicle';
-import { getFreeMediaLinks, mayBeCopyrighted } from '../utils/freeMedia';
+import { getFreeMediaLinks } from '../utils/freeMedia';
 import { yearText } from '../utils/yearLabel';
 
 interface WorkModalProps {
@@ -18,8 +19,9 @@ interface WorkModalProps {
   onOpenComposer?: (composerId: string, year?: number) => void;
 }
 
-/** 曲の解説ポップアップ：曲の話・聴きどころ・蘊蓄・著作権フリー音源へのリンク */
+/** 曲の解説ポップアップ：曲の話・聴きどころ・蘊蓄・音源を探すリンク */
 export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, onOpenComposer }) => {
+  useBackClose(true, onClose);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -131,7 +133,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
           <section className="space-y-2">
             <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
               <ExternalLink className="w-3.5 h-3.5" />
-              著作権フリーの音源・動画・楽譜を探す
+              音源・動画・楽譜を探す
             </h4>
             <ul className="space-y-1.5">
               {links.map(l => (
@@ -151,12 +153,6 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
                 </li>
               ))}
             </ul>
-            <p className="text-[11px] text-[#a3978a] leading-relaxed">
-              ※ 検索結果のページが開きます。曲によっては見つからないことがあります。
-              {mayBeCopyrighted(composer)
-                ? '比較的新しい作曲家の作品は、録音や楽譜に権利があり、自由に使える音源がほとんどない場合があります。'
-                : '作曲者の没後70年以上たっているので曲自体は自由に使えますが、録音には権利がある場合があるため、各ページの表示を確認してください。'}
-            </p>
           </section>
 
           {onOpenComposer && (

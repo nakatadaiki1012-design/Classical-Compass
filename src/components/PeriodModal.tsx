@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { MusicPeriod } from '../data/musicPeriods';
 import { PeriodDetail, periodRange } from './PeriodDetail';
+import { useBackClose } from '../utils/backStack';
 
 interface PeriodModalProps {
   period: MusicPeriod;
@@ -12,6 +13,7 @@ interface PeriodModalProps {
 
 /** 時代の説明を、画面の上に重ねて出す */
 export const PeriodModal: React.FC<PeriodModalProps> = ({ period, onClose, onOpenComposer }) => {
+  useBackClose(true, onClose);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);

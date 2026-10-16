@@ -1,7 +1,7 @@
 import { COMPOSERS } from './composers';
 import { JAPAN_EVENTS } from './historyJapan';
 import { HISTORY_WEST } from './historyWest';
-import { isJapanMode } from '../utils/japanMode';
+import { isJapanMode, isJapanOnly, isJapanesePerson } from '../utils/japanMode';
 import { isWorldMode } from '../utils/worldMode';
 import { WORLD_MUSIC_EVENTS } from './historyWorld';
 import {
@@ -149,7 +149,10 @@ const WORLD: YearEvent[] = [
 /** 日本音楽史のオプションがオフのときは、日本の伝統音楽の人物・トピックを除く */
 const COMPOSER_BY_ID = new Map(COMPOSERS.map(c => [c.id, c]));
 const isVisible = (e: YearEvent): boolean => {
-  const cat = e.composerId ? COMPOSER_BY_ID.get(e.composerId)?.category : undefined;
+  const person = e.composerId ? COMPOSER_BY_ID.get(e.composerId) : undefined;
+  const cat = person?.category;
+  // 「日本音楽史のみ」：日本の人物のできごとと、日本音楽史のトピックだけ
+  if (isJapanOnly()) return person ? isJapanesePerson(person) : !!e.japanOnly;
   if (e.japanOnly && !isJapanMode()) return false;
   if (e.worldOnly && !isWorldMode()) return false;
   if (cat === 'japan-trad' && !isJapanMode()) return false;
@@ -297,7 +300,7 @@ export function getYearTopics(
 
   let near: YearTopic | undefined;
   if (topics.length === 0) {
-    const cand = ALL_EVENTS.filter(e => e.kind === 'world' && Math.abs(e.year - year) <= 6 && e.year !== year).sort(
+    const cand = ALL_EVENTS.filter(e => e.kind === 'world' && isVisible(e) && Math.abs(e.year - year) <= 6 && e.year !== year).sort(
       (a, b) => Math.abs(a.year - year) - Math.abs(b.year - year)
     )[0];
     if (cand) near = toTopic(cand);

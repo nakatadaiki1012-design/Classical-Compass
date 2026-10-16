@@ -18,7 +18,7 @@ import { setComposerOpener } from './utils/wikiStore';
 import { pushBack, useBackClose } from './utils/backStack';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { hasAudio } from './utils/hasAudio';
-import { useJapanMode } from './utils/japanMode';
+import { useJapanLevel } from './utils/japanMode';
 import { useWorldMode } from './utils/worldMode';
 
 function ClassicalAppContent() {
@@ -28,7 +28,7 @@ function ClassicalAppContent() {
   const [modalYear, setModalYear] = useState<number | null>(null);
   const { playTrack } = useAudio();
   // 「日本音楽史」オプションを切り替えたら、画面を作り直して表示を入れ替える
-  const japanMode = useJapanMode();
+  const japanMode = useJapanLevel();
   const worldMode = useWorldMode();
   const modeKey = `${japanMode}-${worldMode}`;
 

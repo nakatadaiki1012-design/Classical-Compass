@@ -8,11 +8,12 @@ import { YearEventsOverlay } from './YearEventsOverlay';
 import { WorkModal } from './WorkModal';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
-import { MUSIC_PERIODS, MusicPeriod } from '../data/musicPeriods';
+import { MUSIC_PERIODS, MusicPeriod, getPeriodsAt } from '../data/musicPeriods';
+import { periodShortName } from '../data/glossary';
 import { PeriodModal } from './PeriodModal';
 import { getWorkTrivia } from '../data/trivia';
 import { ComposerHoverCard, HoverCardHandle } from './ComposerHoverCard';
-import { useJapanMode } from '../utils/japanMode';
+import { useJapanMode, useJapanOnly, isJapanOnly } from '../utils/japanMode';
 import { useWorldMode } from '../utils/worldMode';
 import { useSettings } from '../utils/appSettings';
 import { countryOf, countryColor } from '../data/composerMeta';
@@ -91,8 +92,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [focalYear, setFocalYear] = useState<number>(1787);
-  const focalYearRef = useRef<number>(1787);
+  // 最初に見る年（日本音楽史のみのときは、江戸時代の初め）
+  const START_YEAR = isJapanOnly() ? 1620 : 1787;
+  const [focalYear, setFocalYear] = useState<number>(START_YEAR);
+  const focalYearRef = useRef<number>(START_YEAR);
   focalYearRef.current = focalYear;
 
   // 人物を開くときは、いま見ている年（中心年）も一緒に渡し、「その年の様子」を見せる
@@ -146,10 +149,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     [filteredComposers, selectedEra, searchQuery]
   );
 
+  const japanOnly = useJapanOnly();
   // Current era based on focal year
   const currentEra = useMemo(() => {
+    // 日本音楽史のみのときは、日本の時代区分を出す
+    const jp = japanOnly ? getPeriodsAt(focalYear, true, false, true)[0] : undefined;
+    if (jp) return { name: periodShortName(jp), color: jp.color };
     return ERAS.find(e => focalYear >= e.startYear && focalYear <= e.endYear) || ERAS[2];
-  }, [focalYear]);
+  }, [focalYear, japanOnly]);
 
   // 年を「指定して」移動したとき（ツマミ・±10・目盛りのタップ・ジャンプ）だけ、その年に生きている人の段が見える位置へ縦にも動かす。
   // 自分で縦にスクロールしたり、横にドラッグしているときは動かさない。
@@ -443,7 +450,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       });
     };
     const inRange = (p: MusicPeriod) => p.end > MIN_YEAR && p.start < MAX_YEAR;
-    const west = place(MUSIC_PERIODS.filter(p => p.region === 'west' && inRange(p)).sort((a, b) => a.start - b.start), 0);
+    const west = japanOnly ? [] : place(MUSIC_PERIODS.filter(p => p.region === 'west' && inRange(p)).sort((a, b) => a.start - b.start), 0);
     const westLanes = west.reduce((m, s) => Math.max(m, s.lane + 1), 0);
     const jp = japanMode
       ? place(MUSIC_PERIODS.filter(p => p.region === 'japan' && inRange(p)).sort((a, b) => a.start - b.start), westLanes)
@@ -454,7 +461,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
       : [];
     const all = [...west, ...jp, ...wd];
     return { bandSegments: all, bandLanes: all.reduce((m, s) => Math.max(m, s.lane + 1), 0) };
-  }, [japanMode, worldMode]);
+  }, [japanMode, worldMode, japanOnly]);
   const BAND_H = bandLanes * BAND_LANE_H + 3;
 
   const PANO_TOP = 44 + BAND_H;

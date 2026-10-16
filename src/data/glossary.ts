@@ -3,6 +3,7 @@ import { HISTORY_AXES } from './historyAxes';
 import { COMPOSERS } from './composers';
 import { Composer } from '../types';
 import { EXTRA_TERMS, TERM_DETAILS, TermCategory } from './glossaryExtra';
+import { JAPAN_TERMS, JAPAN_TERM_DETAILS } from './glossaryJapan';
 
 /**
  * ウィキペディアのように、文章の中の言葉から、用語・作曲家・時代のページへ飛ぶための索引。
@@ -45,11 +46,17 @@ const aliasesOf = (name: string): string[] => {
   const out = new Set<string>([name, baseName(name)]);
   const inner = [...name.matchAll(/（([^）]*)）/g)].map(m => m[1]);
   inner.forEach(i => i.split(/[・、，, ／/]/).forEach(p => p.trim().length >= 3 && out.add(p.trim())));
-  return [...out].filter(a => a.length >= 3 || (a.length >= 2 && /[ァ-ヶ一-龠]{2}/.test(a) && a === name));
+  return [...out].filter(
+    a => a.length >= 3 || (a.length === 2 && /^[一-龠]{2}$/.test(a) && (a === name || a === baseName(name)))
+  );
 };
 
-const addTerm = (name: string, text: string, from: string, periodId?: string) => {
+const addTerm = (rawName: string, text: string, from: string, periodId?: string) => {
+  // 「歌舞伎（かぶき）」のように読みがなだけ違う用語は、「歌舞伎」に合体する
+  const base = baseName(rawName);
+  const name = !TERMS.has(rawName) && base !== rawName && TERMS.has(base) ? base : rawName;
   let e = TERMS.get(name);
+  if (e && name !== rawName) aliasesOf(rawName).forEach(a => !e!.aliases.includes(a) && e!.aliases.push(a));
   if (!e) {
     e = { id: name, texts: [], aliases: aliasesOf(name) };
     TERMS.set(name, e);
@@ -61,7 +68,7 @@ MUSIC_PERIODS.forEach(p => p.terms.forEach(([n, t]) => addTerm(n, t, p.name, p.i
 HISTORY_AXES.forEach(a => a.terms.forEach(([n, t]) => addTerm(n, t, `テーマ：${a.name}`)));
 
 // 基礎用語（楽器・形式・理論など）を加える
-EXTRA_TERMS.forEach(x => {
+[...EXTRA_TERMS, ...JAPAN_TERMS].forEach(x => {
   const e = TERMS.get(x.name) ?? { id: x.name, texts: [], aliases: aliasesOf(x.name) };
   e.short = x.short;
   e.detail = e.detail ?? x.detail;
@@ -72,7 +79,7 @@ EXTRA_TERMS.forEach(x => {
   TERMS.set(x.name, e);
 });
 // すでにある用語に「くわしく」「例」を足す
-Object.entries(TERM_DETAILS).forEach(([name, d]) => {
+Object.entries({ ...TERM_DETAILS, ...JAPAN_TERM_DETAILS }).forEach(([name, d]) => {
   const e = TERMS.get(name);
   if (!e) return;
   e.detail = d.detail ?? e.detail;

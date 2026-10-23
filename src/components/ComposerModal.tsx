@@ -8,7 +8,8 @@ import { getWorkTrivia, COMPOSER_TRIVIA } from '../data/trivia';
 import { ComposerYearSnapshot } from './ComposerYearSnapshot';
 import { useAudio } from '../context/AudioContext';
 import { WorkModal } from './WorkModal';
-import { useBackClose } from '../utils/backStack';
+import { useBackClose, showToast } from '../utils/backStack';
+import { copyShareUrl } from '../utils/urlState';
 import { LinkedText } from './LinkedText';
 import { Composition } from '../types';
 import {
@@ -21,7 +22,8 @@ import {
   Award,
   BookOpen,
   Music,
-  Users
+  Users,
+  Link2
 } from 'lucide-react';
 
 interface ComposerModalProps {
@@ -66,13 +68,27 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
             </span>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#2b241c] rounded-lg transition-colors"
-            title="閉じる"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* この人物のページを開けるアドレスをコピーする（共有用） */}
+            <button
+              onClick={async () => {
+                const ok = await copyShareUrl();
+                showToast(ok ? 'この人物へのリンクをコピーしました' : 'コピーできませんでした');
+              }}
+              className="px-2 py-1.5 flex items-center gap-1 text-xs text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#2b241c] rounded-lg transition-colors"
+              title="この人物へのリンクをコピー"
+            >
+              <Link2 className="w-4 h-4" />
+              <span className="hidden sm:inline">リンクをコピー</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-[#b5aa9b] hover:text-[#f5ebd9] hover:bg-[#2b241c] rounded-lg transition-colors"
+              title="閉じる"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Scrollable Content */}

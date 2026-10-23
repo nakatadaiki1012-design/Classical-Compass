@@ -8,6 +8,7 @@ import { YearEventsOverlay } from './YearEventsOverlay';
 import { WorkModal } from './WorkModal';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
+import { writeUrlState } from '../utils/urlState';
 import { MUSIC_PERIODS, MusicPeriod, getPeriodsAt } from '../data/musicPeriods';
 import { periodShortName } from '../data/glossary';
 import { PeriodModal } from './PeriodModal';
@@ -35,6 +36,8 @@ import {
 
 interface TimelineViewProps {
   onSelectComposer: (composerId: string, year?: number) => void;
+  /** アドレス（#year=…）で指定された、最初に見る年 */
+  initialYear?: number;
 }
 
 interface ActiveNearItem {
@@ -58,7 +61,7 @@ interface StrandItem {
   yearDiff: number;
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear }) => {
+export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear, initialYear }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
 
   const MIN_YEAR = -600;
@@ -93,8 +96,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   // 最初に見る年（日本音楽史のみのときは、江戸時代の初め）
-  const START_YEAR = isJapanOnly() ? 1620 : 1787;
+  const START_YEAR = initialYear ?? (isJapanOnly() ? 1620 : 1787);
   const [focalYear, setFocalYear] = useState<number>(START_YEAR);
+
+  // いま見ている年をアドレスに書いておく（スクロール中は書きすぎないよう、少し待ってから）
+  useEffect(() => {
+    const t = window.setTimeout(() => writeUrlState({ year: focalYear }), 300);
+    return () => window.clearTimeout(t);
+  }, [focalYear]);
   const focalYearRef = useRef<number>(START_YEAR);
   focalYearRef.current = focalYear;
 

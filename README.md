@@ -1,10 +1,12 @@
 # Classical Compass (クラシック・コンパス) 🎵
 
-> クラシック音楽の巨匠たちの生涯年表、主要作品、Web Audio APIによる試聴プレーヤー、およびヨーロッパ年代別作曲マップを探索できるインタラクティブ音楽史アーカイブ。
+> クラシック作曲家の生涯年表、ヨーロッパ音楽地図、作曲家名鑑、音楽史解説を探索できるインタラクティブ音楽史アーカイブ。日本の伝統音楽・世界の音楽にも対応。
+>
+> 👉 **公開中のアプリ**: https://nakatadaiki1012-design.github.io/Classical-Compass/
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square)
 ![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square)
-![Vite](https://img.shields.io/badge/Vite-6-646cff?style=flat-square)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8?style=flat-square)
 
 ---
@@ -22,14 +24,16 @@
 - **都市と作曲の連動**: その年代に誕生した代表作が音符アイコンとともに表示され、都市をクリックすると「都市クロニクル」で滞在作曲家と作品一覧を展開。
 - **「歴史年代を巡る」オートプレイ**: 速度調整（1x, 2x, 4x）付きの自動再生で、音楽史の地理的変遷を鑑賞可能。
 
-### 3. Web Audio API 統合クラシック試聴プレーヤー
-- **高音質シンセシス音源**: 外部通信エラーやリンク切れに強い、Web Audio APIによるポリフォニック音響合成エンジン（ピアノ、弦楽合奏、パイプオルガン、チェンバロ、フルート）。
-- **リアルタイム波形アナライザー**: 再生中の周波数データをキャンバス上にスペクトラムとして描画。
-- **シークバー＆プレイリスト**: 再生/一時停止、シーク、音量調整、ミュート、全曲クイック選択ドロワー。
+### 3. 音楽史・用語集
+- 時代ごとの解説ページと、用語・作曲家・時代をリンクでたどれるウィキ風の用語集。
+- 各作品から、著作権フリーの音源・楽譜（ウィキメディア・コモンズ、インターネット・アーカイブ、IMSLP）を探すリンク。
 
 ### 4. 作曲家詳細プロファイル・名鑑
 - パブリックドメインの肖像画メダリオン。
 - 生涯と経歴、音楽的特徴と革新性、代表作カタログ、同時代作曲家との関係性を確認可能。
+
+### 5. 場面の共有（URL）
+- いま見ている画面・年・人物はアドレスに `#view=map&year=1787&composer=mozart` のように記録されます。アドレスをコピーして送れば、相手も同じ場面を開けます。人物ページの「リンクをコピー」ボタンでも取得できます。
 
 ---
 
@@ -37,7 +41,6 @@
 
 - **Frontend**: React 19, TypeScript, Vite
 - **Styling**: Tailwind CSS v4, Lucide React (Icons)
-- **Audio Engine**: Web Audio API (Additive Synthesis, Polyphony, AnalyserNode)
 - **Typography**: Cormorant Garamond, Cinzel, Shippori Mincho, Plus Jakarta Sans
 
 ---
@@ -53,7 +56,13 @@ npm run dev
 
 # プロダクションビルド
 npm run build
+
+# チェック（型の検査 ＋ データの検査）
+npm run lint
 ```
+
+### データの検査
+`npm run check` で、作曲家データのミス（ID の重複、生年と没年の逆転、作品の年が生涯の外、など）を自動で見つけます。ビルド前にも自動で実行されます。
 
 ---
 

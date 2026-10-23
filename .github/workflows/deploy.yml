@@ -38,6 +38,9 @@ jobs:
         continue-on-error: true
         run: npx tsx scripts/fetch-portraits.ts
 
+      - name: Check data
+        run: npm run check
+
       - name: Build project
         run: npm run build
 

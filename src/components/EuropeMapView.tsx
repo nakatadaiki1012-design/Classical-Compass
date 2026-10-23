@@ -18,6 +18,7 @@ import { getWhereabouts, isOffMap, Whereabouts } from '../data/itinerary';
 import { getComposerEventsAround } from '../data/chronicle';
 import { SVG_W, SVG_H, projectGeoToSvg } from '../data/mapProjection';
 import { useAudio } from '../context/AudioContext';
+import { writeUrlState } from '../utils/urlState';
 import {
   Play,
   Pause,
@@ -38,15 +39,23 @@ import { Composer, Composition } from '../types';
 
 interface EuropeMapViewProps {
   onSelectComposer: (composerId: string, year?: number) => void;
+  /** アドレス（#year=…）で指定された、最初に見る年 */
+  initialYear?: number;
 }
 
 /** 地図の上に出る説明の札（まとめ札・人物の説明）を、文字が読みやすいよう大きくする倍率 */
 const POPUP_ZOOM = 1.4;
 
-export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer }) => {
+export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, initialYear }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
 
-  const [currentYear, setCurrentYear] = useState<number>(isJapanOnly() ? 1620 : 1787); // 最初はモーツァルトの頃（日本音楽史のみなら江戸初め）
+  const [currentYear, setCurrentYear] = useState<number>(initialYear ?? (isJapanOnly() ? 1620 : 1787)); // 最初はモーツァルトの頃（日本音楽史のみなら江戸初め）
+
+  // いま見ている年をアドレスに書いておく（自動再生中は書きすぎないよう、少し待ってから）
+  useEffect(() => {
+    const t = window.setTimeout(() => writeUrlState({ year: currentYear }), 300);
+    return () => window.clearTimeout(t);
+  }, [currentYear]);
   const [isPlayingTimeTravel, setIsPlayingTimeTravel] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [hoveredComposerId, setHoveredComposerId] = useState<string | null>(null);

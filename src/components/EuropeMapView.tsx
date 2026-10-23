@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { yearText, yearTick } from '../utils/yearLabel';
 import { COMPOSERS, getVisibleComposers } from '../data/composers';
 import { EUROPEAN_CITIES } from '../data/cities';
@@ -43,8 +43,13 @@ interface EuropeMapViewProps {
   initialYear?: number;
 }
 
-/** 地図の上に出る説明の札（まとめ札・人物の説明）を、文字が読みやすいよう大きくする倍率 */
+/** 地図の上に出る説明の札（まとめ札・人物の説明）を、文字が読みやすいよう大きくする倍率（上限） */
 const POPUP_ZOOM = 1.4;
+/** まとめ札の1列の幅・1行の高さ（札の中の単位） */
+const CARD_COL = 100;
+const CARD_ROW = 25;
+/** まとめ札の列数：人数が多いほど列を増やして、縦に長くなりすぎないようにする */
+const cardCols = (n: number) => (n > 10 ? 3 : n > 5 ? 2 : 1);
 
 export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, initialYear }) => {
   const { playTrack, currentTrack, isPlaying } = useAudio();
@@ -63,6 +68,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
   const timerRef = useRef<number | null>(null);
   const [showStories, setShowStories] = useState<boolean>(false);
+  // スマホなど小さい地図では、まとめ札はたたんでおき、タップした1つだけ開く
+  const [expandedCluster, setExpandedCluster] = useState<string | null>(null);
+  useEffect(() => setExpandedCluster(null), [currentYear]);
   useBackClose(showStories, () => setShowStories(false));
   useBackClose(!!selectedComposerId, () => setSelectedComposerId(null));
 
@@ -123,19 +131,33 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
   const svgRef = useRef<SVGSVGElement | null>(null);
   // 地図を小さく表示しているとき、札や文字まで小さくなってボケるので、その分だけ少し大きく描く
   const [pxScale, setPxScale] = useState(1);
+  // 枠の縦横比。枠が地図より横長なら、その分だけ左右に表示範囲を広げて、札を置く場所に使う
+  const [boxAspect, setBoxAspect] = useState(SVG_W / SVG_H);
   useEffect(() => {
     const el = svgRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(() => {
       // 地図は枠の中に縦横比を保って収まるので、幅と高さのうち小さいほうの比率が実際の縮尺
       const r = el.getBoundingClientRect();
+      if (r.width < 10 || r.height < 10) return;
       setPxScale(Math.min(r.width / SVG_W, r.height / SVG_H) || 1);
+      setBoxAspect(r.width / r.height);
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const boost = Math.min(1.35, Math.max(1, 0.7 / pxScale));
+  // 画面の上で名前が 10px 程度以上になるようにする（スマホでは 2 倍ほど大きく描く）
+  const boost = Math.min(2.6, Math.max(1, 0.85 / pxScale));
   const sc = boost / k; // 拡大しても、札や文字の大きさが画面の上で変わらないようにするための倍率
+  // まとめ札・説明札の倍率。画面が小さいときは札が地図を覆ってしまうので、控えめにする
+  const popupZoom = Math.min(POPUP_ZOOM, Math.max(1, 1.0 / (boost * pxScale)));
+  // 地図が画面上で小さい（おおよそスマホ）ときは、まとめ札をたたむ
+  const smallMap = pxScale * SVG_W < 620;
+  // 枠が地図より横長なとき、左右に広げる幅（地図の単位。倍率 1 のとき）
+  const EXTRA_W = Math.max(0, SVG_H * boxAspect - SVG_W);
+  /** 表示範囲の左端と幅（倍率 k のとき） */
+  const viewLeft = (v: { k: number; vx: number }) => v.vx - EXTRA_W / (2 * v.k);
+  const viewWidth = (kk: number) => (SVG_W + EXTRA_W) / kk;
   const hoverCardRef = useRef<HoverCardHandle>(null);
   const didPanRef = useRef(false);
   const viewRef = useRef(view);
@@ -149,6 +171,40 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     };
   };
 
+  /** その年に地図の上にいる人たちが画面に収まるよう、拡大して中央に寄せる */
+  const fitToPeople = useCallback(() => {
+    const pts: [number, number][] = [];
+    activeComposers.forEach(c => {
+      const where = getWhereabouts(c, currentYear);
+      if (!where || isOffMap(where.place)) return;
+      pts.push(projectGeoToSvg(where.place.lon, where.place.lat));
+    });
+    if (pts.length === 0) {
+      setView({ k: 1, vx: 0, vy: 0 });
+      return;
+    }
+    const xs = pts.map(p => p[0]);
+    const ys = pts.map(p => p[1]);
+    // 札（名前）の分だけ余白を広めに取る
+    const PAD_X = 150;
+    const PAD_Y = 110;
+    const w = Math.max(...xs) - Math.min(...xs) + PAD_X * 2;
+    const h = Math.max(...ys) - Math.min(...ys) + PAD_Y * 2;
+    const k = Math.min(2.4, MAX_K, (SVG_W + EXTRA_W) / w, SVG_H / h);
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+    const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    setView(clampView({ k, vx: cx - SVG_W / k / 2, vy: cy - SVG_H / k / 2 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeComposers, currentYear, EXTRA_W]);
+
+  // 最初に開いたときは、人がいるあたりに寄せて見せる
+  const didInitialFit = useRef(false);
+  useEffect(() => {
+    if (didInitialFit.current) return;
+    didInitialFit.current = true;
+    fitToPeople();
+  }, [fitToPeople]);
+
   /** 画面上の点（clientX/Y）を中心に、倍率を factor 倍にする */
   const zoomAt = (factor: number, clientX?: number, clientY?: number) => {
     const el = svgRef.current;
@@ -161,9 +217,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     const rect = el.getBoundingClientRect();
     const fx = clientX === undefined ? 0.5 : (clientX - rect.left) / rect.width;
     const fy = clientY === undefined ? 0.5 : (clientY - rect.top) / rect.height;
-    const wx = cur.vx + fx * (SVG_W / cur.k);
+    const wx = viewLeft(cur) + fx * viewWidth(cur.k);
     const wy = cur.vy + fy * (SVG_H / cur.k);
-    setView(clampView({ k: nk, vx: wx - fx * (SVG_W / nk), vy: wy - fy * (SVG_H / nk) }));
+    setView(clampView({ k: nk, vx: wx - fx * viewWidth(nk) + EXTRA_W / (2 * nk), vy: wy - fy * (SVG_H / nk) }));
   };
 
   // マウスでドラッグして動かす（拡大しているときだけ）
@@ -180,7 +236,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       setView(
         clampView({
           k: start.k,
-          vx: start.vx - (dx / rect.width) * (SVG_W / start.k),
+          vx: start.vx - (dx / rect.width) * viewWidth(start.k),
           vy: start.vy - (dy / rect.height) * (SVG_H / start.k)
         })
       );
@@ -225,7 +281,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         const dy = e.touches[0].clientY - pan.y;
         if (Math.hypot(dx, dy) > 3) didPanRef.current = true;
         pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        setView(clampView({ k: cur.k, vx: cur.vx - (dx / rect.width) * (SVG_W / cur.k), vy: cur.vy - (dy / rect.height) * (SVG_H / cur.k) }));
+        setView(clampView({ k: cur.k, vx: cur.vx - (dx / rect.width) * viewWidth(cur.k), vy: cur.vy - (dy / rect.height) * (SVG_H / cur.k) }));
       }
     };
     const onEnd = (e: TouchEvent) => {
@@ -287,6 +343,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       trueY: number;
       placeName: string;
       members: Entry[];
+      /** たたんである（場所名と人数だけ）。タップで開く */
+      collapsed: boolean;
     }
     const pins: Pin[] = [];
     const clusters: Cluster[] = [];
@@ -297,14 +355,27 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     const free = (x: number, y: number, w: number, h: number) =>
       placed.every(q => Math.abs(q.x - x) >= (q.w + w) / 2 + 4 * s || Math.abs(q.y - y) >= (q.h + h) / 2 + 4 * s);
     const ANGLES = [-45, 45, -135, 135, -90, 90, 0, 180, -22, 22, -158, 158, -68, 68, -112, 112];
+    // いま見えている範囲（拡大しているときは、その中に札を置く。横長の枠では左右の余白も使う）
+    const minX = viewLeft({ k, vx }) + 10 * s;
+    const maxX = viewLeft({ k, vx }) + viewWidth(k) - 10 * s;
+    const minY = vy + 6 * s;
+    const maxY = vy + SVG_H / k - 6 * s;
+    // 左上の拡大・縮小ボタンの場所は、札でふさがない
+    {
+      const u = 1 / (pxScale * k); // 画面の 1px が地図の何単位か
+      placed.push({ x: viewLeft({ k, vx }) + 30 * u, y: vy + 110 * u, w: 60 * u, h: 220 * u });
+    }
     /** 本当の場所のまわりで、斜めも含めて近い順に空いている場所を探す */
     const findSpot = (tx: number, ty: number, w: number, h: number, firstRing: number, maxRing = 24): [number, number] | null => {
+      // 大きな札でも置き場所を見つけられるよう、歩幅は札の大きさと画面上の約60pxの小さいほう
+      const stepX = Math.min(w * 0.75, 60 * s);
+      const stepY = Math.min(h * 0.9, 60 * s);
       for (let ring = firstRing; ring <= maxRing; ring++) {
         for (const deg of ANGLES) {
           const rad = (deg * Math.PI) / 180;
-          const x = tx + Math.cos(rad) * ring * w * 0.75;
-          const y = ty + Math.sin(rad) * ring * h * 0.9;
-          const inside = x - w / 2 > 10 && x + w / 2 < SVG_W - 10 && y - h / 2 > 6 && y + h / 2 < SVG_H - 6;
+          const x = tx + Math.cos(rad) * ring * stepX;
+          const y = ty + Math.sin(rad) * ring * stepY;
+          const inside = x - w / 2 > minX && x + w / 2 < maxX && y - h / 2 > minY && y + h / 2 < maxY;
           if (inside && free(x, y, w, h)) return [x, y];
         }
       }
@@ -333,7 +404,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     });
 
     // 4人以上が集中している場所は「まとめ札」
-    const CARD_ROW = 28;
     const singles: typeof onMap = [];
     groups.forEach(list => {
       if (list.length < 4) {
@@ -342,14 +412,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       }
       const cx = list.reduce((a, b) => a + b.tx, 0) / list.length;
       const cy = list.reduce((a, b) => a + b.ty, 0) / list.length;
-      const cols = list.length > 7 ? 2 : 1;
+      const cols = cardCols(list.length);
       const rows = Math.ceil(list.length / cols);
-      const wScreen = (cols * 108 + 16) * POPUP_ZOOM;
-      const hScreen = (26 + rows * CARD_ROW) * POPUP_ZOOM;
       const id = `cluster-${clusters.length}`;
       const nearest = list.reduce((best, cur) =>
         Math.hypot(cur.tx - cx, cur.ty - cy) < Math.hypot(best.tx - cx, best.ty - cy) ? cur : best
       );
+      const collapsed = smallMap && expandedCluster !== id;
+      const placeName = nearest.e.where.place.ja;
+      // たたんだ札は「ウィーン 12人 ▾」の1行だけ
+      const wScreen = (collapsed ? [...placeName].length * 12 + 58 : cols * CARD_COL + 16) * popupZoom;
+      const hScreen = (collapsed ? 24 : 26 + rows * CARD_ROW) * popupZoom;
       clusters.push({
         id,
         x: cx,
@@ -359,7 +432,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         cols,
         trueX: cx,
         trueY: cy,
-        placeName: nearest.e.where.place.ja,
+        placeName,
+        collapsed,
         members: list
           .map(i => i.e)
           .sort((a, b) => a.composer.birthYear - b.composer.birthYear)
@@ -450,7 +524,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       });
     }
     return { composerMapData: pins, offMapBox: box, clusters };
-  }, [activeComposers, currentYear, k, boost]);
+  }, [activeComposers, currentYear, k, vx, vy, boost, popupZoom, pxScale, EXTRA_W, smallMap, expandedCluster]);
 
   // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
   const composerLifeStories = useMemo(() => {
@@ -682,7 +756,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         <div className="w-full max-w-6xl relative">
           <svg
             ref={svgRef}
-            viewBox={`${vx} ${vy} ${SVG_W / k} ${SVG_H / k}`}
+            viewBox={`${viewLeft({ k, vx })} ${vy} ${viewWidth(k)} ${SVG_H / k}`}
             className={`w-full h-auto object-contain select-none ${k > 1 ? 'cursor-grab' : ''}`}
             style={{ maxHeight: `max(220px, ${MAP_SIZES[mapSize].vh}vh)` }}
             onMouseDown={handleMapMouseDown}
@@ -703,7 +777,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
               </filter>
             </defs>
 
-            {/* Ocean / Background */}
+            {/* Ocean / Background（左右に広げた分も含めて塗る） */}
+            <rect x={-4000} y={-4000} width={9000} height={9000} fill="#080706" />
             <rect width={SVG_W} height={SVG_H} fill="url(#oceanGlow)" />
 
             {/* 緯度・経度の目盛り線（5度ごとの緯度線、10度ごとの経度線） */}
@@ -788,7 +863,11 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
             {/* 人が集中している都市：都市を指す線と人数の丸 */}
             {clusters.map(c => (
-              <g key={`cl-line-${c.id}`} className="pointer-events-none">
+              <g
+                key={`cl-line-${c.id}`}
+                className={smallMap ? 'cursor-pointer' : 'pointer-events-none'}
+                onClick={() => smallMap && setExpandedCluster(c.collapsed ? c.id : null)}
+              >
                 <line x1={c.trueX} y1={c.trueY} x2={c.x} y2={c.y} stroke="#e6b95c" strokeWidth={1.6 * sc} opacity="0.85" />
                 <circle cx={c.trueX} cy={c.trueY} r={9 * sc} fill="#e6b95c" stroke="#14110e" strokeWidth={1.5 * sc} />
                 <text x={c.trueX} y={c.trueY + 4 * sc} textAnchor="middle" fontSize={11 * sc} fontWeight="bold" fill="#14110e">
@@ -922,7 +1001,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                     const boxW = level === 2 ? 224 : 130;
                     const boxH = level === 2 ? 20 + lines.length * 13 + 16 : 28;
                     return (
-                      <g transform={`translate(${x + 20}, ${y - (boxH * POPUP_ZOOM) / 2}) scale(${POPUP_ZOOM})`} className="pointer-events-none">
+                      <g transform={`translate(${x + 20}, ${y - (boxH * popupZoom) / 2}) scale(${popupZoom})`} className="pointer-events-none">
                         <rect width={boxW} height={boxH} rx="8" fill="#14110e" stroke={isSelected ? '#ffffff' : topWork ? '#c99738' : era.color} strokeWidth="1.1" opacity="0.94" />
                         <text x="12" y="17" fontSize="13" fontWeight="bold" fill="#ffffff">
                           {composer.shortName}
@@ -964,7 +1043,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                       [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
                     const boxWidth = crowded ? textWidth(line1, 12) + 16 : Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
                     return (
-                      <g transform={`translate(${x}, ${y + 22})`} className={isSelected ? undefined : 'max-md:hidden'}>
+                      <g transform={`translate(${x}, ${y + 22})`}>
                         <rect
                           x={-boxWidth / 2}
                           y="0"
@@ -1001,19 +1080,47 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
             {/* 人が集中している都市の「まとめ札」：中の名前をタップするとその人の説明が開く */}
             {clusters.map(c => {
               const rows = Math.ceil(c.members.length / c.cols);
-              const W = (c.w * k) / (POPUP_ZOOM * boost);
-              const H = (c.h * k) / (POPUP_ZOOM * boost);
+              const W = (c.w * k) / (popupZoom * boost);
+              const H = (c.h * k) / (popupZoom * boost);
+              if (c.collapsed) {
+                // たたんだ札：タップすると中の人たちが開く
+                return (
+                  <g
+                    key={`cl-card-${c.id}`}
+                    transform={`translate(${c.x} ${c.y}) scale(${sc * popupZoom})`}
+                    className="cursor-pointer"
+                    onClick={() => setExpandedCluster(c.id)}
+                  >
+                    <rect filter="url(#pinShadow)" x={-W / 2} y={-H / 2} width={W} height={H} rx="12" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
+                    <text x={-W / 2 + 10} y={-H / 2 + 16.5} fontSize="12" fontWeight="bold" fill="#e6b95c">
+                      {c.placeName}　{c.members.length}人
+                      <tspan fill="#f5ebd9" dx="6">
+                        ▾
+                      </tspan>
+                    </text>
+                  </g>
+                );
+              }
               return (
-                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc * POPUP_ZOOM})`}>
+                <g key={`cl-card-${c.id}`} transform={`translate(${c.x} ${c.y}) scale(${sc * popupZoom})`}>
                   <rect filter="url(#pinShadow)" x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#14110e" stroke="#e6b95c" strokeWidth="1.4" opacity="0.96" />
-                  <text x={-W / 2 + 10} y={-H / 2 + 17} fontSize="12" fontWeight="bold" fill="#e6b95c">
-                    {c.placeName}　{c.members.length}人
-                  </text>
+                  {/* 見出し（小さい地図では、タップするとたたむ） */}
+                  <g className={smallMap ? 'cursor-pointer' : undefined} onClick={() => smallMap && setExpandedCluster(null)}>
+                    <rect x={-W / 2} y={-H / 2} width={W} height="24" rx="10" fill="transparent" />
+                    <text x={-W / 2 + 10} y={-H / 2 + 17} fontSize="12" fontWeight="bold" fill="#e6b95c">
+                      {c.placeName}　{c.members.length}人
+                      {smallMap && (
+                        <tspan fill="#f5ebd9" dx="6">
+                          ▴
+                        </tspan>
+                      )}
+                    </text>
+                  </g>
                   {c.members.map((m, i) => {
                     const col = Math.floor(i / rows);
                     const row = i % rows;
-                    const mx = -W / 2 + 10 + col * 108;
-                    const my = -H / 2 + 26 + row * 28;
+                    const mx = -W / 2 + 10 + col * CARD_COL;
+                    const my = -H / 2 + 26 + row * CARD_ROW;
                     const era = getEraById(m.composer.era);
                     const selected = selectedComposerId === m.composer.id;
                     return (
@@ -1034,17 +1141,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                         <rect
                           x={mx - 4}
                           y={my}
-                          width="104"
-                          height="27"
+                          width={CARD_COL - 4}
+                          height={CARD_ROW - 1}
                           rx="6"
                           fill={selected ? '#3a2d1c' : hoveredComposerId === m.composer.id ? '#2a2118' : 'transparent'}
                           stroke={selected ? '#ffffff' : 'none'}
                         />
-                        <foreignObject x={mx} y={my + 2} width="24" height="24">
-                          <ComposerPortrait composer={m.composer} size="xs" showOrnateBorder={false} />
+                        <foreignObject x={mx} y={my + 2} width="21" height="21">
+                          <ComposerPortrait composer={m.composer} size="xs" showOrnateBorder={false} className="!w-[21px] !h-[21px]" />
                         </foreignObject>
-                        <circle cx={mx + 22} cy={my + 22} r="3.2" fill={era.color} stroke="#14110e" strokeWidth="1" />
-                        <text x={mx + 30} y={my + 17} fontSize="11" fontWeight="bold" fill="#ffffff">
+                        <circle cx={mx + 19} cy={my + 20} r="3" fill={era.color} stroke="#14110e" strokeWidth="1" />
+                        <text x={mx + 26} y={my + 16} fontSize="10.5" fontWeight="bold" fill="#ffffff">
                           {m.composer.shortName.length > 6 ? m.composer.shortName.slice(0, 6) + '…' : m.composer.shortName}
                         </text>
                       </g>
@@ -1072,6 +1179,16 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
               aria-label="地図を縮小"
             >
               −
+            </button>
+            <button
+              onClick={fitToPeople}
+              className="w-8 py-1 rounded bg-[#241f19]/90 border border-[#3d362e] text-[#e6b95c] text-[9px] leading-tight font-bold hover:bg-[#382f23]"
+              aria-label="その年の人たちが収まるように拡大する"
+              title="その年の人たちが収まるように拡大する"
+            >
+              人に
+              <br />
+              合わせる
             </button>
             {k > 1 && (
               <button

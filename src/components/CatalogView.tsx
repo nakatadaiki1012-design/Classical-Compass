@@ -6,6 +6,7 @@ import { ComposerPortrait } from './ComposerPortrait';
 import { COMPOSER_YOMI, REGIONS, regionOf, gyoOf } from '../data/composerMeta';
 import { useAudio } from '../context/AudioContext';
 import { Play, Pause, Search, Sparkles, Filter, ChevronRight } from 'lucide-react';
+import { yearText } from '../utils/yearLabel';
 
 interface CatalogViewProps {
   onSelectComposer: (composerId: string) => void;
@@ -149,7 +150,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                     {era.name}
                   </span>
                   <span className="text-[11px] font-mono tabular-nums text-[#a3978a]">
-                    {composer.birthYear} - {composer.deathYear} ({age}歳)
+                    {yearText(composer.birthYear)} - {yearText(composer.deathYear)}（{age}歳）
                   </span>
                 </div>
 

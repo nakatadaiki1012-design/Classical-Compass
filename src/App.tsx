@@ -8,7 +8,8 @@ import { ViewMode } from './types';
 import { COMPOSERS, getComposerById } from './data/composers';
 import { AudioProvider, useAudio } from './context/AudioContext';
 import { Header } from './components/Header';
-import { readUrlState, writeUrlState } from './utils/urlState';
+import { readUrlState, writeUrlState, getUrlState, onExternalUrlChange } from './utils/urlState';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // 画面ごとにプログラムを分けて読み込む（最初に開くときの待ち時間を短くする）
 const TimelineView = lazy(() => import('./components/TimelineView').then(m => ({ default: m.TimelineView })));
@@ -39,11 +40,15 @@ function ClassicalAppContent() {
   );
   // 人物詳細を開いたときの「いま見ていた年」（年表の中心年・地図の年）。なければ null
   const [modalYear, setModalYear] = useState<number | null>(initialUrl.year ?? null);
+  // 年表⇄地図を切り替えたとき、見ていた年を引き継ぐ（年はアドレスに書いてあるので、そこから読む）
+  const [viewYear, setViewYear] = useState<number | undefined>(initialUrl.year);
+  // 同じタブで別のリンクを開いたときに画面を作り直すための番号
+  const [navSeq, setNavSeq] = useState(0);
   const { playTrack } = useAudio();
   // 「日本音楽史」オプションを切り替えたら、画面を作り直して表示を入れ替える
   const japanMode = useJapanLevel();
   const worldMode = useWorldMode();
-  const modeKey = `${japanMode}-${worldMode}`;
+  const modeKey = `${japanMode}-${worldMode}-${navSeq}`;
 
   const handleSelectComposer = useCallback((composerId: string, year?: number) => {
     setSelectedComposerId(composerId);
@@ -60,6 +65,7 @@ function ClassicalAppContent() {
     (v: ViewMode) => {
       if (v === currentView) return;
       const prev = currentView;
+      setViewYear(getUrlState().year);
       setCurrentView(v);
       pushBack(() => setCurrentView(prev));
     },
@@ -91,6 +97,23 @@ function ClassicalAppContent() {
     writeUrlState({ view: currentView, composer: selectedComposerId ?? undefined });
   }, [currentView, selectedComposerId]);
 
+  // 同じタブで別のリンク（#view=map&year=…）を開いたら、その場面に切り替える
+  useEffect(
+    () =>
+      onExternalUrlChange(s => {
+        setViewYear(s.year);
+        setNavSeq(n => n + 1);
+        if (s.view) setCurrentView(s.view);
+        if (s.composer && getComposerById(s.composer)) {
+          setSelectedComposerId(s.composer);
+          setModalYear(s.year ?? null);
+        } else {
+          setSelectedComposerId(null);
+        }
+      }),
+    []
+  );
+
   const selectedComposer = selectedComposerId ? getComposerById(selectedComposerId) || null : null;
 
   return (
@@ -104,13 +127,14 @@ function ClassicalAppContent() {
 
       {/* Main View Area */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
+        <ErrorBoundary key={`eb-${currentView}-${modeKey}`}>
         <Suspense fallback={<ViewLoading />}>
           {currentView === 'timeline' && (
-            <TimelineView key={`tl-${modeKey}`} onSelectComposer={handleSelectComposer} initialYear={initialUrl.year} />
+            <TimelineView key={`tl-${modeKey}`} onSelectComposer={handleSelectComposer} initialYear={viewYear} />
           )}
 
           {currentView === 'map' && (
-            <EuropeMapView key={`map-${modeKey}`} onSelectComposer={handleSelectComposer} initialYear={initialUrl.year} />
+            <EuropeMapView key={`map-${modeKey}`} onSelectComposer={handleSelectComposer} initialYear={viewYear} />
           )}
 
           {currentView === 'history' && (
@@ -121,6 +145,7 @@ function ClassicalAppContent() {
             <CatalogView key={`cat-${modeKey}`} onSelectComposer={handleSelectComposer} />
           )}
         </Suspense>
+        </ErrorBoundary>
       </main>
 
       {/* 用語・作曲家・時代のウィキ風ページ（行ったり来たりできる） */}

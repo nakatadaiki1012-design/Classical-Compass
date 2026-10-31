@@ -117,8 +117,20 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                 </span>
               </div>
 
-              <h2 className="text-2xl md:text-3xl font-classical-display font-bold text-[#f5ebd9] mt-2">
-                {composer.name}
+              <h2
+                className="text-2xl md:text-3xl font-classical-display font-bold text-[#f5ebd9] mt-2"
+                style={{ wordBreak: 'keep-all', overflowWrap: 'anywhere' }}
+              >
+                {composer.name.split('・').map((part, i, arr) => (
+                  <React.Fragment key={i}>
+                    {part}
+                    {i < arr.length - 1 && (
+                      <>
+                        ・<wbr />
+                      </>
+                    )}
+                  </React.Fragment>
+                ))}
               </h2>
               <p className="text-sm font-serif italic text-[#c99738] tracking-wider mt-0.5">
                 {composer.originalName}

@@ -56,7 +56,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
   }, [filtered, sortMode]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto space-y-6 pb-28">
+    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl 3xl:max-w-[1720px] mx-auto space-y-6 pb-28">
       {/* Header & Filter Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#2e2924]">
         <div>
@@ -124,7 +124,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
             <span className="ml-2 text-xs font-normal text-[#a3978a]">{group.items.length}人</span>
           </h3>
         )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-5">
         {group.items.map(composer => {
           const era = getEraById(composer.era);
           const age = composer.deathYear - composer.birthYear;
@@ -138,9 +138,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
             >
               <div>
                 {/* Top card bar: Era & Lifespan */}
-                <div className="flex items-center justify-between pb-3 border-b border-[#241e18]">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 pb-3 border-b border-[#241e18]">
                   <span
-                    className="text-[11px] font-semibold flex items-center gap-1.5"
+                    className="text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap"
                     style={{ color: era.accentColor }}
                   >
                     <span
@@ -149,7 +149,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                     />
                     {era.name}
                   </span>
-                  <span className="text-[11px] font-mono tabular-nums text-[#a3978a]">
+                  <span className="text-[11px] font-mono tabular-nums text-[#a3978a] whitespace-nowrap">
                     {yearText(composer.birthYear)} - {yearText(composer.deathYear)}（{age}歳）
                   </span>
                 </div>

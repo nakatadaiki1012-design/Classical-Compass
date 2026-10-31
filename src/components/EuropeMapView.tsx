@@ -670,9 +670,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         </div>
 
           {/* 自動再生・画期ジャンプ（速度は再生中だけ表示して画面をすっきり） */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-md bg-[#241f19] border border-[#3d362e] p-0.5 text-[11px]">
-            <span className="px-1 text-[#a3978a]">地図の大きさ</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-1 rounded-md bg-[#241f19] border border-[#3d362e] p-0.5 text-[11px] shrink-0" title="地図の大きさ">
+            <span className="px-1 text-[#a3978a] whitespace-nowrap">
+              <span className="sm:hidden">大きさ</span>
+              <span className="hidden sm:inline">地図の大きさ</span>
+            </span>
             {(Object.keys(MAP_SIZES) as (keyof typeof MAP_SIZES)[]).map(key => (
               <button
                 key={key}
@@ -691,7 +694,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                   setSelectedComposerId(null);
                 }
               }}
-              className="bg-[#241f19] border border-[#3d362e] rounded-md px-1.5 py-0.5 text-[11px] text-[#e8dec8] focus:outline-none focus:border-[#c99738] cursor-pointer max-w-[120px] sm:max-w-[150px]"
+              className="bg-[#241f19] border border-[#3d362e] rounded-md px-1.5 py-0.5 text-[11px] text-[#e8dec8] focus:outline-none focus:border-[#c99738] cursor-pointer max-w-[110px] sm:max-w-[150px] shrink-0"
               aria-label="有名な年へジャンプ"
             >
               <option value="">有名な年へ</option>
@@ -753,7 +756,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
       {/* 2. Main SVG Europe Map Canvas (地図のほう: 生没年＆その年の作曲を表示) */}
       <div className="relative bg-[#0a0908] border-b border-[#2e2924] flex items-center justify-center p-2 md:p-4 overflow-hidden">
-        <div className="w-full max-w-6xl relative">
+        <div className="w-full max-w-6xl 3xl:max-w-[1600px] relative">
           <svg
             ref={svgRef}
             viewBox={`${viewLeft({ k, vx })} ${vy} ${viewWidth(k)} ${SVG_H / k}`}

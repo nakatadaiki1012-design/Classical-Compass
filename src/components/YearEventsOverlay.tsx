@@ -39,6 +39,10 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
 }) => {
   const [selected, setSelected] = useState<YearEvent | null>(null);
   const [openPeriod, setOpenPeriod] = useState<MusicPeriod | null>(null);
+  // 年表の下に重ねる窓は、たためるようにする。横向きのスマホなど高さが低い画面では、最初からたたんでおく
+  const [collapsed, setCollapsed] = useState<boolean>(
+    () => !inline && typeof window !== 'undefined' && window.innerHeight < 560
+  );
   const japanMode = useJapanMode();
   const japanOnly = useJapanOnly();
   const worldMode = useWorldMode();
@@ -120,10 +124,21 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
               </button>
             ))}
           </div>
+          {!inline && (
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? 'できごとを開く' : 'できごとをたたむ'}
+              title={collapsed ? 'できごとを開く' : 'できごとをたたむ'}
+              className="shrink-0 -my-0.5 w-7 h-6 rounded border border-white/10 hover:border-[#c99738]/60 text-[11px] text-[#e8dec8] flex items-center justify-center"
+            >
+              {collapsed ? '▴' : '▾'}
+            </button>
+          )}
         </div>
 
         {/* この頃の主流の音楽（時代）。タップで用語の解説 */}
-        {periods.length > 0 && (
+        {!collapsed && periods.length > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-[3px] border-b border-white/5 overflow-x-auto scrollbar-none">
             <span className="shrink-0 text-[10px] font-bold text-[#e6b95c]">この頃の主流</span>
             {periods.map(p => (
@@ -143,9 +158,10 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
         )}
 
         {/* 見出しの一覧（狭いときは1列、広いと2〜3列） */}
+        {!collapsed && (
         <div
           className={`overflow-y-auto px-2 py-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-2 content-start ${
-            inline ? 'max-h-[40vh]' : 'max-h-[22vh] md:max-h-[24vh]'
+            inline ? 'max-h-[40vh]' : 'max-h-[22vh] md:max-h-[24vh] [@media(max-height:560px)]:max-h-[18vh]'
           }`}
         >
           {events.map(ev => headline(ev))}
@@ -161,6 +177,7 @@ export const YearEventsOverlay: React.FC<YearEventsOverlayProps> = ({
             </>
           )}
         </div>
+        )}
       </div>
 
       {openPeriod && (

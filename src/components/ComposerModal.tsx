@@ -10,6 +10,8 @@ import { useAudio } from '../context/AudioContext';
 import { WorkModal } from './WorkModal';
 import { useBackClose, showToast } from '../utils/backStack';
 import { copyShareUrl } from '../utils/urlState';
+import { hasAudio } from '../utils/hasAudio';
+import { formatDuration, getRecording } from '../utils/recordings';
 import { LinkedText } from './LinkedText';
 import { Composition } from '../types';
 import {
@@ -51,7 +53,10 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
   const lifeEvents = getComposerEvents(composer.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      style={{ paddingBottom: 'calc(var(--player-h, 0px) + 0.75rem)' }}
+    >
       <div
         className="relative w-full max-w-4xl max-h-[90vh] bg-[#161412] border border-[#383127] rounded-xl shadow-2xl overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
@@ -214,10 +219,28 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                         </p>
                       </div>
 
-                      {/* Composition Year Badge */}
-                      <span className="px-2.5 py-1 rounded bg-[#241e19] border border-[#c99738]/40 text-[#c99738] font-mono font-bold text-xs shrink-0">
-                        {work.year}年 作曲
-                      </span>
+                      {/* 録音があれば「聴く」ボタン、なければ作曲年 */}
+                      {hasAudio(work) ? (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            playTrack(work, composer);
+                          }}
+                          className={`shrink-0 flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full text-xs font-bold shadow ${
+                            isCurrent && isPlaying
+                              ? 'bg-white text-black ring-2 ring-[#c99738]'
+                              : 'bg-[#c99738] text-black hover:bg-[#dbaa44]'
+                          }`}
+                          aria-label={isCurrent && isPlaying ? `${work.title}を一時停止` : `${work.title}を聴く`}
+                        >
+                          {isCurrent && isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                          <span className="font-mono">{formatDuration(getRecording(work.id)!.dur)}</span>
+                        </button>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded bg-[#241e19] border border-[#c99738]/40 text-[#c99738] font-mono font-bold text-xs shrink-0">
+                          {work.year}年 作曲
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs text-[#a39888] mt-3 leading-relaxed">

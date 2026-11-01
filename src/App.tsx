@@ -151,6 +151,9 @@ function ClassicalAppContent() {
       {/* 用語・作曲家・時代のウィキ風ページ（行ったり来たりできる） */}
       <WikiPanel />
 
+      {/* 再生プレーヤー（曲を再生したときだけ、画面の下に出る） */}
+      <AudioPlayerBar onOpenComposer={id => handleSelectComposer(id)} />
+
       {/* Composer Full Profile Modal */}
       <ComposerModal
         composer={selectedComposer}

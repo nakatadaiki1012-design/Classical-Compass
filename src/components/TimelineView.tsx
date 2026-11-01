@@ -9,6 +9,7 @@ import { WorkModal } from './WorkModal';
 import { YearTopicsBar } from './YearTopicsBar';
 import { useAudio } from '../context/AudioContext';
 import { writeUrlState } from '../utils/urlState';
+import { hasAudio } from '../utils/hasAudio';
 import { MUSIC_PERIODS, MusicPeriod, getPeriodsAt } from '../data/musicPeriods';
 import { periodShortName } from '../data/glossary';
 import { PeriodModal } from './PeriodModal';
@@ -614,7 +615,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-45px)] select-none bg-[#090807] overflow-hidden font-sans">
+    <div className="flex flex-col h-[calc(100dvh-45px-var(--player-h,0px))] select-none bg-[#090807] overflow-hidden font-sans">
       {/* Top bar: 年・時代・ツマミだけを常に表示。検索や設定は「検索・設定」を押したときだけ出る */}
       <div className="bg-[#14100c]/95 backdrop-blur-xl border-b border-[#302519] px-4 md:px-6 py-2.5 shrink-0 z-30 shadow-lg">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -1304,6 +1305,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                     {/* Composition Dots on the bar's lower edge (kept clear of the name) */}
                     {composer.works.map(w => {
                       const workOffsetX = (w.year - composer.birthYear) * zoomScale;
+                      const listenable = hasAudio(w); // 録音があって聴ける曲は、金色の♪にする
                       return (
                         <div
                           key={w.id}
@@ -1313,9 +1315,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                           }}
                           className={`absolute ${compactRows ? '-bottom-1' : '-bottom-2'} -translate-x-1/2 cursor-pointer z-20 group/panodot`}
                           style={{ left: `${workOffsetX}px` }}
-                          title={`${w.year}年: ${w.title}（タップで解説）`}
+                          title={`${w.year}年: ${w.title}（タップで解説${listenable ? '・録音を聴けます' : ''}）`}
                         >
-                          <div className={`${compactRows ? 'w-2 h-2' : 'w-4 h-4 text-[9px]'} rounded-full bg-[#120e0b] border border-[#f0d48d] text-[#f0d48d] font-bold flex items-center justify-center hover:scale-150 transition-transform shadow-md`}>
+                          <div
+                            className={`${compactRows ? 'w-2 h-2' : 'w-4 h-4 text-[9px]'} rounded-full border font-bold flex items-center justify-center hover:scale-150 transition-transform shadow-md ${
+                              listenable ? 'bg-[#e6b95c] border-[#fff3d0] text-[#120e0b]' : 'bg-[#120e0b] border-[#f0d48d] text-[#f0d48d]'
+                            }`}
+                          >
                             {!compactRows && '♪'}
                           </div>
                         </div>

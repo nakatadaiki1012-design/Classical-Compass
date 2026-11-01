@@ -12,6 +12,7 @@
  */
 import { COMPOSERS } from '../src/data/composers';
 import { ERAS } from '../src/data/eras';
+import { RECORDINGS } from '../src/data/recordings';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -45,6 +46,13 @@ for (const c of COMPOSERS) {
   }
 }
 
+// 録音（data/recordings.ts）が、実在する作品に結びついているか
+for (const [workId, r] of Object.entries(RECORDINGS)) {
+  if (!workIds.has(workId)) errors.push(`録音 "${workId}" に対応する作品がない`);
+  if (!/^[0-9a-f]\/[0-9a-f]{2}\/./.test(r.path)) errors.push(`録音 "${workId}" のパスの形がおかしい: ${r.path}`);
+  if (!r.license) errors.push(`録音 "${workId}" にライセンスが書かれていない`);
+}
+
 if (warnings.length) {
   console.log(`⚠ 注意 ${warnings.length} 件:`);
   warnings.forEach(w => console.log(`  - ${w}`));
@@ -54,4 +62,4 @@ if (errors.length) {
   errors.forEach(e => console.error(`  - ${e}`));
   process.exit(1);
 }
-console.log(`✔ データ検査 OK（作曲家 ${COMPOSERS.length} 人、作品 ${workIds.size} 曲）`);
+console.log(`✔ データ検査 OK（作曲家 ${COMPOSERS.length} 人、作品 ${workIds.size} 曲、聴ける録音 ${Object.keys(RECORDINGS).length} 曲）`);

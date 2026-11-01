@@ -1380,7 +1380,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                             ? 'bg-white text-black scale-105 ring-2 ring-[#c99738]'
                             : 'bg-[#c99738] text-black hover:bg-[#dbaa44] hover:scale-105'
                         }`}
-                        title={isCurrentPlaying ? '一時停止' : 'フレーズ試聴'}
+                        title={isCurrentPlaying ? '一時停止' : '録音を聴く'}
                       >
                         {isCurrentPlaying ? (
                           <Pause className="w-5 h-5 fill-current" />

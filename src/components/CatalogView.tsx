@@ -7,6 +7,7 @@ import { COMPOSER_YOMI, REGIONS, regionOf, gyoOf } from '../data/composerMeta';
 import { useAudio } from '../context/AudioContext';
 import { Play, Pause, Search, Sparkles, Filter, ChevronRight } from 'lucide-react';
 import { yearText } from '../utils/yearLabel';
+import { hasAudio } from '../utils/hasAudio';
 
 interface CatalogViewProps {
   onSelectComposer: (composerId: string) => void;
@@ -128,8 +129,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
         {group.items.map(composer => {
           const era = getEraById(composer.era);
           const age = composer.deathYear - composer.birthYear;
-          const firstWork = composer.works[0];
-          const isThisTrackActive = firstWork && currentTrack?.work.id === firstWork.id;
+          // 代表作：録音のある曲があれば、それを優先して「聴く」ボタンを出す
+          const playableWork = composer.works.find(hasAudio);
+          const firstWork = playableWork ?? composer.works[0];
+          const isThisTrackActive = !!firstWork && currentTrack?.work.id === firstWork.id;
 
           return (
             <div
@@ -202,12 +205,26 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
               {/* Bottom Card Actions: Representative work title & composition year + Full Details */}
               <div className="mt-5 pt-3 border-t border-[#241e18] flex items-center justify-between gap-2">
                 {firstWork ? (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                  {playableWork && (
+                    <button
+                      onClick={() => playTrack(playableWork, composer)}
+                      className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center shadow ${
+                        isThisTrackActive && isPlaying ? 'bg-white text-black ring-2 ring-[#c99738]' : 'bg-[#c99738] text-black hover:bg-[#dbaa44]'
+                      }`}
+                      aria-label={isThisTrackActive && isPlaying ? `${playableWork.title}を一時停止` : `${playableWork.title}を聴く`}
+                      title={isThisTrackActive && isPlaying ? '一時停止' : '聴く'}
+                    >
+                      {isThisTrackActive && isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current translate-x-px" />}
+                    </button>
+                  )}
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#201a15] text-[#c99738] text-xs font-medium border border-[#30271e] truncate min-w-0"
                     title={`代表作: ${firstWork.title} (${firstWork.year}年)`}
                   >
                     <Sparkles className="w-3 h-3 text-[#c99738] shrink-0" />
                     <span className="truncate">{firstWork.title} ({firstWork.year}年)</span>
+                  </div>
                   </div>
                 ) : (
                   <span />

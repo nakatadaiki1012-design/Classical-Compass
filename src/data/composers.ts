@@ -1,6 +1,7 @@
 import { Composer } from '../types';
 import { LIFE_EPISODES } from './lifeEpisodes';
 import { MORE_COMPOSERS } from './moreComposers';
+import { EXTRA_WORKS } from './extraWorks';
 import { isJapanMode, isJapanOnly, isJapanesePerson } from '../utils/japanMode';
 import { isWorldMode } from '../utils/worldMode';
 
@@ -2949,7 +2950,11 @@ export const COMPOSERS: Composer[] = [
     return ep ? { ...c, ...ep } : c;
   }),
   ...MORE_COMPOSERS
-];
+].map(c => {
+  // 録音で聴ける名曲を、作品一覧のうしろに足す（extraWorks.ts）
+  const extra = EXTRA_WORKS[c.id];
+  return extra ? { ...c, works: [...c.works, ...extra] } : c;
+});
 
 export const getComposerById = (id: string): Composer | undefined => {
   return COMPOSERS.find(c => c.id === id);

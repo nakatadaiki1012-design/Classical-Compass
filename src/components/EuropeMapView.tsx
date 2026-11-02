@@ -578,7 +578,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
   }, [composerLifeStories, selectedComposerId, currentYear]);
 
   // 地図の表示エリアの大きさ（小・中・大）。この端末に覚えておく
-  const MAP_SIZES = { s: { label: '小', vh: 30 }, m: { label: '中', vh: 46 }, l: { label: '大', vh: 70 } } as const;
+  const MAP_SIZES = { s: { label: '小', vh: 38 }, m: { label: '中', vh: 58 }, l: { label: '大', vh: 80 } } as const;
   const [mapSize, setMapSize] = useState<keyof typeof MAP_SIZES>(() => {
     try {
       const v = localStorage.getItem('cc-map-size');
@@ -767,8 +767,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
           >
             <defs>
               <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#181512" />
-                <stop offset="100%" stopColor="#080706" />
+                <stop offset="0%" stopColor="#0d2033" />
+                <stop offset="100%" stopColor="#081623" />
               </radialGradient>
 
               <marker id="moveArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -781,17 +781,17 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
             </defs>
 
             {/* Ocean / Background（左右に広げた分も含めて塗る） */}
-            <rect x={-4000} y={-4000} width={9000} height={9000} fill="#080706" />
+            <rect x={-4000} y={-4000} width={9000} height={9000} fill="#081623" />
             <rect width={SVG_W} height={SVG_H} fill="url(#oceanGlow)" />
 
             {/* 緯度・経度の目盛り線（5度ごとの緯度線、10度ごとの経度線） */}
             {[40, 45, 50, 55, 60].map(lat => {
               const y = projectGeoToSvg(0, lat)[1];
-              return <line key={`lat-${lat}`} x1="0" y1={y} x2={SVG_W} y2={y} stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />;
+              return <line key={`lat-${lat}`} x1="0" y1={y} x2={SVG_W} y2={y} stroke="#16293b" strokeWidth="1" strokeDasharray="3 5" />;
             })}
             {[-10, 0, 10, 20, 30, 40].map(lon => {
               const x = projectGeoToSvg(lon, 0)[0];
-              return <line key={`lon-${lon}`} x1={x} y1="0" x2={x} y2={SVG_H} stroke="#1c1813" strokeWidth="1" strokeDasharray="3 5" />;
+              return <line key={`lon-${lon}`} x1={x} y1="0" x2={x} y2={SVG_H} stroke="#16293b" strokeWidth="1" strokeDasharray="3 5" />;
             })}
 
             {/* European Country Outlines */}
@@ -800,10 +800,10 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                 <path
                   key={idx}
                   d={country.d}
-                  fill="#1e1813"
-                  stroke="#382e23"
-                  strokeWidth="1.2"
-                  className="hover:fill-[#272019] transition-colors"
+                  fill="#2a2219"
+                  stroke="#5a4a37"
+                  strokeWidth={1.1 * sc}
+                  className="hover:fill-[#33291e] transition-colors"
                 >
                   <title>{country.name}</title>
                 </path>
@@ -814,14 +814,14 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
             {Object.values(EUROPEAN_CITIES).map(city => {
               const [cx, cy] = projectGeoToSvg(city.coordinates[0], city.coordinates[1]);
               return (
-                <g key={city.id} className="opacity-70 pointer-events-none max-md:hidden">
-                  <circle cx={cx} cy={cy} r={2.5 * sc} fill="#8c7e6d" />
+                <g key={city.id} className="opacity-80 pointer-events-none max-md:hidden">
+                  <circle cx={cx} cy={cy} r={2.5 * sc} fill="#9c8e7d" />
                   <text
                     x={cx}
                     y={cy + 10 * sc}
                     textAnchor="middle"
                     fontSize={10 * sc}
-                    fill="#a89a88"
+                    fill="#b8aa98"
                     fontFamily="sans-serif"
                     fontWeight="500"
                   >
@@ -833,7 +833,14 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
             {/* 引っ越し・旅立ちの年は、前の滞在先からの点線の矢印で「移動」を見せる */}
             {composerMapData
-              .filter(p => p.where.movedFrom && !p.offMap && !p.clusterId && !isOffMap(p.where.movedFrom))
+              .filter(
+                p =>
+                  p.where.movedFrom &&
+                  !p.offMap &&
+                  !p.clusterId &&
+                  !isOffMap(p.where.movedFrom) &&
+                  (p.composer.id === selectedComposerId || p.composer.id === hoveredComposerId)
+              )
               .map(p => {
                 const [fx, fy] = projectGeoToSvg(p.where.movedFrom!.lon, p.where.movedFrom!.lat);
                 return (
@@ -844,12 +851,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                       x2={p.x}
                       y2={p.y}
                       stroke="#e6b95c"
-                      strokeWidth="2"
-                      strokeDasharray="7 6"
-                      opacity="0.75"
+                      strokeWidth={2 * sc}
+                      strokeDasharray={`${7 * sc} ${6 * sc}`}
+                      opacity="0.85"
                       markerEnd="url(#moveArrow)"
                     />
-                    <circle cx={fx} cy={fy} r="4" fill="#e6b95c" opacity="0.8" />
+                    <circle cx={fx} cy={fy} r={4 * sc} fill="#e6b95c" opacity="0.85" />
                   </g>
                 );
               })}
@@ -859,8 +866,16 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
               .filter(p => !p.offMap && !p.clusterId && Math.hypot(p.x - p.trueX, p.y - p.trueY) > 6 * sc)
               .map(p => (
                 <g key={`leader-${p.composer.id}`} className="pointer-events-none">
-                  <line x1={p.trueX} y1={p.trueY} x2={p.x} y2={p.y} stroke="#bdb1a1" strokeWidth={1.2 * sc} opacity="0.7" />
-                  <circle cx={p.trueX} cy={p.trueY} r={3.5 * sc} fill="#f5ebd9" stroke="#14110e" strokeWidth={sc} />
+                  <line
+                    x1={p.trueX}
+                    y1={p.trueY}
+                    x2={p.x}
+                    y2={p.y}
+                    stroke="#d6cbbb"
+                    strokeWidth={(p.composer.id === selectedComposerId || p.composer.id === hoveredComposerId ? 1.6 : 0.9) * sc}
+                    opacity={p.composer.id === selectedComposerId || p.composer.id === hoveredComposerId ? 0.95 : 0.4}
+                  />
+                  <circle cx={p.trueX} cy={p.trueY} r={3 * sc} fill="#f5ebd9" stroke="#14110e" strokeWidth={sc} />
                 </g>
               ))}
 
@@ -1202,6 +1217,30 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                 全体
               </button>
             )}
+          </div>
+
+          {/* 印の意味（凡例） */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-[#a3978a]">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#f5ebd9] border border-[#14110e]" />
+              白い点＝その人が実際にいた都市
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e6b95c] text-[#14110e] text-[9px] font-bold">4</span>
+              同じ都市にいた人数
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-4 border-t-2 border-dashed border-[#e6b95c]" />
+              引っ越し・旅の道すじ（人物を選ぶと表示）
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded-full border border-dashed border-[#d6cdbd]" />
+              点線の輪＝近い年の記録からの推定
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#c99738] text-[#14110e] text-[9px] font-bold">旅</span>
+              旅行・遠征中
+            </span>
           </div>
 
           {/* 人物ポップアップ: 広い画面では地図の右上に重ねて、狭い画面では地図の下に表示 */}

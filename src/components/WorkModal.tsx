@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, ExternalLink, Film, Headphones, MapPin, Sparkles, X } from 'lucide-react';
+import { ChevronRight, ExternalLink, Film, Headphones, Loader2, MapPin, Pause, Play, Sparkles, X } from 'lucide-react';
+import { useAudio } from '../context/AudioContext';
+import { formatDuration, getRecording, recordingPageUrl } from '../utils/recordings';
 import { Composer, Composition } from '../types';
 import { ComposerPortrait } from './ComposerPortrait';
 import { useBackClose } from '../utils/backStack';
@@ -33,6 +35,9 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
   const guide = getWorkGuide(composer.id, work);
   const media = getWorkMedia(composer.id, work);
   const links = getFreeMediaLinks(composer, work);
+  const rec = getRecording(work.id);
+  const { playTrack, currentTrack, isPlaying, isLoading } = useAudio();
+  const isThis = currentTrack?.work.id === work.id;
   const age = work.year - composer.birthYear;
   // この曲の前後2年に、同じ人に起きた出来事（曲の背景として）
   const around = getComposerEvents(composer.id)
@@ -42,6 +47,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
   return createPortal(
     <div
       className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+      style={{ paddingBottom: 'calc(var(--player-h, 0px) + 0.75rem)' }}
       onClick={onClose}
     >
       <article
@@ -76,6 +82,37 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
               {work.city}
             </span>
           </div>
+
+          {/* 録音を聴く（ウィキメディア・コモンズの、自由に使える録音） */}
+          {rec && (
+            <div className="rounded-xl bg-[#241c12] border border-[#c99738]/60 p-3 flex items-center gap-3">
+              <button
+                onClick={() => playTrack(work, composer)}
+                className="w-12 h-12 shrink-0 rounded-full bg-[#c99738] hover:bg-[#dbaa44] text-black flex items-center justify-center shadow-lg active:scale-95"
+                aria-label={isThis && isPlaying ? '一時停止' : 'この曲を聴く'}
+              >
+                {isThis && isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isThis && isPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current translate-x-0.5" />
+                )}
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold text-[#f5ebd9]">
+                  {isThis && isPlaying ? '再生中' : 'この曲を聴く'}
+                  <span className="ml-2 text-xs font-normal font-mono text-[#c9bfb0]">{formatDuration(rec.dur)}</span>
+                </div>
+                <div className="text-[11px] text-[#b5aa9b] leading-snug mt-0.5">
+                  {rec.note && !work.title.includes(rec.note) && <span className="text-[#e6b95c]">{rec.note}・</span>}
+                  <a href={recordingPageUrl(rec)} target="_blank" rel="noopener noreferrer" className="hover:text-[#c99738] hover:underline">
+                    {rec.performer ? `演奏: ${rec.performer}・` : ''}Wikimedia Commons（{rec.license}）
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           <section className="space-y-2">
             <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
@@ -133,7 +170,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
           <section className="space-y-2">
             <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
               <ExternalLink className="w-3.5 h-3.5" />
-              音源・動画・楽譜を探す
+              {rec ? 'ほかの演奏・動画・楽譜を探す' : '音源・動画・楽譜を探す'}
             </h4>
             <ul className="space-y-1.5">
               {links.map(l => (

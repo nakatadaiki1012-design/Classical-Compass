@@ -12,7 +12,7 @@ let ignorePops = 0;
 let initialized = false;
 let lastRootPress = 0;
 
-const showToast = (text: string) => {
+export const showToast = (text: string) => {
   const el = document.createElement('div');
   el.textContent = text;
   el.setAttribute('role', 'status');

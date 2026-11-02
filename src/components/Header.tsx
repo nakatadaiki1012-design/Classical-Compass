@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
       className="sticky top-0 z-40 bg-[#161412]/95 backdrop-blur-md border-b border-[#2e2924] px-3 md:px-6"
       style={{ height: HEADER_HEIGHT }}
     >
-      <div className="h-full max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
+      <div className="h-full max-w-7xl mx-auto flex items-center justify-between gap-1 min-[360px]:gap-1.5 sm:gap-3">
         {/* ロゴ（狭い画面ではアイコンだけ） */}
         <button
           onClick={() => onViewChange('timeline')}
@@ -40,18 +40,18 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           <div className="w-7 h-7 rounded-full border border-[#c99738]/50 flex items-center justify-center bg-[#241f19]">
             <Compass className="w-3.5 h-3.5 text-[#c99738]" />
           </div>
-          <span className="hidden sm:inline font-classical-display tracking-widest text-base font-bold text-[#f5ebd9] whitespace-nowrap">
+          <span className="hidden lg:inline font-classical-display tracking-widest text-base font-bold text-[#f5ebd9] whitespace-nowrap">
             CLASSICAL COMPASS
           </span>
         </button>
 
         {/* 切り替えボタン：年表・地図・名鑑（どの画面でも1行に収まる） */}
-        <nav className="flex items-center gap-1 bg-[#1e1a16] border border-[#2e2924] rounded-lg p-0.5 text-[13px] font-bold">
+        <nav className="flex items-center gap-0.5 min-[360px]:gap-1 bg-[#1e1a16] border border-[#2e2924] rounded-lg p-0.5 text-[12px] min-[360px]:text-[13px] font-bold shrink-0">
           {NAV_ITEMS.map(item => (
             <button
               key={item.view}
               onClick={() => onViewChange(item.view)}
-              className={`px-2 sm:px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
+              className={`px-1.5 min-[360px]:px-2 sm:px-4 py-1 rounded-md whitespace-nowrap transition-colors ${
                 currentView === item.view
                   ? 'bg-[#c99738] text-[#161412]'
                   : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
@@ -62,6 +62,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           ))}
         </nav>
 
+        {/* 右側のボタン（日本音楽史・世界の音楽・用語集・設定）は1つにまとめて並べる */}
+        <div className="flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-2 shrink-0">
         {/* 日本音楽史オプション：押すたびに「オフ → 加える → 日本のみ → オフ」と切り替わる */}
         <button
           onClick={() => setJapanLevel(japanLevel === 'off' ? 'on' : japanLevel === 'on' ? 'only' : 'off')}
@@ -73,7 +75,8 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               ? 'もう一度押すと、日本の音楽だけを表示します'
               : 'もう一度押すと、元（西洋音楽）に戻ります'
           }
-          className={`shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+          aria-label="日本音楽史の表示を切り替える"
+          className={`shrink-0 px-1 min-[360px]:px-1.5 lg:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
             japanLevel === 'only'
               ? 'bg-[#7f1d1d] border-[#fca5a5] text-white ring-1 ring-[#fca5a5]'
               : japanLevel === 'on'
@@ -81,11 +84,11 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
           }`}
         >
-          <span className="sm:hidden">
+          <span className="lg:hidden">
             <span className="emoji">🇯🇵</span>
             {japanLevel === 'only' && <span className="ml-0.5 text-[10px]">のみ</span>}
           </span>
-          <span className="hidden sm:inline">
+          <span className="hidden lg:inline">
             <span className="emoji">🇯🇵</span> 日本音楽史{japanLevel === 'on' ? ' ON' : japanLevel === 'only' ? 'のみ' : ''}
           </span>
         </button>
@@ -93,25 +96,27 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           onClick={() => setWorldMode(!worldMode)}
           aria-pressed={worldMode}
           title="クラシック・日本以外の地域の音楽（ハワイ、インド、中南米、アフリカ、ジャズなど）を表示します"
-          className={`${japanLevel === 'only' ? 'hidden' : ''} shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
+          aria-label="世界の音楽の表示を切り替える"
+          className={`${japanLevel === 'only' ? 'hidden' : ''} shrink-0 px-1 min-[360px]:px-1.5 lg:px-2.5 py-1 rounded-md border text-[12px] font-bold whitespace-nowrap transition-colors ${
             worldMode
               ? 'bg-[#2563eb] border-[#2563eb] text-white'
               : 'bg-[#1e1a16] border-[#2e2924] text-[#bdb1a1] hover:text-[#f5ebd9]'
           }`}
         >
-          <span className="sm:hidden emoji">🌍</span>
-          <span className="hidden sm:inline"><span className="emoji">🌍</span> 世界の音楽{worldMode ? ' ON' : ''}</span>
+          <span className="lg:hidden emoji">🌍</span>
+          <span className="hidden lg:inline"><span className="emoji">🌍</span> 世界の音楽{worldMode ? ' ON' : ''}</span>
         </button>
         <button
           onClick={() => openWiki({ kind: 'home' })}
           title="用語集（用語・作曲家・時代をリンクでたどる）"
           aria-label="用語集を開く"
-          className="shrink-0 px-1.5 sm:px-2.5 py-1 rounded-md border border-[#2e2924] bg-[#1e1a16] text-[#bdb1a1] hover:text-[#f5ebd9] text-[12px] font-bold whitespace-nowrap flex items-center gap-1"
+          className="shrink-0 px-1 min-[360px]:px-1.5 lg:px-2.5 py-1 rounded-md border border-[#2e2924] bg-[#1e1a16] text-[#bdb1a1] hover:text-[#f5ebd9] text-[12px] font-bold whitespace-nowrap flex items-center gap-1"
         >
           <BookOpen className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">用語集</span>
+          <span className="hidden lg:inline">用語集</span>
         </button>
         <SettingsMenu />
+        </div>
       </div>
     </header>
   );

@@ -6,6 +6,8 @@ import { ComposerPortrait } from './ComposerPortrait';
 import { COMPOSER_YOMI, REGIONS, regionOf, gyoOf } from '../data/composerMeta';
 import { useAudio } from '../context/AudioContext';
 import { Play, Pause, Search, Sparkles, Filter, ChevronRight } from 'lucide-react';
+import { yearText } from '../utils/yearLabel';
+import { hasAudio } from '../utils/hasAudio';
 
 interface CatalogViewProps {
   onSelectComposer: (composerId: string) => void;
@@ -55,7 +57,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
   }, [filtered, sortMode]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto space-y-6 pb-28">
+    <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl 3xl:max-w-[1720px] mx-auto space-y-6 pb-28">
       {/* Header & Filter Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#2e2924]">
         <div>
@@ -123,12 +125,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
             <span className="ml-2 text-xs font-normal text-[#a3978a]">{group.items.length}人</span>
           </h3>
         )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-5">
         {group.items.map(composer => {
           const era = getEraById(composer.era);
           const age = composer.deathYear - composer.birthYear;
-          const firstWork = composer.works[0];
-          const isThisTrackActive = firstWork && currentTrack?.work.id === firstWork.id;
+          // 代表作：録音のある曲があれば、それを優先して「聴く」ボタンを出す
+          const playableWork = composer.works.find(hasAudio);
+          const firstWork = playableWork ?? composer.works[0];
+          const isThisTrackActive = !!firstWork && currentTrack?.work.id === firstWork.id;
 
           return (
             <div
@@ -137,9 +141,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
             >
               <div>
                 {/* Top card bar: Era & Lifespan */}
-                <div className="flex items-center justify-between pb-3 border-b border-[#241e18]">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 pb-3 border-b border-[#241e18]">
                   <span
-                    className="text-[11px] font-semibold flex items-center gap-1.5"
+                    className="text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap"
                     style={{ color: era.accentColor }}
                   >
                     <span
@@ -148,8 +152,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
                     />
                     {era.name}
                   </span>
-                  <span className="text-[11px] font-mono tabular-nums text-[#a3978a]">
-                    {composer.birthYear} - {composer.deathYear} ({age}歳)
+                  <span className="text-[11px] font-mono tabular-nums text-[#a3978a] whitespace-nowrap">
+                    {yearText(composer.birthYear)} - {yearText(composer.deathYear)}（{age}歳）
                   </span>
                 </div>
 
@@ -201,12 +205,26 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onSelectComposer }) =>
               {/* Bottom Card Actions: Representative work title & composition year + Full Details */}
               <div className="mt-5 pt-3 border-t border-[#241e18] flex items-center justify-between gap-2">
                 {firstWork ? (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                  {playableWork && (
+                    <button
+                      onClick={() => playTrack(playableWork, composer)}
+                      className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center shadow ${
+                        isThisTrackActive && isPlaying ? 'bg-white text-black ring-2 ring-[#c99738]' : 'bg-[#c99738] text-black hover:bg-[#dbaa44]'
+                      }`}
+                      aria-label={isThisTrackActive && isPlaying ? `${playableWork.title}を一時停止` : `${playableWork.title}を聴く`}
+                      title={isThisTrackActive && isPlaying ? '一時停止' : '聴く'}
+                    >
+                      {isThisTrackActive && isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current translate-x-px" />}
+                    </button>
+                  )}
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#201a15] text-[#c99738] text-xs font-medium border border-[#30271e] truncate min-w-0"
                     title={`代表作: ${firstWork.title} (${firstWork.year}年)`}
                   >
                     <Sparkles className="w-3 h-3 text-[#c99738] shrink-0" />
                     <span className="truncate">{firstWork.title} ({firstWork.year}年)</span>
+                  </div>
                   </div>
                 ) : (
                   <span />

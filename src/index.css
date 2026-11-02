@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* とても大きい画面（横1800px以上）用の区切り。3xl: で使う */
+@theme {
+  --breakpoint-3xl: 112.5rem;
+}
+
 @layer base {
   :root {
     --font-serif: "Cormorant Garamond", "Shippori Mincho", Georgia, serif;

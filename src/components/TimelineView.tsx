@@ -27,10 +27,10 @@ import {
   Play,
   Pause,
   Sparkles,
-  Compass,
-  Layers,
+
+
   ChevronRight,
-  Maximize2,
+
   SlidersHorizontal,
   X
 } from 'lucide-react';
@@ -39,27 +39,6 @@ interface TimelineViewProps {
   onSelectComposer: (composerId: string, year?: number) => void;
   /** アドレス（#year=…）で指定された、最初に見る年 */
   initialYear?: number;
-}
-
-interface ActiveNearItem {
-  composer: Composer;
-  x: number;
-  y: number;
-  diff: number;
-}
-
-interface StrandItem {
-  composer: Composer;
-  birthX: number;
-  deathX: number;
-  width: number;
-  y: number;
-  z: number;
-  depthNorm: number;
-  opacity: number;
-  strokeThickness: number;
-  isForeground: boolean;
-  yearDiff: number;
 }
 
 export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: onSelectComposerWithYear, initialYear }) => {
@@ -72,9 +51,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const MAX_YEAR = 2030;
   const TOTAL_YEARS = MAX_YEAR - MIN_YEAR;
 
-  // View style
-  const [viewStyle, setViewStyle] = useState<'3d-bundle' | 'panorama'>('panorama');
-
   // Zoom scale (pixels per year): default 12.0px/year
   // 横の拡大率（1年あたりの幅）。小さいほど広い範囲が一度に見える
   const [zoomScale, setZoomScale] = useState<number>(BASE_ZOOM);
@@ -82,17 +58,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   const [rowScale, setRowScale] = useState<number>(1);
   const MIN_ROW_SCALE = 0.35;
   const MAX_ROW_SCALE = 1.6;
-  const [rotationAngle, setRotationAngle] = useState<number>(0);
-
-  // Auto-rotating set to FALSE by default so it doesn't spin arbitrarily without scrolling ("勝手に回転はしなくてよい")
-  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(false);
 
   // 検索・表示設定パネルの開閉（普段は閉じて画面をすっきり見せる）
   const [showSettings, setShowSettings] = useState<boolean>(false);
-
-
-  // User adjustable cylinder radius (default 165px for a broad, readable 3D bundle!)
-  const [cylinderRadius, setCylinderRadius] = useState<number>(165);
 
   const [selectedEra, setSelectedEra] = useState<EraId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -126,7 +94,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
   // Smooth scroll & dragging state with inertia
   const scrollPosRef = useRef<number>(0);
   const targetScrollPosRef = useRef<number>(0);
-  const rotAngleRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
   const lastMousePosRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
   const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
@@ -287,13 +254,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     targetScrollPosRef.current = Math.max(0, targetScrollPosRef.current - dx);
 
     // 縦方向のドラッグでも、上下にスクロールできるようにする
-    if (viewStyle !== '3d-bundle' && containerRef.current) {
+    if (containerRef.current) {
       containerRef.current.scrollTop -= dy;
-    }
-
-    if (viewStyle === '3d-bundle') {
-      rotAngleRef.current += dy * 0.008;
-      setRotationAngle(rotAngleRef.current);
     }
 
     velocityRef.current = { vx: -dx / dt, vy: dy / dt };
@@ -334,40 +296,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
         const currentYear = Math.round(MIN_YEAR + centerPixel / zoomScale);
         const clamped = Math.max(MIN_YEAR, Math.min(MAX_YEAR, currentYear));
         setFocalYear(clamped);
-
-        // 3. SYNCHRONIZED CYLINDER ROTATION:
-        // Automatically rotate cylinder during horizontal scroll so that active composers for focalYear come to the front/top!
-        if (viewStyle === '3d-bundle') {
-          const count = filteredComposers.length;
-          if (count > 0) {
-            if (isAutoRotating) {
-              // Manual continuous spinning option if explicitly toggled on
-              rotAngleRef.current += 0.012;
-            } else if (!isDraggingRef.current) {
-              // いま見ている年にいちばん「ちょうど」生きている作曲家（生涯の中ほどが年に近い人）を、正面の真ん中に持ってくる
-              let focusIdx = -1;
-              let best = Infinity;
-              filteredComposers.forEach((c, idx) => {
-                const alive = c.birthYear <= clamped && clamped <= c.deathYear;
-                const score = alive
-                  ? Math.abs((c.birthYear + c.deathYear) / 2 - clamped)
-                  : 10000 + Math.min(Math.abs(c.birthYear - clamped), Math.abs(c.deathYear - clamped));
-                if (score < best) {
-                  best = score;
-                  focusIdx = idx;
-                }
-              });
-              if (focusIdx >= 0) {
-                const baseAngle = (focusIdx / count) * Math.PI * 2;
-                const desiredRotation = -baseAngle;
-                let delta = desiredRotation - rotAngleRef.current;
-                delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-                rotAngleRef.current += delta * 0.12; // なめらかに回って、フォーカスした人が真ん中に来る
-              }
-            }
-            setRotationAngle(rotAngleRef.current);
-          }
-        }
       }
 
       animId = requestAnimationFrame(renderLoop);
@@ -375,66 +303,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
     animId = requestAnimationFrame(renderLoop);
     return () => cancelAnimationFrame(animId);
-  }, [zoomScale, horizontalPadding, isAutoRotating, viewStyle, filteredComposers]);
-
-  // 3D：一人ひとりの間隔（前面で約 spacing px）を確保するよう、人数に合わせて筒を大きくする
-  const bundleSpacing = Math.round(cylinderRadius * 0.2); // スライダーで間隔を調整（初期値で約33px）
-  const bundleRadius = Math.max(120, Math.round((filteredComposers.length * bundleSpacing) / (2 * Math.PI)));
-  const bundleCenterY = bundleRadius + 60;
-  const bundleHeight = bundleRadius * 2 + 120;
-
-  // Compute 3D strand layout and active proximity bubbles
-  const { bundle3DData, activeNearComposer } = useMemo<{
-    bundle3DData: StrandItem[];
-    activeNearComposer: ActiveNearItem | null;
-  }>(() => {
-    const centerY = bundleCenterY;
-    const cylinderRadius = bundleRadius;
-    const count = filteredComposers.length;
-
-    let nearest: ActiveNearItem | null = null;
-
-    const strands = filteredComposers.map((composer, idx) => {
-      const baseAngle = (idx / Math.max(1, count)) * Math.PI * 2;
-      const currentAngle = baseAngle + rotationAngle;
-
-      const birthX = (composer.birthYear - MIN_YEAR) * zoomScale + horizontalPadding;
-      const deathX = (composer.deathYear - MIN_YEAR) * zoomScale + horizontalPadding;
-      const width = Math.max(48, deathX - birthX);
-
-      const y = centerY + Math.sin(currentAngle) * cylinderRadius;
-      const z = Math.cos(currentAngle) * cylinderRadius;
-
-      const depthNorm = (z + cylinderRadius) / (cylinderRadius * 2);
-      const opacity = 0.35 + depthNorm * 0.65;
-      const strokeThickness = Math.max(14, 14 + depthNorm * 14);
-      const isForeground = z > -15;
-
-      // Proximity check for focal balloon
-      const yearDiff = Math.abs(focalYear - composer.birthYear);
-      if (yearDiff <= 12) {
-        if (!nearest || yearDiff < nearest.diff) {
-          nearest = { composer, x: birthX, y, diff: yearDiff };
-        }
-      }
-
-      return {
-        composer,
-        birthX,
-        deathX,
-        width,
-        y,
-        z,
-        depthNorm,
-        opacity,
-        strokeThickness,
-        isForeground,
-        yearDiff
-      };
-    }).sort((a, b) => a.z - b.z);
-
-    return { bundle3DData: strands, activeNearComposer: nearest };
-  }, [filteredComposers, rotationAngle, zoomScale, horizontalPadding, focalYear, bundleRadius, bundleCenterY]);
+  }, [zoomScale, horizontalPadding, filteredComposers]);
 
   // 一覧表示: 生まれた年が遅い人ほど下の段に置く（1人1段）。左上から右下へ階段のように流れる
   // 時代の帯（年表の目盛りの下）。重なる時代は段を分けて並べる
@@ -489,7 +358,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
 
   alignRowsRef.current = (year: number) => {
     const container = containerRef.current;
-    if (!container || viewStyle !== 'panorama') return;
+    if (!container) return;
     const alive = panoramaBars.filter(b => b.composer.birthYear <= year && year <= b.composer.deathYear);
     if (alive.length === 0) return;
     const top = PANO_TOP + alive[0].row * PANO_ROW_HEIGHT;
@@ -499,13 +368,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
     if (top >= visibleFrom + BAND_H && top < visibleTo - 120) return;
     container.scrollTo({ top: Math.max(0, top - 42 - BAND_H), behavior: 'smooth' });
   };
-
-  // 3Dに切り替えたとき・間隔を変えたときは、フォーカスする人が通る「中心線」が画面の真ん中に来るよう縦に合わせる
-  useEffect(() => {
-    if (viewStyle !== '3d-bundle') return;
-    const container = containerRef.current;
-    if (container) container.scrollTop = Math.max(0, bundleCenterY - container.clientHeight / 2 + 20);
-  }, [viewStyle, bundleCenterY]);
 
   // 開いたときも、いま見ている年に生きている人の段が見える位置に合わせる
   useEffect(() => {
@@ -740,27 +602,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
             </label>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-[#a3978a]">表示のしかた</span>
+              <span className="text-[11px] font-bold text-[#a3978a]">表示の大きさ</span>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center bg-[#1e1711] border border-[#3d3021] rounded-lg p-0.5">
-                  {([
-                    { id: 'panorama', label: '見やすい一覧', Icon: Layers },
-                    { id: '3d-bundle', label: '3D', Icon: Compass }
-                  ] as const).map(({ id, label, Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setViewStyle(id)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-bold transition-all ${
-                        viewStyle === id
-                          ? 'bg-gradient-to-r from-[#c99738] via-[#e6b95c] to-[#9e7220] text-black'
-                          : 'text-[#bdb1a1] hover:text-[#f5ebd9]'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
                 <div className="flex items-center gap-1 bg-[#1e1711] border border-[#3d3021] rounded-lg p-1">
                   <button
                     onClick={() => setZoomScale(prev => Math.max(MIN_ZOOM, +(prev / 1.25).toFixed(2)))}
@@ -803,29 +646,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
                   </button>
                 </div>
               </div>
-              {viewStyle === '3d-bundle' && (
-                <div className="flex items-center gap-2 mt-1">
-                  <Maximize2 className="w-3.5 h-3.5 text-[#c99738]" />
-                  <input
-                    type="range"
-                    min="100"
-                    max="260"
-                    step="5"
-                    value={cylinderRadius}
-                    onChange={e => setCylinderRadius(parseInt(e.target.value))}
-                    className="w-24 h-1.5 accent-[#c99738] cursor-pointer"
-                    title="3D：人どうしの間隔"
-                  />
-                  <button
-                    onClick={() => setIsAutoRotating(!isAutoRotating)}
-                    className={`px-2 py-0.5 rounded-md font-bold ${
-                      isAutoRotating ? 'bg-[#c99738] text-black' : 'bg-[#2b2118] text-[#bdb1a1] hover:text-white'
-                    }`}
-                  >
-                    {isAutoRotating ? '回転を止める' : '回転させる'}
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -896,7 +716,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           className="relative min-h-full"
           style={{
             width: `${timelineTotalWidth + horizontalPadding * 2}px`,
-            height: viewStyle === 'panorama' ? `${PANO_TOP + panoramaRowCount * PANO_ROW_HEIGHT + 240}px` : `${bundleHeight}px`
+            height: `${PANO_TOP + panoramaRowCount * PANO_ROW_HEIGHT + 240}px`
           }}
         >
           {/* Center Golden Focal Needle */}
@@ -1058,190 +878,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           </div>
 
           {/* ========================================================
-              MODE 1: 3D CYLINDRICAL TWISTED BUNDLE (広々とした3D筒年表)
-             ======================================================== */}
-          {viewStyle === '3d-bundle' && (
-            <div className="relative pt-2" style={{ height: bundleHeight }}>
-              {/* Central Glowing Core Line */}
-              <div
-                className="absolute left-0 right-0 h-[2px] pointer-events-none bg-gradient-to-r from-transparent via-[#c99738]/40 to-transparent"
-                style={{
-                  top: bundleCenterY,
-                  boxShadow: '0 0 24px rgba(201, 151, 56, 0.3)'
-                }}
-              />
-
-              {/* Render 3D Strands for each composer */}
-              {bundle3DData.map(item => {
-                const {
-                  composer,
-                  birthX,
-                  deathX,
-                  width,
-                  y,
-                  opacity,
-                  strokeThickness,
-                  isForeground
-                } = item;
-
-                const era = getEraById(composer.era);
-
-                return (
-                  <React.Fragment key={composer.id}>
-                    {/* The 3D Lifespan Ribbon Strand */}
-                    <div
-                      onClick={e => {
-                        e.stopPropagation();
-                        if (clickTimeoutRef.current) {
-                          clearTimeout(clickTimeoutRef.current);
-                          clickTimeoutRef.current = null;
-                          onSelectComposer(composer.id);
-                        } else {
-                          clickTimeoutRef.current = setTimeout(() => {
-                            clickTimeoutRef.current = null;
-                            onSelectComposer(composer.id);
-                          }, 250);
-                        }
-                      }}
-                      onDoubleClick={e => {
-                        e.stopPropagation();
-                        if (clickTimeoutRef.current) {
-                          clearTimeout(clickTimeoutRef.current);
-                          clickTimeoutRef.current = null;
-                        }
-                        onSelectComposer(composer.id);
-                      }}
-                      className={`absolute rounded-full cursor-pointer transition-all duration-75 flex items-center group/strand will-change-transform ${
-                        isForeground ? 'hover:brightness-125 hover:scale-[1.02]' : 'hover:opacity-90'
-                      }`}
-                      style={{
-                        left: `${birthX}px`,
-                        top: `${y - strokeThickness / 2}px`,
-                        width: `${Math.max(64, width)}px`,
-                        height: `${strokeThickness}px`,
-                        opacity: opacity,
-                        zIndex: isForeground ? 10 + Math.round(item.depthNorm * 12) : 2,
-                        background: `linear-gradient(90deg, ${era.accentColor}, ${era.color}, #18130e)`,
-                        boxShadow: isForeground
-                          ? `0 2px 8px ${era.color}55, 0 0 12px ${era.color}33`
-                          : 'none'
-                      }}
-                      title={`${composer.name} (${composer.birthYear}〜${composer.deathYear})\nシングルタップ/ダブルタップで作曲家詳細を開きます`}
-                    >
-                      {/* Portrait Avatar on Strand */}
-                      {isForeground && (
-                        <div className="absolute -left-3 top-1/2 -translate-y-1/2 shrink-0 z-20 pointer-events-none">
-                          <ComposerPortrait
-                            composer={composer}
-                            size="xs"
-                            showOrnateBorder={true}
-                            className="ring-2 ring-[#c99738] shadow-lg scale-110"
-                          />
-                        </div>
-                      )}
-
-                      {/* Composer Name & Flag Label on Strand */}
-                      <div className="pl-6 pr-3 flex items-center gap-1.5 overflow-hidden w-full pointer-events-none">
-                        <span className="text-[11px] drop-shadow-md shrink-0 emoji">{composer.flag}</span>
-                        <span className="text-[11px] font-extrabold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] truncate tracking-wide">
-                          {composer.shortName}
-                        </span>
-                        {width > 120 && isForeground && (
-                          <span className="text-[10px] font-mono text-white/80 font-semibold drop-shadow shrink-0 ml-auto">
-                            {composer.birthYear}〜{composer.deathYear}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Major Composition Works & Milestones Markers along the strand */}
-                    {isForeground && (
-                      <div
-                        className="absolute pointer-events-auto"
-                        style={{
-                          left: `${birthX}px`,
-                          top: `${y}px`,
-                          zIndex: 15 + Math.round(item.depthNorm * 12)
-                        }}
-                      >
-                        {/* Render Major Works (作曲年ポイント/点) along the lifespan */}
-                        {composer.works.map(w => {
-                          const workOffsetX = (w.year - composer.birthYear) * zoomScale;
-                          return (
-                            <div
-                              key={w.id}
-                              onClick={e => {
-                                e.stopPropagation();
-                                if (clickTimeoutRef.current) {
-                                  clearTimeout(clickTimeoutRef.current);
-                                  clickTimeoutRef.current = null;
-                                  onSelectComposer(composer.id);
-                                } else {
-                                  clickTimeoutRef.current = setTimeout(() => {
-                                    clickTimeoutRef.current = null;
-                                    setFocusedEpisodeWork({ work: w, composer });
-                                  }, 220);
-                                }
-                              }}
-                              onDoubleClick={e => {
-                                e.stopPropagation();
-                                if (clickTimeoutRef.current) {
-                                  clearTimeout(clickTimeoutRef.current);
-                                  clickTimeoutRef.current = null;
-                                }
-                                onSelectComposer(composer.id);
-                              }}
-                              className="absolute -translate-x-1/2 -translate-y-1/2 group/work cursor-pointer"
-                              style={{ left: `${workOffsetX}px` }}
-                              title={`${w.year}年 作曲: ${w.title} (${w.city})\nシングルタップ: エピソード解説\nダブルタップ: 作曲家詳細`}
-                            >
-                              <div className="w-4 h-4 rounded-full bg-[#16120e] border-2 border-[#e6b95c] flex items-center justify-center text-[8px] font-bold text-[#e6b95c] group-hover/work:scale-150 transition-all shadow-lg ring-2 ring-[#c99738]/50">
-                                ♪
-                              </div>
-                              {/* Hover Tooltip displaying composition title + year */}
-                              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover/work:flex flex-col bg-[#16120e]/95 border border-[#c99738] rounded-lg p-2.5 w-52 shadow-2xl backdrop-blur-md pointer-events-none z-50">
-                                <span className="text-[11px] font-bold text-white truncate">{w.title}</span>
-                                <span className="text-[10px] text-[#c99738] font-mono mt-0.5">{w.year}年 作曲 · {w.city}</span>
-                                <span className="text-[8px] text-[#bdb1a1] mt-0.5">タップ: エピソード解説 / ダブルタップ: 名鑑</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {/* Render Historical Milestones */}
-                        {composer.milestones?.map((m, mIdx) => {
-                          const mOffsetX = (m.year - composer.birthYear) * zoomScale;
-                          return (
-                            <div
-                              key={mIdx}
-                              onClick={e => {
-                                e.stopPropagation();
-                                onSelectComposer(composer.id);
-                              }}
-                              className="absolute -translate-x-1/2 -translate-y-1/2 group/mile cursor-pointer"
-                              style={{ left: `${mOffsetX}px` }}
-                              title={`${m.year}年: ${m.event}`}
-                            >
-                              <div className="w-2.5 h-2.5 rounded-full bg-white/90 border border-[#16120e] hover:bg-[#c99738] hover:scale-150 transition-all shadow-sm" />
-                              <div className="absolute top-4 left-1/2 -translate-x-1/2 hidden group-hover/mile:flex flex-col bg-[#16120e]/95 border border-[#382f25] rounded-lg p-2 w-48 shadow-2xl backdrop-blur-md pointer-events-none z-50">
-                                <span className="text-[11px] font-bold text-[#c99738]">{m.year}年:</span>
-                                <span className="text-[10px] text-[#e8dec8] leading-tight">{m.event}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ========================================================
               MODE 2: PANORAMA DETAIL TIMELINE (パノラマ詳細年表)
              ======================================================== */}
-          {viewStyle === 'panorama' && (
+          {(
             <div className="absolute inset-x-0 top-0">
               {panoramaBars.map(({ composer, birthX, width, row }) => {
                 const era = getEraById(composer.era);

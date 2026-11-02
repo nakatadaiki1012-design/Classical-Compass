@@ -445,9 +445,78 @@ function w(
   return { id, title, originalTitle, year, genre, genreJa, city, cityCoordinates, description };
 }
 
+/** 3回目の追加分（なるべく新しい録音があるもの） */
+const RAW3: Record<string, ExtraWork[]> = {
+  bach: [
+    w('bach-wtc1', '『平均律クラヴィーア曲集』第1巻より 前奏曲 第1番 ハ長調', 'Well-Tempered Clavier, Book 1: Prelude No. 1 in C major, BWV 846', 1722, 'Keyboard', '鍵盤曲', 'Köthen', [11.9708, 51.7516],
+      '分散和音だけで静かに流れていく、平均律曲集の最初の曲。のちにグノーがこの上に旋律をのせて「アヴェ・マリア」を作った。'),
+    w('bach-double', '2つのヴァイオリンのための協奏曲 ニ短調 第1楽章', 'Concerto for Two Violins in D minor, BWV 1043 (Vivace)', 1730, 'Concerto', '協奏曲', 'Leipzig', [12.3731, 51.3397],
+      '2人のヴァイオリン独奏者が、同じ旋律を少しずらして追いかけ合う。対等な二人の対話のような協奏曲。'),
+    w('bach-badinerie', '管弦楽組曲 第2番より「バディヌリー」', 'Orchestral Suite No. 2 in B minor, BWV 1067: Badinerie', 1739, 'Orchestral', '管弦楽組曲', 'Leipzig', [12.3731, 51.3397],
+      '「冗談」という意味の、フルートが軽やかに駆け回る短い終曲。フルート奏者の腕の見せどころ。')
+  ],
+  handel: [
+    w('handel-sheba', 'オラトリオ『ソロモン』より「シバの女王の到着」', 'Solomon, HWV 67: The Arrival of the Queen of Sheba', 1749, 'Choral', 'オラトリオ', 'London', LONDON,
+      '2本のオーボエと弦楽器が華やかに掛け合う、女王の到着を告げる器楽曲。ロンドン五輪の開会式でも使われた。'),
+    w('handel-zadok', '戴冠式アンセム『司祭ザドク』', 'Zadok the Priest, HWV 258', 1727, 'Choral', '宗教曲・合唱', 'London', LONDON,
+      'ジョージ2世の戴冠式のために書かれ、以来すべての英国王の戴冠式で歌われてきた。静かな序奏から合唱が一気に爆発する。')
+  ],
+  mozart: [
+    w('mozart-aveverum', 'モテット『アヴェ・ヴェルム・コルプス』', 'Ave verum corpus, K. 618', 1791, 'Choral', '宗教曲・合唱', 'Baden', [16.2341, 48.0049],
+      '亡くなる半年前、療養中の妻のいる町の合唱指揮者のために書いた、わずか46小節の祈りの歌。'),
+  ],
+  beethoven: [
+    w('beethoven-egmont', '劇音楽『エグモント』序曲', 'Egmont Overture, Op. 84', 1810, 'Orchestral', '管弦楽曲', 'Vienna', VIENNA,
+      '圧政に立ち向かって処刑される英雄を描いたゲーテの劇のための序曲。重苦しい序奏から、最後は勝利の歓声のように輝かしく終わる。'),
+    w('beethoven-violin', 'ヴァイオリン協奏曲 ニ長調 第3楽章', 'Violin Concerto in D major, Op. 61 (Rondo. Allegro)', 1806, 'Concerto', '協奏曲', 'Vienna', VIENNA,
+      'ヴァイオリンが狩りの歌のような主題を弾ませる、明るいロンドの終楽章。ベートーヴェン唯一のヴァイオリン協奏曲。')
+  ],
+  mendelssohn: [
+    w('mendelssohn-hebrides', '序曲『フィンガルの洞窟（ヘブリディーズ諸島）』', 'The Hebrides (Fingal\'s Cave) Overture, Op. 26', 1830, 'Orchestral', '管弦楽曲', 'London', LONDON,
+      'スコットランドの島の洞窟を訪れた感動から生まれた序曲。寄せては返す波と、海の広がりが目に浮かぶ。')
+  ],
+  chopin: [
+    w('chopin-nocturne20', '夜想曲 第20番 嬰ハ短調（遺作）', 'Nocturne in C-sharp minor, Op. posth.', 1830, 'Piano', 'ピアノ独奏', 'Warsaw', [21.0122, 52.2297],
+      '20歳のショパンが姉に贈った、哀しく美しいノクターン。映画『戦場のピアニスト』で印象的に使われた。'),
+    w('chopin-prelude4', '前奏曲 第4番 ホ短調', 'Prélude in E minor, Op. 28 No. 4', 1839, 'Piano', 'ピアノ独奏', 'Mallorca', [2.65, 39.57],
+      '右手が同じ音を静かにくり返し、左手の和音がゆっくりと沈んでいく、わずか2分ほどの曲。ショパンの葬儀でもオルガンで演奏された。')
+  ],
+  schumann: [
+    w('schumann-concerto', 'ピアノ協奏曲 イ短調 第1楽章', 'Piano Concerto in A minor, Op. 54 (Allegro affettuoso)', 1845, 'Concerto', '協奏曲', 'Dresden', [13.7373, 51.0504],
+      'オーケストラの一撃とピアノの劇的な下降で始まり、オーボエが憧れに満ちた主題を歌う。妻クララが初演した。')
+  ],
+  grieg: [
+    w('grieg-holberg', '『ホルベアの時代から』より「前奏曲」', 'Holberg Suite, Op. 40: Praeludium', 1884, 'Orchestral', '弦楽合奏', 'Bergen', [5.3221, 60.3913],
+      '劇作家ホルベアの生誕200年を記念して、バロック時代の組曲の形で書いた弦楽合奏曲。きらめくような刻みの上に、低音の旋律が力強く歌う。'),
+    w('grieg-troldhaugen', '『抒情小曲集』より「トロルドハウゲンの婚礼の日」', 'Lyric Pieces, Op. 65 No. 6: Wedding Day at Troldhaugen', 1896, 'Piano', 'ピアノ独奏', 'Bergen', [5.3221, 60.3913],
+      '自分たちの銀婚式を祝って書いた、晴れやかな行進曲風のピアノ曲。トロルドハウゲンはグリーグの住んだ家の名前。')
+  ],
+  dvorak: [
+    w('dvorak-moon', '歌劇『ルサルカ』より「月に寄せる歌」', 'Rusalka, Op. 114: Song to the Moon', 1900, 'Opera', 'オペラ', 'Prague', [14.4378, 50.0755],
+      '人間の王子に恋をした水の精ルサルカが、月に思いを託して歌う。ドヴォルザークのオペラで最も愛されるアリア。')
+  ],
+  tchaikovsky: [
+    w('tchaikovsky-andante', 'アンダンテ・カンタービレ（弦楽四重奏曲第1番より）', 'String Quartet No. 1, Op. 11: Andante cantabile', 1871, 'Chamber', '室内楽', 'Moscow', MOSCOW,
+      'ウクライナで聞いた民謡をもとにした、素朴で美しい旋律。演奏会で聴いた文豪トルストイが涙を流したと伝わる。')
+  ],
+  'saint-saens': [
+    w('saint-saens-rondo', '序奏とロンド・カプリチオーソ', 'Introduction et Rondo capriccioso, Op. 28', 1863, 'Concerto', 'ヴァイオリンと管弦楽', 'パリ', [2.35, 48.86],
+      'スペインの名ヴァイオリニスト、サラサーテのために書かれた。物憂げな序奏から、情熱的で技巧的なロンドへ。')
+  ],
+  elgar: [
+    w('elgar-serenade', '弦楽セレナード ホ短調 第1楽章', 'Serenade for Strings in E minor, Op. 20 (Allegro piacevole)', 1892, 'Orchestral', '弦楽合奏', 'Malvern', [-2.3255, 52.1112],
+      '結婚3周年の贈り物として妻に捧げた、やさしい弦楽合奏曲。エルガー自身が「とても気に入っている」と語った作品。')
+  ],
+  puccini: [
+    w('puccini-butterfly', '歌劇『蝶々夫人』より「ある晴れた日に」', 'Madama Butterfly: Un bel dì vedremo', 1904, 'Opera', 'オペラ', 'Milan', [9.19, 45.4642],
+      '長崎を舞台にしたオペラで、アメリカに帰った夫の帰りを信じて待つ蝶々さんが、船が港に入る日を夢見て歌う。')
+  ]
+};
+
 /** 作曲家の id ごとの、追加の作品（音の楽譜データはないので、空のまま） */
 const ALL_RAW: Record<string, ExtraWork[]> = { ...RAW };
-for (const [cid, works] of Object.entries(RAW2)) ALL_RAW[cid] = [...(ALL_RAW[cid] ?? []), ...works];
+for (const extra of [RAW2, RAW3])
+  for (const [cid, works] of Object.entries(extra)) ALL_RAW[cid] = [...(ALL_RAW[cid] ?? []), ...works];
 
 export const EXTRA_WORKS: Record<string, Composition[]> = Object.fromEntries(
   Object.entries(ALL_RAW).map(([cid, works]) => [

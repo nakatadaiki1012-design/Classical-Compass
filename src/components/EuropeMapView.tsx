@@ -222,10 +222,52 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     setView(clampView({ k: nk, vx: wx - fx * viewWidth(nk) + EXTRA_W / (2 * nk), vy: wy - fy * (SVG_H / nk) }));
   };
 
+  // ---- 指やマウスで動かしている最中の「仮の表示範囲」 ----
+  // 動かしている間は React の再描画（札の並べ直し）をせず、SVG の表示範囲だけを直接書き換える。
+  // 指を離したときに一度だけ確定するので、ピンチや移動がカクつかない。
+  type View = { k: number; vx: number; vy: number };
+  const liveRef = useRef<View | null>(null);
+  const rafRef = useRef(0);
+  const commitTimerRef = useRef(0);
+  const viewBoxOf = (v: View) => `${viewLeft(v)} ${v.vy} ${viewWidth(v.k)} ${SVG_H / v.k}`;
+  const curView = () => liveRef.current ?? viewRef.current;
+  const showLive = (v: View) => {
+    liveRef.current = clampView(v);
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      if (liveRef.current && svgRef.current) svgRef.current.setAttribute('viewBox', viewBoxOf(liveRef.current));
+    });
+  };
+  const commitLive = () => {
+    window.clearTimeout(commitTimerRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = 0;
+    const v = liveRef.current;
+    liveRef.current = null;
+    if (v) setView(v);
+  };
+  /** 画面上の点（clientX/Y）が地図のどこに当たるか */
+  const worldAt = (v: View, clientX: number, clientY: number) => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    return {
+      x: viewLeft(v) + ((clientX - rect.left) / rect.width) * viewWidth(v.k),
+      y: v.vy + ((clientY - rect.top) / rect.height) * (SVG_H / v.k)
+    };
+  };
+  /** 地図の点 (wx, wy) が画面上の点（clientX/Y）に来るような表示範囲（倍率 nk） */
+  const viewPutting = (nk: number, wx: number, wy: number, clientX: number, clientY: number): View => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    const fx = (clientX - rect.left) / rect.width;
+    const fy = (clientY - rect.top) / rect.height;
+    const kk = Math.min(MAX_K, Math.max(1, nk));
+    return { k: kk, vx: wx - fx * viewWidth(kk) + EXTRA_W / (2 * kk), vy: wy - fy * (SVG_H / kk) };
+  };
+
   // マウスでドラッグして動かす（拡大しているときだけ）
   const handleMapMouseDown = (e: React.MouseEvent) => {
     if (viewRef.current.k <= 1 || !svgRef.current) return;
-    const start = { x: e.clientX, y: e.clientY, ...viewRef.current };
+    const start = { x: e.clientX, y: e.clientY, ...curView() };
     const rect = svgRef.current.getBoundingClientRect();
     didPanRef.current = false;
     const onMove = (ev: MouseEvent) => {
@@ -233,73 +275,128 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       const dy = ev.clientY - start.y;
       if (!didPanRef.current && Math.hypot(dx, dy) < 4) return;
       didPanRef.current = true;
-      setView(
-        clampView({
-          k: start.k,
-          vx: start.vx - (dx / rect.width) * viewWidth(start.k),
-          vy: start.vy - (dy / rect.height) * (SVG_H / start.k)
-        })
-      );
+      showLive({
+        k: start.k,
+        vx: start.vx - (dx / rect.width) * viewWidth(start.k),
+        vy: start.vy - (dy / rect.height) * (SVG_H / start.k)
+      });
     };
     const onUp = () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      commitLive();
       window.setTimeout(() => (didPanRef.current = false), 0);
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
 
-  // 2本指のピンチで拡大縮小、拡大中は1本指で移動。Ctrl＋ホイール（トラックパッドのピンチ）でも拡大縮小
+  // 2本指のピンチで拡大縮小（2本指のまま動かせば移動も）。拡大中は1本指で移動。
+  // 2回すばやく軽くたたくと、その場所を拡大する。Ctrl＋ホイール（トラックパッドのピンチ）でも拡大縮小
   useEffect(() => {
     const el = svgRef.current;
     if (!el) return;
-    let pinch: { d: number } | null = null;
-    let pan: { x: number; y: number } | null = null;
+    // ピンチ開始時の「指の間の距離」「倍率」「2本の指の真ん中が指していた地図の点」
+    let pinch: { d0: number; k0: number; wx: number; wy: number } | null = null;
+    // 1本指の移動：開始時の指の位置と、そのときの表示範囲
+    let pan: { x: number; y: number; v: View } | null = null;
+    let lastTap = { t: 0, x: 0, y: 0 };
+    let tapStart: { t: number; x: number; y: number } | null = null;
     const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const mid = (t: TouchList) => ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 });
+    const startPinch = (t: TouchList) => {
+      const v = curView();
+      const m = mid(t);
+      const w = worldAt(v, m.x, m.y);
+      pinch = { d0: Math.max(10, dist(t)), k0: v.k, wx: w.x, wy: w.y };
+      pan = null;
+      didPanRef.current = true;
+    };
+    const startPan = (t: Touch) => {
+      pan = { x: t.clientX, y: t.clientY, v: curView() };
+    };
     const onStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        pinch = { d: dist(e.touches) };
-        pan = null;
-      } else if (e.touches.length === 1 && viewRef.current.k > 1) {
-        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      window.clearTimeout(commitTimerRef.current);
+      if (e.touches.length >= 2) {
+        tapStart = null;
+        startPinch(e.touches);
+      } else if (e.touches.length === 1) {
+        const t = e.touches[0];
+        tapStart = { t: Date.now(), x: t.clientX, y: t.clientY };
         didPanRef.current = false;
+        if (curView().k > 1) startPan(t);
       }
     };
     const onMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && pinch) {
+      if (e.touches.length >= 2 && pinch) {
         e.preventDefault();
-        const d = dist(e.touches);
-        zoomAt(d / pinch.d, (e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2);
-        pinch.d = d;
-        didPanRef.current = true;
+        const m = mid(e.touches);
+        showLive(viewPutting(pinch.k0 * (dist(e.touches) / pinch.d0), pinch.wx, pinch.wy, m.x, m.y));
       } else if (e.touches.length === 1 && pan) {
+        const t = e.touches[0];
+        const dx = t.clientX - pan.x;
+        const dy = t.clientY - pan.y;
+        if (!didPanRef.current && Math.hypot(dx, dy) < 6) return;
         e.preventDefault();
+        didPanRef.current = true;
+        tapStart = null;
         const rect = el.getBoundingClientRect();
-        const cur = viewRef.current;
-        const dx = e.touches[0].clientX - pan.x;
-        const dy = e.touches[0].clientY - pan.y;
-        if (Math.hypot(dx, dy) > 3) didPanRef.current = true;
-        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        setView(clampView({ k: cur.k, vx: cur.vx - (dx / rect.width) * viewWidth(cur.k), vy: cur.vy - (dy / rect.height) * (SVG_H / cur.k) }));
+        showLive({
+          k: pan.v.k,
+          vx: pan.v.vx - (dx / rect.width) * viewWidth(pan.v.k),
+          vy: pan.v.vy - (dy / rect.height) * (SVG_H / pan.v.k)
+        });
+      } else if (tapStart && e.touches.length === 1) {
+        const t = e.touches[0];
+        if (Math.hypot(t.clientX - tapStart.x, t.clientY - tapStart.y) > 10) tapStart = null;
       }
     };
     const onEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) pinch = null;
-      if (e.touches.length === 0) {
-        pan = null;
-        window.setTimeout(() => (didPanRef.current = false), 50);
+      if (e.touches.length >= 2) {
+        startPinch(e.touches);
+        return;
       }
+      if (e.touches.length === 1) {
+        // 2本指から1本指になった：残った指でそのまま移動を続ける
+        pinch = null;
+        if (curView().k > 1) startPan(e.touches[0]);
+        else pan = null;
+        return;
+      }
+      pinch = null;
+      pan = null;
+      commitLive();
+      // ダブルタップで拡大（人物の写真の上は除く：写真はタップで説明を開くため）
+      const t = e.changedTouches[0];
+      const onPerson = (e.target as Element | null)?.closest?.('foreignObject, [data-person]');
+      if (tapStart && t && Date.now() - tapStart.t < 300 && !onPerson) {
+        const now = Date.now();
+        if (now - lastTap.t < 320 && Math.hypot(t.clientX - lastTap.x, t.clientY - lastTap.y) < 30) {
+          e.preventDefault();
+          const v = curView();
+          const w = worldAt(v, t.clientX, t.clientY);
+          setView(clampView(viewPutting(v.k >= MAX_K - 0.01 ? 1 : v.k * 2, w.x, w.y, t.clientX, t.clientY)));
+          lastTap = { t: 0, x: 0, y: 0 };
+        } else {
+          lastTap = { t: now, x: t.clientX, y: t.clientY };
+        }
+      }
+      tapStart = null;
+      window.setTimeout(() => (didPanRef.current = false), 50);
     };
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey) return;
       e.preventDefault();
-      zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+      const v = curView();
+      const w = worldAt(v, e.clientX, e.clientY);
+      showLive(viewPutting(v.k * Math.exp(-e.deltaY * 0.01), w.x, w.y, e.clientX, e.clientY));
+      window.clearTimeout(commitTimerRef.current);
+      commitTimerRef.current = window.setTimeout(commitLive, 160);
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: false });
-    el.addEventListener('touchend', onEnd);
-    el.addEventListener('touchcancel', onEnd);
+    el.addEventListener('touchend', onEnd, { passive: false });
+    el.addEventListener('touchcancel', onEnd, { passive: false });
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       el.removeEventListener('touchstart', onStart);
@@ -307,9 +404,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       el.removeEventListener('touchend', onEnd);
       el.removeEventListener('touchcancel', onEnd);
       el.removeEventListener('wheel', onWheel);
+      window.clearTimeout(commitTimerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
+    // 枠の大きさ（EXTRA_W）が変わったら作り直す
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [EXTRA_W]);
 
   // 地図に出す人物。その年の居場所（滞在・旅行）に合わせて位置が動く。
   // 地図の範囲の外（アメリカ・日本など）は、「地図の外」の枠に表示する。
@@ -761,9 +861,13 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         <div className="w-full max-w-6xl 3xl:max-w-[1600px] relative">
           <svg
             ref={svgRef}
-            viewBox={`${viewLeft({ k, vx })} ${vy} ${viewWidth(k)} ${SVG_H / k}`}
+            viewBox={viewBoxOf(curView())}
             className={`w-full h-auto object-contain select-none ${k > 1 ? 'cursor-grab' : ''}`}
-            style={{ maxHeight: `max(220px, ${MAP_SIZES[mapSize].vh}vh)` }}
+            style={{
+              maxHeight: `max(220px, ${MAP_SIZES[mapSize].vh}vh)`,
+              // 拡大中は指の操作をすべて地図が受け取る。全体表示のときは縦横のスクロールだけ画面に任せる（ピンチは地図で受け取る）
+              touchAction: k > 1 ? 'none' : 'pan-x pan-y'
+            }}
             onMouseDown={handleMapMouseDown}
             textRendering="geometricPrecision"
           >

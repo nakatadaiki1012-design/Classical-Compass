@@ -313,8 +313,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
   // 地図に出す人物。その年の居場所（滞在・旅行）に合わせて位置が動く。
   // 地図の範囲の外（アメリカ・日本など）は、「地図の外」の枠に表示する。
-  // 同じ場所に人が集中しているときは、1つの「まとめ札」にして、都市を指示線で指す。
-  const { composerMapData, offMapBox, clusters } = useMemo(() => {
+  // 肖像は本当の場所に置き、同じ都市の人はそのまわりに詰めて並べる（指示線は使わない）。
+  const { composerMapData, offMapBox, clusters, groupLabels } = useMemo(() => {
     interface Entry {
       composer: Composer;
       where: Whereabouts;
@@ -331,7 +331,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       });
     });
 
-    type Pin = Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean; clusterId?: string; level: 0 | 1 | 2; compact?: boolean };
+    type Pin = Entry & { x: number; y: number; trueX: number; trueY: number; offMap: boolean; clusterId?: string; level: 0 | 1 | 2; compact?: boolean; size?: number };
     interface Cluster {
       id: string;
       x: number;
@@ -348,6 +348,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
     }
     const pins: Pin[] = [];
     const clusters: Cluster[] = [];
+    // 都市名と人数の札（同じ都市に何人もいて、名前を出す場所がないとき）
+    const groupLabels: { x: number; y: number; text: string }[] = [];
 
     // 画面の上での大きさが変わらないよう、拡大しているときは地図の上での大きさを小さくして場所を探す
     const s = boost / k;
@@ -389,58 +391,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         return { e, tx, ty };
       });
 
-    // 近い人どうしをグループにする（画面の上で約36px以内）
-    const parent = onMap.map((_, i) => i);
-    const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
-    for (let i = 0; i < onMap.length; i++) {
-      for (let j = i + 1; j < onMap.length; j++) {
-        if (Math.hypot(onMap[i].tx - onMap[j].tx, onMap[i].ty - onMap[j].ty) < 36 * s) parent[find(i)] = find(j);
-      }
-    }
-    const groups = new Map<number, typeof onMap>();
-    onMap.forEach((item, i) => {
-      const root = find(i);
-      groups.set(root, [...(groups.get(root) || []), item]);
-    });
-
-    // 4人以上が集中している場所は「まとめ札」
-    const singles: typeof onMap = [];
-    groups.forEach(list => {
-      if (list.length < 4) {
-        singles.push(...list);
-        return;
-      }
-      const cx = list.reduce((a, b) => a + b.tx, 0) / list.length;
-      const cy = list.reduce((a, b) => a + b.ty, 0) / list.length;
-      const cols = cardCols(list.length);
-      const rows = Math.ceil(list.length / cols);
-      const id = `cluster-${clusters.length}`;
-      const nearest = list.reduce((best, cur) =>
-        Math.hypot(cur.tx - cx, cur.ty - cy) < Math.hypot(best.tx - cx, best.ty - cy) ? cur : best
-      );
-      const collapsed = smallMap && expandedCluster !== id;
-      const placeName = nearest.e.where.place.ja;
-      // たたんだ札は「ウィーン 12人 ▾」の1行だけ
-      const wScreen = (collapsed ? [...placeName].length * 12 + 58 : cols * CARD_COL + 16) * popupZoom;
-      const hScreen = (collapsed ? 24 : 26 + rows * CARD_ROW) * popupZoom;
-      clusters.push({
-        id,
-        x: cx,
-        y: cy,
-        w: wScreen * s,
-        h: hScreen * s,
-        cols,
-        trueX: cx,
-        trueY: cy,
-        placeName,
-        collapsed,
-        members: list
-          .map(i => i.e)
-          .sort((a, b) => a.composer.birthYear - b.composer.birthYear)
-      });
-    });
-
-    // 地図の外にいる人の枠（右下）も場所をふさぐので、先に押さえておく
+    // 地図の外にいる人の枠（右下）は場所をふさぐので、先に押さえておく
     {
       const offCount = entries.filter(e => isOffMap(e.where.place)).length;
       if (offCount > 0) {
@@ -450,61 +401,112 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       }
     }
 
-    // まとめ札を先に置く（大きいので、よい場所を先に取る）
-    clusters
-      .sort((a, b) => b.members.length - a.members.length)
-      .forEach(c => {
-        const [x, y] = findSpot(c.trueX, c.trueY, c.w, c.h, 1) ?? [c.trueX, c.trueY];
-        c.x = x;
-        c.y = y;
-        placed.push({ x, y, w: c.w, h: c.h });
-        c.members.forEach(m => {
-          pins.push({ ...m, x, y, trueX: c.trueX, trueY: c.trueY, offMap: false, clusterId: c.id, level: 0 });
-        });
+    // 同じ都市（ほぼ同じ位置）にいる人をまとめる
+    const groupsList: (typeof onMap)[] = [];
+    onMap
+      .slice()
+      .sort((a, b) => a.e.composer.birthYear - b.e.composer.birthYear)
+      .forEach(item => {
+        const g = groupsList.find(list => Math.hypot(list[0].tx - item.tx, list[0].ty - item.ty) < 4 * s);
+        if (g) g.push(item);
+        else groupsList.push([item]);
       });
 
-    // 残りの人は、1人ずつの札。拡大して場所に余裕があるときは、肖像画の隣に名前（段階1）、
-    // さらに余裕があれば、その頃にしていたこと・作曲したもの（段階2）まで広げる
-    const LABEL_W = 104 * s;
-    const LABEL_H = 82 * s; // 肖像（上）から名前の札（下）まで
-    const LABEL_DY = 14 * s; // 札の中心は、肖像の中心より少し下
-    // [段階, 画面上の幅, 高さ, 探す範囲（リング数）]
-    const LEVELS: [1 | 2, number, number, number][] = [
-      [2, 360, 95, 1],
-      [1, 210, 48, 2]
-    ];
-    singles
-      .sort((a, b) => a.ty - b.ty || a.tx - b.tx)
-      .forEach(({ e, tx, ty }) => {
-        let done = false;
-        if (k >= 2) {
-          for (const [level, wPx, hPx, maxRing] of LEVELS) {
-            if (level === 2 && k < 3.2) continue;
+    // 肖像は「本当の場所」に置く。同じ都市に何人もいるときは、都市のまわりに蜂の巣のように詰めて並べる
+    // （指示線は使わない。そのぶん肖像を小さくする）
+    // 広い画面（パソコン）では余裕があるので、少し大きめにする
+    const bigScreen = smallMap ? 1 : 1.25;
+    const sizeFor = (n: number) => Math.round((n === 1 ? 26 : n <= 3 ? 24 : n <= 7 ? 22 : 20) * bigScreen);
+    const hexOffsets = (n: number): [number, number][] => {
+      const out: [number, number][] = [[0, 0]];
+      for (let ring = 1; out.length < n; ring++) {
+        for (let side = 0; side < 6 && out.length < n; side++) {
+          for (let step = 0; step < ring && out.length < n; step++) {
+            const a1 = (Math.PI / 3) * side - Math.PI / 2;
+            const a2 = (Math.PI / 3) * (side + 2) - Math.PI / 2;
+            out.push([
+              Math.cos(a1) * ring + Math.cos(a2) * step,
+              Math.sin(a1) * ring + Math.sin(a2) * step
+            ]);
+          }
+        }
+      }
+      return out;
+    };
+    const avatars: { x: number; y: number; r: number }[] = [];
+    const groupLayouts: { list: typeof onMap; size: number; pos: [number, number][]; cx: number; cy: number }[] = [];
+    groupsList
+      .sort((a, b) => b.length - a.length)
+      .forEach(list => {
+        const size = sizeFor(list.length);
+        const step = (size + 2) * s;
+        const cx = list[0].tx;
+        const cy = list[0].ty;
+        const pos = hexOffsets(list.length).map(([ox, oy]) => {
+          let x = cx + ox * step;
+          let y = cy + oy * step;
+          // ほかの都市の肖像と大きく重なるときだけ、少しだけ外側へずらす（最大で肖像1つ分）
+          for (let t = 0; t < 4; t++) {
+            const hit = avatars.find(a => Math.hypot(a.x - x, a.y - y) < (a.r + (size / 2) * s) * 0.75);
+            if (!hit) break;
+            const ang = Math.atan2(y - hit.y, x - hit.x) || -Math.PI / 2;
+            x += Math.cos(ang) * (size / 4) * s;
+            y += Math.sin(ang) * (size / 4) * s;
+          }
+          avatars.push({ x, y, r: (size / 2) * s });
+          return [x, y] as [number, number];
+        });
+        groupLayouts.push({ list, size, pos, cx, cy });
+      });
+    avatars.forEach(a => placed.push({ x: a.x, y: a.y, w: a.r * 2, h: a.r * 2 }));
+
+    // 名前の札：空いている場所があるときだけ、肖像のすぐ下に出す（ずらして置くことはしない）
+    const textW = (text: string, size: number) =>
+      [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
+    const tryPlace = (x: number, y: number, w: number, h: number) => {
+      const inside = x - w / 2 > minX && x + w / 2 < maxX && y - h / 2 > minY && y + h / 2 < maxY;
+      if (!inside || !free(x, y, w, h)) return false;
+      placed.push({ x, y, w, h });
+      return true;
+    };
+    groupLayouts.forEach(({ list, size, pos, cx, cy }) => {
+      const many = list.length >= 2;
+      // 拡大して余裕があれば、1人ずつ名前を出す。だめなら都市名と人数を1つだけ出す
+      const showEach = list.length <= 3 || k >= 2;
+      const labelOk = list.map(({ e }, idx) => {
+        if (!showEach) return false;
+        const [x, y] = pos[idx];
+        const topWork = e.activeWorksInYear[0];
+        const w = (Math.max(textW(e.composer.shortName, 12), topWork ? textW(`♪ ${topWork.title.slice(0, 10)}`, 10) : 0) + 16) * s;
+        const h = (topWork ? 32 : 20) * s;
+        return tryPlace(x, y + (size / 2 + 6) * s + h / 2, w, h);
+      });
+      if (many && !labelOk.some(Boolean)) {
+        const maxY = Math.max(...pos.map(p => p[1]));
+        const text = `${list[0].e.where.place.ja} ${list.length}人`;
+        const w = (textW(text, 11) + 12) * s;
+        const h = 17 * s;
+        const y = maxY + (size / 2 + 6) * s + h / 2;
+        if (tryPlace(cx, y, w, h)) groupLabels.push({ x: cx, y, text });
+      }
+      list.forEach(({ e, tx, ty }, idx) => {
+        const [x, y] = pos[idx];
+        let level: 0 | 1 | 2 = 0;
+        // 大きく拡大していて右側が空いていれば、その頃していたこと（段階1・2）も出す
+        if (k >= 2 && !labelOk[idx]) {
+          for (const [lv, wPx, hPx] of [[2, 224 * popupZoom, 62 * popupZoom], [1, 130 * popupZoom, 28 * popupZoom]] as const) {
+            if (lv === 2 && k < 3.2) continue;
             const w = wPx * s;
             const h = hPx * s;
-            const shift = (w / 2 - 20 * s); // 肖像（左端）が本当の場所の近くに来るようにずらす
-            const spot = findSpot(tx + shift, ty, w, h, 0, maxRing);
-            if (spot) {
-              placed.push({ x: spot[0], y: spot[1], w, h });
-              pins.push({ ...e, x: spot[0] - w / 2 + 20 * s, y: spot[1], trueX: tx, trueY: ty, offMap: false, level });
-              done = true;
+            if (tryPlace(x + (size / 2 + 4) * s + w / 2, y, w, h)) {
+              level = lv;
               break;
             }
           }
         }
-        if (done) return;
-        const spotFull = findSpot(tx, ty + LABEL_DY, LABEL_W, LABEL_H, 0);
-        if (spotFull) {
-          placed.push({ x: spotFull[0], y: spotFull[1], w: LABEL_W, h: LABEL_H });
-          pins.push({ ...e, x: Math.round(spotFull[0]), y: Math.round(spotFull[1] - LABEL_DY), trueX: tx, trueY: ty, offMap: false, level: 0 });
-          return;
-        }
-        // 札を置く場所がないときは、重ならないよう顔写真だけにする（名前はタップ・カーソルで見られる）
-        const AV = 32 * s;
-        const [ax, ay] = findSpot(tx, ty, AV, AV, 0) ?? [tx, ty];
-        placed.push({ x: ax, y: ay, w: AV, h: AV });
-        pins.push({ ...e, x: Math.round(ax), y: Math.round(ay), trueX: tx, trueY: ty, offMap: false, level: 0, compact: true });
+        pins.push({ ...e, x, y, trueX: tx, trueY: ty, offMap: false, level, size, compact: !labelOk[idx] });
       });
+    });
 
     // 地図の外の枠（右下）
     const off = entries.filter(e => isOffMap(e.where.place));
@@ -523,7 +525,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
         pins.push({ ...e, x: Math.round(x), y: Math.round(y), trueX: x, trueY: y, offMap: true, level: 0 });
       });
     }
-    return { composerMapData: pins, offMapBox: box, clusters };
+    return { composerMapData: pins, offMapBox: box, clusters, groupLabels };
   }, [activeComposers, currentYear, k, vx, vy, boost, popupZoom, pxScale, EXTRA_W, smallMap, expandedCluster]);
 
   // Active composer full story data for currentYear (生没年、生誕エピソード、最期エピソード、作曲エピソード)
@@ -861,24 +863,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                 );
               })}
 
-            {/* 札を避けて少しずらした人には、本当の場所との間に細い線と点を表示 */}
-            {composerMapData
-              .filter(p => !p.offMap && !p.clusterId && Math.hypot(p.x - p.trueX, p.y - p.trueY) > 6 * sc)
-              .map(p => (
-                <g key={`leader-${p.composer.id}`} className="pointer-events-none">
-                  <line
-                    x1={p.trueX}
-                    y1={p.trueY}
-                    x2={p.x}
-                    y2={p.y}
-                    stroke="#d6cbbb"
-                    strokeWidth={(p.composer.id === selectedComposerId || p.composer.id === hoveredComposerId ? 1.6 : 0.9) * sc}
-                    opacity={p.composer.id === selectedComposerId || p.composer.id === hoveredComposerId ? 0.95 : 0.4}
-                  />
-                  <circle cx={p.trueX} cy={p.trueY} r={3 * sc} fill="#f5ebd9" stroke="#14110e" strokeWidth={sc} />
-                </g>
-              ))}
-
             {/* 人が集中している都市：都市を指す線と人数の丸 */}
             {clusters.map(c => (
               <g
@@ -918,6 +902,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
             {/* MAP COMPOSER PINS WITH LIFESPAN & COMPOSITION (生没年＆作曲を地図上に明記) */}
             {composerMapData.filter(pin => !pin.clusterId).map(pin => {
               const { composer, where, x, y, offMap, activeWorksInYear, level, compact } = pin;
+              // 肖像の直径（地図の上では本当の場所に置くので、人が多い都市ほど小さくなる）
+              const D = offMap ? 30 : pin.size ?? 26;
+              const R = D / 2;
               const era = getEraById(composer.era);
               const isSelected = selectedComposerId === composer.id;
               const isHovered = hoveredComposerId === composer.id;
@@ -943,35 +930,23 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                   <circle
                     cx={x}
                     cy={y}
-                    r={topWork ? 26 : isSelected ? 22 : 16}
+                    r={R + (topWork ? 9 : isSelected ? 6 : 3)}
                     fill={era.color}
                     opacity={topWork ? 0.45 : isSelected ? 0.4 : isHovered ? 0.3 : 0.15}
                     className="animate-pulse transition-all duration-300"
                   />
 
-                  {/* Pin Stem */}
-                  <line
-                    x1={x}
-                    y1={y}
-                    x2={x}
-                    y2={y + 16}
-                    stroke={isSelected ? '#ffffff' : era.color}
-                    strokeWidth={isSelected ? '3' : '2'}
-                    strokeLinecap="round"
-                  />
-                  <circle cx={x} cy={y + 16} r="2.5" fill="#ffffff" stroke={era.color} strokeWidth="1.5" />
-
                   {/* 記録がなく、近い年の居場所から推定しているときは点線の輪 */}
                   {where.isEstimated && (
-                    <circle cx={x} cy={y} r="21" fill="none" stroke="#d6cdbd" strokeWidth="1.2" strokeDasharray="3 3" />
+                    <circle cx={x} cy={y} r={R + 4} fill="none" stroke="#d6cdbd" strokeWidth="1.2" strokeDasharray="3 3" />
                   )}
 
                   {/* Portrait Avatar Marker */}
                   <foreignObject
-                    x={x - (isSelected ? 18 : 15)}
-                    y={y - (isSelected ? 18 : 15)}
-                    width={isSelected ? 36 : 30}
-                    height={isSelected ? 36 : 30}
+                    x={x - (isSelected ? R + 3 : R)}
+                    y={y - (isSelected ? R + 3 : R)}
+                    width={isSelected ? D + 6 : D}
+                    height={isSelected ? D + 6 : D}
                     className="overflow-visible"
                   >
                     <div
@@ -996,8 +971,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                   {/* 長期の旅行・遠征・留学中は「旅」のバッジ */}
                   {where.isTrip && (
                     <g>
-                      <circle cx={x + 15} cy={y - 15} r="9" fill="#c99738" stroke="#14110e" strokeWidth="1.5" />
-                      <text x={x + 15} y={y - 11.5} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#14110e">
+                      <circle cx={x + R * 0.8} cy={y - R * 0.8} r="7" fill="#c99738" stroke="#14110e" strokeWidth="1.2" />
+                      <text x={x + R * 0.8} y={y - R * 0.8 + 3} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#14110e">
                         旅
                       </text>
                     </g>
@@ -1019,7 +994,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                     const boxW = level === 2 ? 224 : 130;
                     const boxH = level === 2 ? 20 + lines.length * 13 + 16 : 28;
                     return (
-                      <g transform={`translate(${x + 20}, ${y - (boxH * popupZoom) / 2}) scale(${popupZoom})`} className="pointer-events-none">
+                      <g transform={`translate(${x + R + 4}, ${y - (boxH * popupZoom) / 2}) scale(${popupZoom})`} className="pointer-events-none">
                         <rect width={boxW} height={boxH} rx="8" fill="#14110e" stroke={isSelected ? '#ffffff' : topWork ? '#c99738' : era.color} strokeWidth="1.1" opacity="0.94" />
                         <text x="12" y="17" fontSize="13" fontWeight="bold" fill="#ffffff">
                           {composer.shortName}
@@ -1048,7 +1023,8 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                     const workTitle = topWork
                       ? topWork.title.length > 10 ? topWork.title.substring(0, 9) + '…' : topWork.title
                       : '';
-                    const crowded = composerMapData.length > 8 && !isSelected && !topWork;
+                    // 作品の行は、その年に作曲した曲があるときだけ（地図をすっきりさせる）
+                    const crowded = !offMap && !topWork;
                     const line2 = topWork
                       ? `♪ ${workTitle}`
                       : offMap
@@ -1061,7 +1037,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                       [...text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * size, 0);
                     const boxWidth = crowded ? textWidth(line1, 12) + 16 : Math.max(textWidth(line1, 12), textWidth(line2, 10)) + 18;
                     return (
-                      <g transform={`translate(${x}, ${y + 22})`}>
+                      <g transform={`translate(${x}, ${y + R + 6})`}>
                         <rect
                           x={-boxWidth / 2}
                           y="0"
@@ -1094,6 +1070,26 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                 </g>
               );
             })}
+
+            {/* 同じ都市に何人もいて、名前を出す場所がないとき：都市名と人数（名前は写真をタップ） */}
+            {groupLabels.map(g => (
+              <g key={`gl-${g.text}-${g.x}`} transform={`translate(${g.x} ${g.y}) scale(${sc})`} className="pointer-events-none">
+                <rect
+                  x={-(([...g.text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * 11, 0)) + 12) / 2}
+                  y={-8.5}
+                  width={[...g.text].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? 0.6 : 1) * 11, 0) + 12}
+                  height={17}
+                  rx={8.5}
+                  fill="#14110e"
+                  stroke="#e6b95c"
+                  strokeWidth="1"
+                  opacity="0.92"
+                />
+                <text x="0" y="4" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#e6b95c">
+                  {g.text}
+                </text>
+              </g>
+            ))}
 
             {/* 人が集中している都市の「まとめ札」：中の名前をタップするとその人の説明が開く */}
             {clusters.map(c => {
@@ -1222,12 +1218,12 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
           {/* 印の意味（凡例） */}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-[#a3978a]">
             <span className="flex items-center gap-1">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#f5ebd9] border border-[#14110e]" />
-              白い点＝その人が実際にいた都市
+              <span className="inline-block w-3 h-3 rounded-full bg-[#c99738] border border-[#14110e]" />
+              写真＝その年にいた都市の位置（同じ都市の人はまわりに並ぶ）
             </span>
             <span className="flex items-center gap-1">
-              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#e6b95c] text-[#14110e] text-[9px] font-bold">4</span>
-              同じ都市にいた人数
+              <span className="px-1.5 rounded-full border border-[#e6b95c] text-[#e6b95c] text-[10px] font-bold leading-4">ウィーン 5人</span>
+              名前は写真をタップ・拡大で表示
             </span>
             <span className="flex items-center gap-1">
               <span className="inline-block w-4 border-t-2 border-dashed border-[#e6b95c]" />

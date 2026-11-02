@@ -685,9 +685,237 @@ const RAW4: Record<string, ExtraWork[]> = {
   ]
 };
 
+/** 第5弾：録音（実演）が見つかった名曲を追加 */
+const LEIPZIG: [number, number] = [12.3731, 51.3397];
+const KOTHEN: [number, number] = [11.9708, 51.7516];
+const WEIMAR: [number, number] = [11.3287, 50.9787];
+const WARSAW: [number, number] = [21.0122, 52.2297];
+const RAW5: Record<string, ExtraWork[]> = {
+  bach: [
+    w('bach-brandenburg2', 'ブランデンブルク協奏曲 第2番 第1楽章', 'Brandenburg Concerto No. 2 in F major, BWV 1047 (Allegro)', 1721, 'Concerto', '協奏曲', 'Köthen', KOTHEN,
+      '高音のトランペットが、リコーダー・オーボエ・ヴァイオリンと並んで輝かしく歌う協奏曲。トランペット奏者泣かせの難曲として知られる。'),
+    w('bach-brandenburg5', 'ブランデンブルク協奏曲 第5番 第1楽章', 'Brandenburg Concerto No. 5 in D major, BWV 1050 (Allegro)', 1721, 'Concerto', '協奏曲', 'Köthen', KOTHEN,
+      '伴奏役だったチェンバロが、楽章の終わりで長い独奏（カデンツァ）を弾きまくる。鍵盤楽器が主役になった最初期の協奏曲。'),
+    w('bach-magnificat', 'マニフィカト ニ長調より「グローリア」', 'Magnificat, BWV 243: Gloria Patri', 1733, 'Choral', '合唱曲', 'Leipzig', LEIPZIG,
+      '聖母マリアの賛歌に付けた、華やかな合唱曲。トランペットとティンパニが加わる祝祭的な響きで、クリスマスにもよく歌われる。'),
+    w('bach-stmatthew', 'マタイ受難曲より「憐れみたまえ、わが神よ」', 'St Matthew Passion, BWV 244: Erbarme dich', 1727, 'Choral', '受難曲', 'Leipzig', LEIPZIG,
+      'イエスを3度知らないと言ってしまったペテロの後悔を歌う、アルトのアリア。独奏ヴァイオリンが涙のように寄り添う。メンデルスゾーンの復活上演で、バッハ再評価のきっかけとなった大作。'),
+    w('bach-mass-b', 'ミサ曲 ロ短調より「アニュス・デイ」', 'Mass in B minor, BWV 232: Agnus Dei', 1749, 'Choral', 'ミサ曲', 'Leipzig', LEIPZIG,
+      '晩年のバッハが、生涯の作品から集大成としてまとめた大ミサ曲。終わり近くの「アニュス・デイ」は、アルトが静かに祈る美しいアリア。'),
+    w('bach-french5', 'フランス組曲 第5番より「ガヴォット」', 'French Suite No. 5 in G major, BWV 816: Gavotte', 1722, 'Keyboard', '鍵盤曲', 'Köthen', KOTHEN,
+      '妻アンナ・マクダレーナのための曲集に書かれた、親しみやすい鍵盤の組曲。軽やかなガヴォットはピアノ発表会の定番。'),
+    w('bach-violin-sonata1', '無伴奏ヴァイオリン・ソナタ 第1番より「アダージョ」', 'Violin Sonata No. 1 in G minor, BWV 1001: Adagio', 1720, 'Solo', '独奏曲', 'Köthen', KOTHEN,
+      'ヴァイオリン1本で和音と旋律を同時に鳴らす、無伴奏曲集の幕開け。即興のように自由に揺れる、重厚な序奏。')
+  ],
+  handel: [
+    w('handel-organ', 'オルガン協奏曲 作品7-1 第1楽章', 'Organ Concerto Op. 7 No. 1, HWV 306', 1740, 'Concerto', '協奏曲', 'London', LONDON,
+      'オラトリオの幕間に、ヘンデル自身がオルガンを弾いて聴衆を楽しませるために書いた協奏曲。足鍵盤を使う珍しい作品。'),
+    w('handel-fireworks', '王宮の花火の音楽より「歓喜（レジュイッサンス）」', 'Music for the Royal Fireworks, HWV 351: La Réjouissance', 1749, 'Orchestral', '管弦楽曲', 'London', LONDON,
+      '戦争の終結を祝うロンドンの花火大会のための音楽。公開リハーサルには1万2千人が押し寄せ、橋が大渋滞になったという。'),
+    w('handel-harmonious', '「調子の良い鍛冶屋」', 'Suite No. 5 in E major, HWV 430: Air and Variations "The Harmonious Blacksmith"', 1720, 'Keyboard', '鍵盤曲', 'London', LONDON,
+      'チェンバロ組曲の最後の変奏曲。鍛冶屋の槌の音から思いついたという俗説から、このあだ名で親しまれている。')
+  ],
+  vivaldi: [
+    w('vivaldi-mandolin', 'マンドリン協奏曲 ハ長調 RV 425', 'Mandolin Concerto in C major, RV 425', 1725, 'Concerto', '協奏曲', 'Venice', VENICE,
+      '粒のそろったマンドリンのトレモロが、弦楽合奏の上で軽やかに歌う。マンドリンのための協奏曲として最も有名な曲。'),
+    w('vivaldi-cello', 'チェロ協奏曲 ト長調 RV 413 第1楽章', 'Cello Concerto in G major, RV 413 (Allegro)', 1720, 'Concerto', '協奏曲', 'Venice', VENICE,
+      'チェロを独奏楽器として活躍させた、早い時期の協奏曲の一つ。ヴィヴァルディはチェロ協奏曲を25曲以上も書いた。')
+  ],
+  telemann: [
+    w('telemann-fantasia', '無伴奏フルートのための12のファンタジア より第8番', 'Fantasia No. 8 for solo flute, TWV 40:9', 1732, 'Solo', '独奏曲', 'Hamburg', [9.9937, 53.5511],
+      '伴奏なしのフルート1本で、和音や対話まで感じさせる小品集。（録音はサクソフォンでの演奏）')
+  ],
+  haydn: [
+    w('haydn-sym100', '交響曲 第100番「軍隊」第2楽章', 'Symphony No. 100 in G major "Military" (Allegretto)', 1794, 'Symphony', '交響曲', 'London', LONDON,
+      'ロンドンのために書いた交響曲。第2楽章で突然、トライアングル・シンバル・大太鼓の「トルコ風」軍楽隊が鳴り響き、聴衆を沸かせた。'),
+    w('haydn-sym101', '交響曲 第101番「時計」第2楽章', 'Symphony No. 101 in D major "The Clock" (Andante)', 1794, 'Symphony', '交響曲', 'London', LONDON,
+      'ファゴットと弦のピツィカートが、振り子時計のように「チクタク」と規則正しく刻む。そこからこのあだ名が付いた。'),
+    w('haydn-creation', 'オラトリオ『天地創造』より「はじめに神は」', 'The Creation: In the beginning', 1798, 'Choral', 'オラトリオ', 'Vienna', VIENNA,
+      '暗くさまよう「混沌」の音楽のあと、合唱が「光あれ！」と歌う瞬間、オーケストラ全体がハ長調で爆発する。初演では聴衆が総立ちになった。')
+  ],
+  mozart: [
+    w('mozart-sym35', '交響曲 第35番「ハフナー」第1楽章', 'Symphony No. 35 in D major "Haffner", K. 385 (Allegro con spirito)', 1782, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      'ザルツブルクの名家ハフナー家のために急いで書いたセレナードを、のちに交響曲に作り直したもの。冒頭の大きな跳躍が力強い。'),
+    w('mozart-sym38', '交響曲 第38番「プラハ」第3楽章', 'Symphony No. 38 in D major "Prague", K. 504 (Presto)', 1786, 'Symphony', '交響曲', 'Prague', [14.4378, 50.0755],
+      '『フィガロの結婚』が大ヒットしていたプラハで初演された交響曲。メヌエットのない3楽章形式で、終楽章は息もつかせぬ速さ。'),
+    w('mozart-sym29', '交響曲 第29番 イ長調 第1楽章', 'Symphony No. 29 in A major, K. 201 (Allegro moderato)', 1774, 'Symphony', '交響曲', 'Salzburg', [13.055, 47.8095],
+      '18歳のモーツァルトがザルツブルクで書いた、室内楽のように繊細な交響曲。若い時期の傑作として人気が高い。'),
+    w('mozart-pc23', 'ピアノ協奏曲 第23番 イ長調 第2楽章', 'Piano Concerto No. 23 in A major, K. 488 (Adagio)', 1786, 'Concerto', '協奏曲', 'Vienna', VIENNA,
+      'モーツァルトの協奏曲で唯一の嬰ヘ短調の楽章。シチリアーノのリズムにのって、ピアノがしみじみと悲しみを歌う。'),
+    w('mozart-vc5', 'ヴァイオリン協奏曲 第5番「トルコ風」第1楽章', 'Violin Concerto No. 5 in A major, K. 219 (Allegro aperto)', 1775, 'Concerto', '協奏曲', 'Salzburg', [13.055, 47.8095],
+      '19歳のときの協奏曲。独奏ヴァイオリンがゆったりした序奏で入ってきてから、急に快活な主題を弾き始める意外な仕掛けがある。'),
+    w('mozart-oboe', 'オーボエ協奏曲 ハ長調 第1楽章', 'Oboe Concerto in C major, K. 314 (Allegro aperto)', 1777, 'Concerto', '協奏曲', 'Salzburg', [13.055, 47.8095],
+      'オーボエの明るく伸びやかな音色を生かした協奏曲。のちにフルート協奏曲第2番としても編曲された。'),
+    w('mozart-bassoon', 'ファゴット協奏曲 変ロ長調 第1楽章', 'Bassoon Concerto in B-flat major, K. 191 (Allegro)', 1774, 'Concerto', '協奏曲', 'Salzburg', [13.055, 47.8095],
+      '18歳で書いた、ファゴットのための協奏曲。低音から高音まで跳び回る、ユーモラスで愛らしい独奏が楽しい。')
+  ],
+  beethoven: [
+    w('beethoven-sym1', '交響曲 第1番 ハ長調 第1楽章', 'Symphony No. 1 in C major, Op. 21 (Adagio molto – Allegro con brio)', 1800, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      '29歳のベートーヴェンがウィーンで発表した最初の交響曲。いきなり「よその調」の和音で始まる冒頭に、当時の聴衆は驚いた。'),
+    w('beethoven-sym2', '交響曲 第2番 ニ長調 第1楽章', 'Symphony No. 2 in D major, Op. 36 (Adagio molto – Allegro con brio)', 1802, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      '耳の病に絶望して「ハイリゲンシュタットの遺書」を書いたのと同じ年の作品。それなのに音楽は明るく、エネルギーに満ちている。'),
+    w('beethoven-sym4', '交響曲 第4番 変ロ長調 第1楽章', 'Symphony No. 4 in B-flat major, Op. 60 (Adagio – Allegro vivace)', 1806, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      '「英雄」と「運命」の間にはさまれた、明るくのびやかな交響曲。シューマンは「2人の北欧の巨人の間の、ギリシアの乙女」と呼んだ。'),
+    w('beethoven-sym8', '交響曲 第8番 ヘ長調 第1楽章', 'Symphony No. 8 in F major, Op. 93 (Allegro vivace e con brio)', 1812, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      'ユーモアたっぷりの小ぶりな交響曲。本人は「第7番より人気がないのは、こちらのほうが優れているからだ」と言ったという。'),
+    w('beethoven-waldstein', 'ピアノ・ソナタ 第21番「ワルトシュタイン」第1楽章', 'Piano Sonata No. 21 in C major "Waldstein", Op. 53 (Allegro con brio)', 1804, 'Piano', 'ピアノ独奏', 'Vienna', VIENNA,
+      '若いころの恩人ワルトシュタイン伯爵に捧げたソナタ。和音の連打が駆け出す冒頭から、新しいピアノの性能を存分に引き出している。'),
+    w('beethoven-pc3', 'ピアノ協奏曲 第3番 ハ短調 第1楽章', 'Piano Concerto No. 3 in C minor, Op. 37 (Allegro con brio)', 1803, 'Concerto', '協奏曲', 'Vienna', VIENNA,
+      'モーツァルトの短調の協奏曲を手本にしつつ、ベートーヴェンらしい劇的な力強さが加わった協奏曲。初演では楽譜がほぼ白紙で、本人が記憶で弾いたという。'),
+    w('beethoven-pc4', 'ピアノ協奏曲 第4番 ト長調 第1楽章', 'Piano Concerto No. 4 in G major, Op. 58 (Allegro moderato)', 1806, 'Concerto', '協奏曲', 'Vienna', VIENNA,
+      'オーケストラより先に、ピアノが独りで静かに語り始める——当時としては型破りな幕開け。ベートーヴェンが独奏者として出た最後の協奏曲。'),
+    w('beethoven-coriolan', '序曲『コリオラン』', 'Coriolan Overture, Op. 62', 1807, 'Orchestral', '管弦楽曲', 'Vienna', VIENNA,
+      '祖国ローマに弓を引こうとした英雄コリオラヌスの悲劇を描く序曲。激しい和音の一撃と、母の願いを表す優しい旋律が対立する。')
+  ],
+  schubert: [
+    w('schubert-death', '弦楽四重奏曲 第14番「死と乙女」第2楽章', 'String Quartet No. 14 in D minor "Death and the Maiden", D 810 (Andante con moto)', 1824, 'Chamber', '室内楽', 'Vienna', VIENNA,
+      '自作の歌曲『死と乙女』の、死神が静かに語りかける旋律をもとにした変奏曲。重い病の中で書かれた、深い陰影をもつ四重奏曲。'),
+    w('schubert-wanderer', '幻想曲「さすらい人」第1楽章', 'Wanderer Fantasy in C major, D 760 (Allegro con fuoco)', 1822, 'Piano', 'ピアノ独奏', 'Vienna', VIENNA,
+      '歌曲『さすらい人』の旋律から全曲を組み立てた、シューベルトで最も技巧的なピアノ曲。本人も弾きこなせず「悪魔にでも弾かせろ」と言ったという。')
+  ],
+  chopin: [
+    w('chopin-military', 'ポロネーズ 第3番「軍隊」', 'Polonaise in A major, Op. 40 No. 1 "Military"', 1838, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '祖国ポーランドの栄光を思わせる、堂々とした行進のようなポロネーズ。第二次世界大戦中、ポーランドのラジオで抵抗の象徴として流された。'),
+    w('chopin-mazurka', 'マズルカ 変ロ長調 作品7-1', 'Mazurka in B-flat major, Op. 7 No. 1', 1831, 'Piano', 'ピアノ独奏', 'Warsaw', WARSAW,
+      'ポーランドの田舎の踊り「マズルカ」を、ショパンが芸術作品にまで高めた。生涯に約60曲を書いた中で、最も親しまれている一曲。'),
+    w('chopin-waltz7', 'ワルツ 第7番 嬰ハ短調', 'Waltz in C-sharp minor, Op. 64 No. 2', 1847, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '「子犬のワルツ」と同じ年に出版された、憂いをたたえたワルツ。ゆったりした部分と、くるくる回るような速い部分が交互に現れる。'),
+    w('chopin-winter', '練習曲 作品25-11「木枯らし」', 'Étude in A minor, Op. 25 No. 11 "Winter Wind"', 1836, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '静かな4小節の序奏のあと、右手の細かい音の嵐が吹き荒れる。ショパンの練習曲の中でも最難関の一つ。'),
+    w('chopin-blackkey', '練習曲 作品10-5「黒鍵」', 'Étude in G-flat major, Op. 10 No. 5 "Black Keys"', 1830, 'Piano', 'ピアノ独奏', 'Warsaw', WARSAW,
+      '右手がほとんど黒鍵だけを弾く、きらきらと軽快な練習曲。わずか2分足らずの中に遊び心が詰まっている。'),
+    w('chopin-ballade4', 'バラード 第4番 ヘ短調', 'Ballade No. 4 in F minor, Op. 52', 1842, 'Piano', 'ピアノ独奏', 'Nohant', [1.9764, 46.5833],
+      '夏を過ごしたノアンで書いた、ショパン円熟期の最高傑作の一つ。素朴な旋律が変奏されながら、激しい終結へと高まっていく。'),
+    w('chopin-pc2', 'ピアノ協奏曲 第2番 ヘ短調 第2楽章', 'Piano Concerto No. 2 in F minor, Op. 21 (Larghetto)', 1830, 'Concerto', '協奏曲', 'Warsaw', WARSAW,
+      '実は第1番より先に書かれた協奏曲。初恋の人コンスタンツィアへの思いを込めたという、夢見るような緩徐楽章。'),
+    w('chopin-nocturne-op48', 'ノクターン 第13番 ハ短調', 'Nocturne in C minor, Op. 48 No. 1', 1841, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '葬送行進曲のような重い歌に始まり、中間部では祈りのようなコラールが嵐へと膨れ上がる。ショパンのノクターンで最も劇的な一曲。'),
+    w('chopin-prelude7', '前奏曲 作品28-7 イ長調', 'Prélude in A major, Op. 28 No. 7', 1839, 'Piano', 'ピアノ独奏', 'Valldemossa', [2.6222, 39.7106],
+      'わずか16小節、1分足らずのマズルカ風の小品。日本では胃腸薬「太田胃散」のCMの曲としておなじみ。')
+  ],
+  liszt: [
+    w('liszt-rhapsody6', 'ハンガリー狂詩曲 第6番', 'Hungarian Rhapsody No. 6 in D-flat major, S. 244/6', 1853, 'Piano', 'ピアノ独奏', 'Weimar', WEIMAR,
+      '堂々とした序奏、軽快な踊り、哀愁の歌、そして右手のオクターブ連打で突き進む終盤。ハンガリーのロマ（ジプシー）音楽の魅力が詰まっている。'),
+    w('liszt-mephisto', 'メフィスト・ワルツ 第1番', 'Mephisto Waltz No. 1, S. 514', 1860, 'Piano', 'ピアノ独奏', 'Weimar', WEIMAR,
+      '悪魔メフィストが村の酒場でヴァイオリンを奪い、人々を狂乱の踊りに巻き込む——ファウスト伝説の一場面を描いた悪魔的な名曲。'),
+    w('liszt-pc1', 'ピアノ協奏曲 第1番 変ホ長調', 'Piano Concerto No. 1 in E-flat major, S. 124', 1855, 'Concerto', '協奏曲', 'Weimar', WEIMAR,
+      '4つの楽章を切れ目なく続けた協奏曲。トライアングルが活躍するので「トライアングル協奏曲」とからかわれた。初演はリスト自身の独奏、ベルリオーズの指揮。')
+  ],
+  mendelssohn: [
+    w('mendelssohn-pc1', 'ピアノ協奏曲 第1番 ト短調 第1楽章', 'Piano Concerto No. 1 in G minor, Op. 25 (Molto allegro con fuoco)', 1831, 'Concerto', '協奏曲', 'Munich', [11.582, 48.1351],
+      'イタリア旅行の途中、ミュンヘンで書きあげて自ら初演した協奏曲。短い序奏のあと、すぐにピアノが嵐のように飛び込んでくる。'),
+    w('mendelssohn-octet', '弦楽八重奏曲 変ホ長調 第4楽章', 'String Octet in E-flat major, Op. 20 (Presto)', 1825, 'Chamber', '室内楽', 'Berlin', [13.405, 52.52],
+      'わずか16歳で書いた、室内楽史上の奇跡と呼ばれる作品。8人の弦楽器が、チェロから順に次々と駆け上がっていく終楽章。')
+  ],
+  schumann: [
+    w('schumann-kreisleriana', '『クライスレリアーナ』より第1曲', 'Kreisleriana, Op. 16: No. 1 Äußerst bewegt', 1838, 'Piano', 'ピアノ独奏', 'Leipzig', LEIPZIG,
+      'E.T.A.ホフマンの小説の、風変わりな楽長クライスラーをもとにしたピアノ曲集。結婚を反対されていたクララへの思いがあふれている。'),
+    w('schumann-arabeske', 'アラベスク ハ長調', 'Arabeske in C major, Op. 18', 1839, 'Piano', 'ピアノ独奏', 'Vienna', VIENNA,
+      'ウィーン滞在中に書いた、唐草模様のように流れる優美な小品。最後のしみじみとした後奏が印象深い。')
+  ],
+  brahms: [
+    w('brahms-sym2', '交響曲 第2番 ニ長調 第3楽章', 'Symphony No. 2 in D major, Op. 73 (Allegretto grazioso)', 1877, 'Symphony', '交響曲', 'Pörtschach', [14.1667, 46.6333],
+      'オーストリアの湖畔の避暑地で書かれた、明るくのどかな交響曲。オーボエが素朴な踊りの歌を奏でる楽章。'),
+    w('brahms-requiem', '『ドイツ・レクイエム』より「なんと愛すべきはあなたの住まい」', 'Ein deutsches Requiem, Op. 45: Wie lieblich sind deine Wohnungen', 1868, 'Choral', '合唱曲', 'Bremen', [8.8017, 53.0793],
+      'ラテン語でなくドイツ語の聖書から言葉を選び、死者よりも残された人々を慰めるために書いたレクイエム。中心にあたる第4曲は、天の住まいを歌う穏やかな合唱。'),
+    w('brahms-clarinet', 'クラリネット五重奏曲 ロ短調 第1楽章', 'Clarinet Quintet in B minor, Op. 115 (Allegro)', 1891, 'Chamber', '室内楽', 'Bad Ischl', [13.6194, 47.7114],
+      '創作をやめるつもりだった晩年のブラームスが、名クラリネット奏者ミュールフェルトの演奏に心を動かされて書いた。秋の夕暮れのような哀愁に満ちた室内楽。')
+  ],
+  tchaikovsky: [
+    w('tchaikovsky-sym4', '交響曲 第4番 ヘ短調 第4楽章', 'Symphony No. 4 in F minor, Op. 36 (Finale: Allegro con fuoco)', 1878, 'Symphony', '交響曲', 'Moscow', MOSCOW,
+      '支援者フォン・メック夫人に捧げた交響曲。ロシア民謡『野に立つ白樺』が現れる、お祭り騒ぎのような終楽章。'),
+    w('tchaikovsky-trepak', 'バレエ『くるみ割り人形』より「トレパック（ロシアの踊り）」', 'The Nutcracker, Op. 71: Russian Dance (Trepak)', 1892, 'Ballet', 'バレエ音楽', 'Saint Petersburg', ST_PETERSBURG,
+      'お菓子の国で踊られる、ロシアのコサック風の踊り。1分ほどの中で、どんどん速くなって一気に駆け抜ける。')
+  ],
+  'saint-saens': [
+    w('saint-saens-cello1', 'チェロ協奏曲 第1番 イ短調 第1楽章', 'Cello Concerto No. 1 in A minor, Op. 33 (Allegro non troppo)', 1872, 'Concerto', '協奏曲', 'Paris', PARIS,
+      'オーケストラの一撃の直後、すぐにチェロが激しく駆け出す協奏曲。ラフマニノフやカザルスも絶賛した、チェロ協奏曲の代表作。')
+  ],
+  faure: [
+    w('faure-berceuse', '組曲『ドリー』より「子守歌」', 'Dolly Suite, Op. 56: Berceuse', 1894, 'Piano', 'ピアノ連弾', 'Paris', PARIS,
+      '友人の幼い娘ドリーのために、誕生日ごとに書き足していったピアノ連弾の組曲。その冒頭の、優しく揺れる子守歌。'),
+  ],
+  debussy: [
+    w('debussy-quartet', '弦楽四重奏曲 ト短調 第1楽章', 'String Quartet in G minor, Op. 10 (Animé et très décidé)', 1893, 'Chamber', '室内楽', 'Paris', PARIS,
+      'ドビュッシーが残した唯一の弦楽四重奏曲。冒頭の主題が姿を変えながら全曲に現れる。ジャワのガムランの響きの影響も感じられる。'),
+    w('debussy-syrinx', 'シランクス（無伴奏フルート）', 'Syrinx, L. 129', 1913, 'Solo', '独奏曲', 'Paris', PARIS,
+      '牧神パンが、葦に姿を変えた妖精シュリンクスを想って笛を吹く——その笛の音を描いた、無伴奏フルートの名曲。')
+  ],
+  ravel: [
+    w('ravel-quartet', '弦楽四重奏曲 ヘ長調 第2楽章', 'String Quartet in F major (Assez vif – Très rythmé)', 1903, 'Chamber', '室内楽', 'Paris', PARIS,
+      '20代のラヴェルが書いた唯一の弦楽四重奏曲。第2楽章では、全員のピツィカート（指ではじく奏法）がギターのように鳴り響く。'),
+    w('ravel-sonatine', 'ソナチネ 第1楽章', 'Sonatine, M. 40 (Modéré)', 1905, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '雑誌の作曲コンクールのために書いた、小さく透明なソナタ。古典的な形の中に、ラヴェルらしい繊細な和音が光る。'),
+    w('ravel-introduction', '序奏とアレグロ（ハープと室内アンサンブル）', 'Introduction and Allegro for Harp, Flute, Clarinet and String Quartet', 1905, 'Chamber', '室内楽', 'Paris', PARIS,
+      'ハープ製造会社が、新型ハープの宣伝のために依頼した作品。ハープが主役となって、きらめくような響きを聴かせる。')
+  ],
+  satie: [
+    w('satie-gnossienne3', 'グノシエンヌ 第3番', 'Gnossienne No. 3', 1890, 'Piano', 'ピアノ独奏', 'Paris', PARIS,
+      '小節線のない楽譜に「ずっと遠くからのように」「頭を開いて」などの奇妙な指示が書かれた、不思議な雰囲気のピアノ曲。')
+  ],
+  elgar: [
+    w('elgar-introduction', '序奏とアレグロ（弦楽のための）', 'Introduction and Allegro for Strings, Op. 47', 1905, 'Orchestral', '弦楽合奏', 'London', LONDON,
+      '弦楽四重奏と弦楽合奏を組み合わせた作品。ウェールズで聞いた民謡の歌声から生まれた「ウェールズの旋律」が登場する。')
+  ],
+  holst: [
+    w('holst-suite1', '吹奏楽のための第1組曲 第1楽章「シャコンヌ」', 'First Suite in E-flat for Military Band, Op. 28 No. 1: Chaconne', 1909, 'Orchestral', '吹奏楽', 'London', LONDON,
+      '吹奏楽のために最初から書かれた、本格的な芸術作品の先駆け。低音で始まる短い主題が、次々と楽器を変えて積み重なっていく。今も世界中の吹奏楽団の定番。')
+  ],
+  verdi: [
+    w('verdi-forza', '歌劇『運命の力』序曲', 'La forza del destino: Overture', 1862, 'Opera', 'オペラ', 'Saint Petersburg', ST_PETERSBURG,
+      'ロシア皇帝の劇場のために書かれたオペラに、のちの改訂で加えられた序曲。金管の3つの音のあと、弦が「運命の動機」を不安げに奏でる。'),
+    w('verdi-rigoletto-quartet', '歌劇『リゴレット』より四重唱「美しい恋の乙女よ」', 'Rigoletto: Bella figlia dell\'amore', 1851, 'Opera', 'オペラ', 'Venice', VENICE,
+      '女性を口説く公爵、軽くあしらう娘、嘆くジルダ、復讐を誓う父——4人がそれぞれ違う気持ちを同時に歌う、オペラ史上屈指の四重唱。')
+  ],
+  puccini: [
+    w('puccini-tedeum', '歌劇『トスカ』より「テ・デウム」', 'Tosca: Te Deum', 1900, 'Opera', 'オペラ', 'Rome', [12.4964, 41.9028],
+      '教会で合唱が神をたたえる中、悪役スカルピアがトスカを手に入れる欲望を独白する。鐘と大砲が鳴り響く、第1幕の壮大な幕切れ。')
+  ],
+  donizetti: [
+    w('donizetti-pasquale', '歌劇『ドン・パスクワーレ』序曲', 'Don Pasquale: Overture', 1843, 'Opera', 'オペラ', 'Paris', PARIS,
+      'けちな老人が若い娘との結婚をたくらんで痛い目にあう喜劇オペラの序曲。チェロが歌う甘いセレナードの旋律が印象的。')
+  ],
+  wagner: [
+    w('wagner-tannhauser', '歌劇『タンホイザー』序曲', 'Tannhäuser: Overture', 1845, 'Opera', 'オペラ', 'Dresden', [13.7373, 51.0504],
+      '巡礼者たちの厳かな合唱と、愛の女神ヴェーヌスの官能的な世界がぶつかり合う序曲。最後は巡礼の歌が圧倒的な力で戻ってくる。')
+  ],
+  mahler: [
+    w('mahler-sym4', '交響曲 第4番 ト長調 第4楽章', 'Symphony No. 4 in G major (Sehr behaglich)', 1900, 'Symphony', '交響曲', 'Vienna', VIENNA,
+      '子どもの見た天国の楽しい暮らしを、ソプラノが無邪気に歌う終楽章。マーラーの交響曲の中で最も小ぶりで親しみやすい。')
+  ],
+  paganini: [
+    w('paganini-caprice5', '24の奇想曲より 第5番', '24 Caprices, Op. 1: No. 5 in A minor', 1817, 'Solo', '独奏曲', 'Genoa', [8.9463, 44.4056],
+      '弓を弦の上で跳ねさせながら、高音から低音まで猛スピードで駆け下りる超絶技巧の曲。（録音はサクソフォンでの演奏）')
+  ],
+  weber: [
+    w('weber-oberon', '歌劇『オベロン』序曲', 'Oberon: Overture', 1826, 'Opera', 'オペラ', 'London', LONDON,
+      '妖精の王オベロンの物語。ホルンの呼び声で始まる幻想的な序曲。ウェーバーはロンドンでの初演の直後、その地で亡くなった。')
+  ],
+  sibelius: [
+    w('sibelius-valse', '『悲しきワルツ』', 'Valse triste, Op. 44 No. 1', 1904, 'Orchestral', '管弦楽曲', 'Helsinki', [24.9384, 60.1699],
+      '病床の母が、死神を亡き夫と思い込んで夢の中で踊る——劇の付随音楽として書かれた、幻想的で物悲しいワルツ。')
+  ],
+  rachmaninoff: [
+    w('rachmaninoff-pc2-2', 'ピアノ協奏曲 第2番 第2楽章', 'Piano Concerto No. 2 in C minor, Op. 18 (Adagio sostenuto)', 1901, 'Concerto', '協奏曲', 'Moscow', MOSCOW,
+      'フルートとクラリネットが歌い出す、夢見るように甘い緩徐楽章。のちにポップスの名曲『オール・バイ・マイセルフ』の元にもなった。')
+  ],
+  pachelbel: [
+    w('pachelbel-chaconne', 'シャコンヌ ヘ短調（オルガン）', 'Chaconne in F minor', 1699, 'Keyboard', 'オルガン曲', 'Nuremberg', [11.0767, 49.4521],
+      '『カノン』と同じく、短い低音のくり返しの上で変奏を重ねていくオルガン曲。重々しく、しだいに熱を帯びていく。')
+  ],
+  corelli: [
+    w('corelli-op6-4', '合奏協奏曲 作品6-4 ニ長調 第1楽章', 'Concerto Grosso in D major, Op. 6 No. 4 (Adagio – Allegro)', 1712, 'Concerto', '協奏曲', 'Rome', [12.4964, 41.9028],
+      '小さな独奏グループと大きな合奏が掛け合う「合奏協奏曲」の手本となった曲集から。輝かしいニ長調の響き。')
+  ],
+  couperin: [
+    w('couperin-tic', '「ティク・トク・ショク、またはオリーブ搾り機」', 'Le Tic-Toc-Choc, ou Les Maillotins', 1722, 'Keyboard', '鍵盤曲', 'Paris', PARIS,
+      '左右の手が同じ音域で交互にすばやく打ち合い、機械がカタカタ動くような音を生む、チェンバロの名人芸の曲。')
+  ]
+};
+
 /** 作曲家の id ごとの、追加の作品（音の楽譜データはないので、空のまま） */
 const ALL_RAW: Record<string, ExtraWork[]> = { ...RAW };
-for (const extra of [RAW2, RAW3, RAW4])
+for (const extra of [RAW2, RAW3, RAW4, RAW5])
   for (const [cid, works] of Object.entries(extra)) ALL_RAW[cid] = [...(ALL_RAW[cid] ?? []), ...works];
 
 export const EXTRA_WORKS: Record<string, Composition[]> = Object.fromEntries(

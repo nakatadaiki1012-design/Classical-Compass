@@ -772,7 +772,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           </div>
 
           {/* Fine-Grained Sticky Year Ruler Header */}
-          <div className="sticky top-0 z-20 bg-[#120e0b]/95 backdrop-blur-md border-b border-[#2b2118] h-9 flex items-center shadow-sm">
+          <div className="sticky top-0 z-[28] bg-[#120e0b]/95 backdrop-blur-md border-b border-[#2b2118] h-9 flex items-center shadow-sm">
             {yearTicks.map(t => {
               if (t.type === 'single-1') {
                 return (
@@ -827,7 +827,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onSelectComposer: on
           </div>
 
           {/* 時代の帯：タップすると、その時代の主流の音楽と用語が開く */}
-          <div className="sticky z-20 h-0" style={{ top: 36 }}>
+          {/* 曲の♪（z-20）より上、金色の年の針（z-30）より下に重ねる */}
+          <div className="sticky z-[28] h-0" style={{ top: 36 }}>
             <div
               className="absolute left-0 top-0 w-full bg-[#0f0b08]/95 border-b border-[#2b2118]"
               style={{ height: BAND_H }}

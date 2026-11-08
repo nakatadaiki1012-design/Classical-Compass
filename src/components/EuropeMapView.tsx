@@ -533,12 +533,34 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
       }
       return out;
     };
+    // 拡大して、まわりの都市の人と十分離れたら、そのぶん肖像を大きくする（指を広げるほど少しずつ大きく）
+    // まわりとの距離の半分に収まる大きさまで。名前の札のぶんの余白も残す
+    const growT = Math.min(1, Math.max(0, (k - 1.2) / 1.6));
+    const ringsOf = (n: number) => (n <= 1 ? 0 : n <= 7 ? 1 : n <= 19 ? 2 : 3);
+    const grownSize = (list: typeof onMap) => {
+      const base = sizeFor(list.length);
+      if (growT <= 0) return base;
+      const cx = list[0].tx;
+      const cy = list[0].ty;
+      let nearest = Infinity;
+      groupsList.forEach(other => {
+        if (other === list) return;
+        nearest = Math.min(nearest, Math.hypot(other[0].tx - cx, other[0].ty - cy));
+      });
+      const rings = ringsOf(list.length);
+      // 画面上の距離（px）の半分から、名前の札などの余白を引いた分が使える
+      const room = nearest === Infinity ? 999 : nearest / s / 2 - 22;
+      const fit = (room - 2 * rings) / (rings + 0.5);
+      const cap = (list.length === 1 ? 64 : list.length <= 3 ? 48 : 40) * bigScreen;
+      const target = Math.max(base, Math.min(cap, fit));
+      return Math.round(base + (target - base) * growT);
+    };
     const avatars: { x: number; y: number; r: number }[] = [];
     const groupLayouts: { list: typeof onMap; size: number; pos: [number, number][]; cx: number; cy: number }[] = [];
     groupsList
       .sort((a, b) => b.length - a.length)
       .forEach(list => {
-        const size = sizeFor(list.length);
+        const size = grownSize(list);
         const step = (size + 2) * s;
         const cx = list[0].tx;
         const cy = list[0].ty;

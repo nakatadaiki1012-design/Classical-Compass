@@ -3,7 +3,11 @@ import { PLACES, Place } from './places';
 import { getStays } from './itinerary';
 import { LIFE_EPISODES } from './lifeEpisodes';
 import { getComposerEvents } from './chronicle';
-import { WRITTEN_STORIES } from './storiesWritten';
+import { WRITTEN_STORIES, StoryAside } from './storiesWritten';
+import { WRITTEN_STORIES_2 } from './storiesWritten2';
+import { STORY_ASIDES } from './storiesAsides';
+
+const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2 };
 import { imageKeyFor } from './imageHints';
 
 /** 人生の物語の1章 */
@@ -16,6 +20,8 @@ export interface StoryChapter {
   /** 写真の手がかり（'英語版の記事名|日本語版の記事名'） */
   image?: string;
   caption?: string;
+  /** 人柄・作風のルーツなどの囲み */
+  aside?: StoryAside;
   /** この期間に作曲した曲 */
   works: Composition[];
   /** 旅行・遠征 */
@@ -33,7 +39,7 @@ const worksIn = (composer: Composer, from: number, to: number) =>
 
 /** 手で書いた物語 */
 const fromWritten = (composer: Composer): Story | null => {
-  const list = WRITTEN_STORIES[composer.id];
+  const list = ALL_WRITTEN[composer.id];
   if (!list) return null;
   const chapters = list
     .map(c => {
@@ -48,6 +54,7 @@ const fromWritten = (composer: Composer): Story | null => {
         text: c.text,
         image: c.image,
         caption: c.caption,
+        aside: c.aside ?? STORY_ASIDES[`${composer.id}:${c.title}`],
         // 死後の章（復活など）には曲を並べない
         works: c.year > composer.deathYear ? [] : worksIn(composer, c.year, end)
       } as StoryChapter;

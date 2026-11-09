@@ -16,6 +16,13 @@ export interface WrittenChapter {
   text: string;
   image?: string;
   caption?: string;
+  /** 人柄や作風のルーツがわかる「ひとこと」の囲み */
+  aside?: StoryAside;
+}
+
+export interface StoryAside {
+  label: '人柄' | '作風のルーツ' | 'こぼれ話';
+  text: string;
 }
 
 export const WRITTEN_STORIES: Record<string, WrittenChapter[]> = {
@@ -647,4 +654,7 @@ export const WRITTEN_STORIES: Record<string, WrittenChapter[]> = {
 };
 
 /** 手で書いた物語がある作曲家か */
-export const hasWrittenStory = (composerId: string) => !!WRITTEN_STORIES[composerId];
+export const hasWrittenStory = (composerId: string) => !!WRITTEN_STORIES[composerId] || HAS_MORE.has(composerId);
+
+/** 第2弾（storiesWritten2.ts）で書いた作曲家（読み込みの循環を避けるため、ここでは名前だけ） */
+const HAS_MORE = new Set(['brahms', 'liszt', 'wagner']);

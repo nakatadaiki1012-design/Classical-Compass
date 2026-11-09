@@ -134,5 +134,8 @@ export const PLACES_MORE: Record<string, Place> = {
   heiligenstadt: { ja: 'ハイリゲンシュタット（ウィーン郊外）', lon: 16.35, lat: 48.26, country: 'オーストリア' },
   teplitz: { ja: 'テプリッツ（温泉地）', lon: 13.82, lat: 50.64, country: 'ボヘミア' },
   kamenka: { ja: 'カーメンカ（妹の領地）', lon: 32.1, lat: 49.03, country: 'ウクライナ' },
-  potsdam: { ja: 'ポツダム', lon: 13.06, lat: 52.4, country: 'ドイツ' }
+  potsdam: { ja: 'ポツダム', lon: 13.06, lat: 52.4, country: 'ドイツ' },
+  bremen: { ja: 'ブレーメン', lon: 8.8, lat: 53.08, country: 'ドイツ' },
+  detmold: { ja: 'デトモルト', lon: 8.88, lat: 51.94, country: 'ドイツ' },
+  tribschen: { ja: 'トリープシェン（ルツェルン湖畔）', lon: 8.32, lat: 47.04, country: 'スイス' }
 };

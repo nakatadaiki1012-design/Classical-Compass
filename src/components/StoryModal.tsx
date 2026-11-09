@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BookOpen, ChevronLeft, ChevronRight, Globe2, Loader2, Pause, Play, PlayCircle, X } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Globe2, Lightbulb, Loader2, Pause, Play, PlayCircle, Square, Volume2, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
 import { getStory, StoryChapter } from '../data/stories';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
@@ -14,6 +14,18 @@ import { useWikiImage } from '../utils/useWikiPortrait';
 import { useAudio } from '../context/AudioContext';
 import { hasAudio } from '../utils/hasAudio';
 import { yearText } from '../utils/yearLabel';
+
+/** 文章を「。」ごとに分ける（読み上げと、読んでいる文の強調に使う） */
+const splitSentences = (t: string) => t.split(/(?<=[。！？])/).map(x => x.trim()).filter(Boolean);
+
+const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+/** 日本語の声を選ぶ（端末にあれば、より自然な声を優先） */
+const pickVoice = (): SpeechSynthesisVoice | null => {
+  if (!canSpeak) return null;
+  const ja = window.speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+  return ja.find(v => /Google|Kyoko|O-ren|Nanami|Natural|Premium|Enhanced/i.test(v.name)) || ja[0] || null;
+};
 
 /** 自動で次の章へ進むまでの時間（ミリ秒） */
 const AUTO_MS = 16000;
@@ -249,7 +261,12 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
   const [openWork, setOpenWork] = useState<Composition | null>(null);
   const textRef = useRef<HTMLDivElement | null>(null);
   const dotsRef = useRef<HTMLDivElement | null>(null);
-  const { playTrack, currentTrack, isPlaying, isLoading } = useAudio();
+  const { playTrack, currentTrack, isPlaying, isLoading, togglePlay } = useAudio();
+  // 読み上げ：オンのあいだ、今の章を読み、読み終わったら次の章へ進む
+  const [speaking, setSpeaking] = useState(false);
+  // 読んでいる文（本文の何文目か。-1 は見出しなど、-2 は囲み）
+  const [readingAt, setReadingAt] = useState<number | null>(null);
+  const speakToken = useRef(0);
 
   const cur = chapters[index];
   const last = chapters.length - 1;
@@ -261,6 +278,72 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
     const dot = dotsRef.current?.querySelector<HTMLElement>(`[data-dot="${index}"]`);
     dot?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [index]);
+
+  // 読み上げ：章が変わるたびに、その章を最初から読む
+  useEffect(() => {
+    if (!canSpeak) return;
+    const synth = window.speechSynthesis;
+    const token = ++speakToken.current;
+    synth.cancel();
+    setReadingAt(null);
+    if (!speaking) return;
+    const ch = chapters[index];
+    if (!ch) return;
+    const yr = ch.end > ch.year ? `${ch.year}年から${ch.end}年` : `${ch.year}年`;
+    const queue: { text: string; at: number }[] = [
+      { text: `${yr}、${ch.place.ja}。${ch.title}。`, at: -1 },
+      ...splitSentences(ch.text).map((t, i) => ({ text: t, at: i })),
+      ...(ch.aside ? [{ text: `${ch.aside.label}。`, at: -2 }, ...splitSentences(ch.aside.text).map(t => ({ text: t, at: -2 }))] : [])
+    ];
+    const voice = pickVoice();
+    let i = 0;
+    const next = () => {
+      if (token !== speakToken.current) return;
+      if (i >= queue.length) {
+        setReadingAt(null);
+        // 読み終わったら、少し間をおいて次の章へ（最後なら読み上げを終える）
+        window.setTimeout(() => {
+          if (token !== speakToken.current) return;
+          if (index < last) setIndex(index + 1);
+          else setSpeaking(false);
+        }, 900);
+        return;
+      }
+      const item = queue[i++];
+      const u = new SpeechSynthesisUtterance(item.text.replace(/[『』「」]/g, ''));
+      u.lang = 'ja-JP';
+      if (voice) u.voice = voice;
+      u.rate = 1.0;
+      u.onstart = () => token === speakToken.current && setReadingAt(item.at);
+      u.onend = next;
+      u.onerror = next;
+      synth.speak(u);
+    };
+    // 章の切り替え直後は地図が動くので、ほんの少し待ってから読み始める
+    const t = window.setTimeout(next, 500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speaking, index]);
+
+  // 閉じたら読み上げを止める
+  useEffect(
+    () => () => {
+      speakToken.current++;
+      if (canSpeak) window.speechSynthesis.cancel();
+    },
+    []
+  );
+
+  const toggleSpeak = () => {
+    if (!speaking) {
+      // 曲が流れていたら止める（声と重ならないように）
+      if (isPlaying) togglePlay();
+      setAuto(false);
+      // 声の一覧の読み込みを促す（一部のブラウザは最初の呼び出しで読み込む）
+      if (canSpeak) window.speechSynthesis.getVoices();
+    }
+    setSpeaking(v => !v);
+  };
 
   // 自動で読み進める
   useEffect(() => {
@@ -348,8 +431,31 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
             <ChapterImage imageKey={cur.image} caption={cur.caption} />
 
             <p className="text-[15px] leading-[1.9] text-[#e3d9c6]">
-              <LinkedText text={cur.text} exclude={ex} />
+              {splitSentences(cur.text).map((t, i) => (
+                <span
+                  key={i}
+                  className={`transition-colors rounded ${readingAt === i ? 'bg-[#c99738]/30 text-[#fff3d0]' : ''}`}
+                >
+                  <LinkedText text={t} exclude={ex} />
+                </span>
+              ))}
             </p>
+
+            {cur.aside && (
+              <aside
+                className={`rounded-xl border p-3.5 transition-colors ${
+                  readingAt === -2 ? 'border-[#e6b95c] bg-[#2b2216]' : 'border-[#c99738]/40 bg-[#1d1812]'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#e6b95c] mb-1.5">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  {cur.aside.label}
+                </div>
+                <p className="text-[14px] leading-[1.85] text-[#d9cfbd]">
+                  <LinkedText text={cur.aside.text} exclude={ex} />
+                </p>
+              </aside>
+            )}
 
             {cur.works.length > 0 && (
               <section className="space-y-2">
@@ -430,8 +536,25 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
           ))}
         </div>
 
+        {canSpeak && (
+          <button
+            onClick={toggleSpeak}
+            className={`h-10 px-2.5 rounded-lg border flex items-center gap-1 text-xs font-bold ${
+              speaking ? 'border-[#e6b95c] text-[#161412] bg-[#e6b95c]' : 'border-[#c99738]/60 text-[#e6b95c]'
+            }`}
+            aria-label={speaking ? '読み上げを止める' : '物語を読み上げる'}
+            title={speaking ? '読み上げを止める' : '物語を読み上げる（読み終わると次の章へ進みます）'}
+          >
+            {speaking ? <Square className="w-3.5 h-3.5 fill-current" /> : <Volume2 className="w-4 h-4" />}
+            <span>{speaking ? '停止' : '読み上げ'}</span>
+          </button>
+        )}
+
         <button
-          onClick={() => setAuto(a => !a)}
+          onClick={() => {
+            setSpeaking(false);
+            setAuto(a => !a);
+          }}
           className={`h-10 px-2 rounded-lg border flex items-center gap-1 text-xs ${
             auto ? 'border-[#c99738] text-[#e6b95c] bg-[#2b241c]' : 'border-[#3a2f20] text-[#b5aa9b]'
           }`}

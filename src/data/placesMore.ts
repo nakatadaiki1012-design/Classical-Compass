@@ -128,4 +128,11 @@ export const PLACES_MORE: Record<string, Place> = {
   engels: { ja: 'エンゲルス（ヴォルガ川沿い）', lon: 46.1, lat: 51.5, country: 'ロシア' },
   awaji: { ja: '淡路島', lon: 134.85, lat: 34.35, country: '日本' },
   aomori: { ja: '青森（津軽）', lon: 140.74, lat: 40.82, country: '日本' },
+  // 人生の物語で使う場所
+  nohant: { ja: 'ノアン（サンドの館）', lon: 1.98, lat: 46.58, country: 'フランス' },
+  valldemossa: { ja: 'マヨルカ島（ヴァルデモーサ）', lon: 2.62, lat: 39.71, country: 'スペイン' },
+  heiligenstadt: { ja: 'ハイリゲンシュタット（ウィーン郊外）', lon: 16.35, lat: 48.26, country: 'オーストリア' },
+  teplitz: { ja: 'テプリッツ（温泉地）', lon: 13.82, lat: 50.64, country: 'ボヘミア' },
+  kamenka: { ja: 'カーメンカ（妹の領地）', lon: 32.1, lat: 49.03, country: 'ウクライナ' },
+  potsdam: { ja: 'ポツダム', lon: 13.06, lat: 52.4, country: 'ドイツ' }
 };

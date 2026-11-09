@@ -114,3 +114,13 @@ export function getWhereabouts(composer: Composer, year: number): Whereabouts | 
     movedFrom
   };
 }
+
+/** 人生の物語用：滞在の記録を年順に（場所つきで）返す */
+export function getStays(composer: Composer): { start: number; end: number; place: Place; placeId: string; note: string; isTrip: boolean }[] {
+  const hasData = !!STAYS[composer.id]?.length;
+  const stays = hasData ? STAYS[composer.id] : fallbackStays(composer);
+  return stays
+    .map(s => ({ ...s, place: (hasData ? PLACES[s.placeId] : fallbackPlace(composer, s.placeId)) as Place }))
+    .filter(s => !!s.place)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+}

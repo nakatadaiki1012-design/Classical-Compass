@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
+import { hasWrittenStory } from '../data/storiesWritten';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
@@ -14,6 +15,9 @@ import { hasAudio } from '../utils/hasAudio';
 import { formatDuration, getRecording } from '../utils/recordings';
 import { LinkedText } from './LinkedText';
 import { Composition } from '../types';
+
+// 人生の物語（地図の国境データが大きいので、開いたときに読み込む）
+const StoryModal = lazy(() => import('./StoryModal').then(m => ({ default: m.StoryModal })));
 import {
   X,
   Play,
@@ -44,6 +48,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
 }) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useAudio();
   const [openWork, setOpenWork] = React.useState<Composition | null>(null);
+  const [storyOpen, setStoryOpen] = React.useState(false);
   useBackClose(!!composer, onClose);
 
   if (!composer) return null;
@@ -140,6 +145,16 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               <p className="text-sm font-serif italic text-[#c99738] tracking-wider mt-0.5">
                 {composer.originalName}
               </p>
+
+              {/* 人生の物語：章ごとに人生を語り、地図で足どりを追う */}
+              <button
+                onClick={() => setStoryOpen(true)}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#c99738] to-[#e6b95c] text-[#161412] font-bold text-sm shadow-lg hover:brightness-110 active:scale-95"
+              >
+                <BookOpen className="w-4 h-4" />
+                人生を物語で読む
+                <span className="text-[10px] font-normal opacity-80">{hasWrittenStory(composer.id) ? '地図つき' : '地図つき・記録から'}</span>
+              </button>
 
               {composer.historicalQuote && (
                 <blockquote className="mt-4 p-3 rounded bg-[#1f1a15] border-l-2 border-[#c99738] text-xs md:text-sm font-serif italic text-[#d6cdbd] leading-relaxed text-left">
@@ -402,6 +417,11 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
         </div>
       </div>
       {openWork && <WorkModal work={openWork} composer={composer} onClose={() => setOpenWork(null)} />}
+      {storyOpen && (
+        <Suspense fallback={null}>
+          <StoryModal composer={composer} onClose={() => setStoryOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 };

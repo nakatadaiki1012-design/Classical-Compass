@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, ExternalLink, Film, Headphones, Loader2, MapPin, Pause, Play, Sparkles, X } from 'lucide-react';
+import { ChevronRight, ExternalLink, Film, Headphones, Landmark, Loader2, MapPin, Pause, Play, Sparkles, X } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { formatDuration, getRecording, recordingPageUrl } from '../utils/recordings';
 import { Composer, Composition } from '../types';
@@ -9,6 +9,7 @@ import { useBackClose } from '../utils/backStack';
 import { LinkedText } from './LinkedText';
 import { getWorkTrivia } from '../data/trivia';
 import { getWorkGuide } from '../data/workGuides';
+import { getWorkLegacy } from '../data/workLegacy';
 import { getWorkMedia } from '../data/workExtras';
 import { getComposerEvents } from '../data/chronicle';
 import { getFreeMediaLinks } from '../utils/freeMedia';
@@ -33,6 +34,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
   const ex = [`composer:${composer.id}`];
   const trivia = getWorkTrivia(composer.id, work);
   const guide = getWorkGuide(composer.id, work);
+  const legacy = getWorkLegacy(work.id);
   const media = getWorkMedia(composer.id, work);
   const links = getFreeMediaLinks(composer, work);
   const rec = getRecording(work.id);
@@ -121,6 +123,29 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
             </h4>
             <p className="text-[13px] text-[#d1c6b6] leading-relaxed bg-[#110f0d] p-3 rounded-lg border border-[#241e17]"><LinkedText text={work.description} exclude={ex} /></p>
           </section>
+
+          {legacy && (
+            <section className="space-y-2">
+              <h4 className="text-xs font-bold text-[#c99738] flex items-center gap-1.5">
+                <Landmark className="w-3.5 h-3.5" />
+                音楽史の中での役割
+              </h4>
+              <div className="bg-[#1d1812] rounded-lg border border-[#c99738]/35 divide-y divide-[#2e251a]">
+                <p className="p-3 text-[13px] text-[#d9cfbd] leading-relaxed">
+                  <span className="inline-block mr-1.5 mb-0.5 px-1.5 py-px rounded text-[10px] font-bold bg-[#c99738]/20 text-[#e6b95c] align-middle">
+                    当時
+                  </span>
+                  <LinkedText text={legacy.then} exclude={ex} />
+                </p>
+                <p className="p-3 text-[13px] text-[#d9cfbd] leading-relaxed">
+                  <span className="inline-block mr-1.5 mb-0.5 px-1.5 py-px rounded text-[10px] font-bold bg-[#c99738]/20 text-[#e6b95c] align-middle">
+                    その後
+                  </span>
+                  <LinkedText text={legacy.after} exclude={ex} />
+                </p>
+              </div>
+            </section>
+          )}
 
           {guide.text && (
             <section className="space-y-2">

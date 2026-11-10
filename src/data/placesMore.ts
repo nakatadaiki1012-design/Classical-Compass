@@ -167,5 +167,9 @@ export const PLACES_MORE: Record<string, Place> = {
   tatsuno: { ja: '龍野（兵庫県）', lon: 134.55, lat: 34.86, country: '日本' },
   hakodate: { ja: '函館（トラピスト修道院）', lon: 140.73, lat: 41.77, country: '日本' },
   okayama: { ja: '岡山', lon: 133.92, lat: 34.66, country: '日本' },
-  dalian: { ja: '大連（満州）', lon: 121.6, lat: 38.91, country: '中国' }
+  dalian: { ja: '大連（満州）', lon: 121.6, lat: 38.91, country: '中国' },
+  otofuke: { ja: '音更（北海道十勝）', lon: 143.2, lat: 42.99, country: '日本' },
+  sapporo: { ja: '札幌', lon: 141.35, lat: 43.06, country: '日本' },
+  akkeshi: { ja: '厚岸（北海道）', lon: 144.85, lat: 43.04, country: '日本' },
+  perm: { ja: 'ペルミ（当時のモロトフ）', lon: 56.25, lat: 58.0, country: 'ロシア' }
 };

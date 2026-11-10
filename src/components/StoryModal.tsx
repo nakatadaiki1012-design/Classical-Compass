@@ -14,6 +14,9 @@ import { useWikiImage } from '../utils/useWikiPortrait';
 import { useAudio } from '../context/AudioContext';
 import { hasAudio } from '../utils/hasAudio';
 import { yearText } from '../utils/yearLabel';
+import { updateSettings, useSettings } from '../utils/appSettings';
+import { SPEECH_RATES } from './SettingsMenu';
+import { getWorkStory } from '../data/workStories';
 
 /** 文章を「。」ごとに分ける（読み上げと、読んでいる文の強調に使う） */
 const splitSentences = (t: string) => t.split(/(?<=[。！？])/).map(x => x.trim()).filter(Boolean);
@@ -120,6 +123,26 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
   const onMapPast = pts.slice(0, index + 1).filter(q => !q.off);
   const route = onMapPast.map(q => q.p);
   const D = 46 * s;
+  // 地名どうしが重なるときは、新しい方（と今いる場所）を優先して、古い方の地名を出さない
+  type Box = { x: number; y: number; w: number; h: number };
+  const hit = (a: Box, b: Box) => Math.abs(a.x - b.x) * 2 < a.w + b.w && Math.abs(a.y - b.y) * 2 < a.h + b.h;
+  const labelBox = (i: number): Box => ({ x: pts[i].p[0], y: pts[i].p[1] - 12 * s, w: pts[i].name.length * 11 * s + 6 * s, h: 15 * s });
+  const keepBoxes: Box[] = cur.off
+    ? []
+    : [
+        { x: cur.p[0], y: cur.p[1], w: D * 1.3, h: D * 1.3 },
+        { x: cur.p[0], y: cur.p[1] + D / 2 + 10 * s, w: cur.name.length * 14 * s + 8 * s, h: 20 * s }
+      ];
+  const shownLabels = new Set<number>();
+  for (let i = index - 1; i >= 0; i--) {
+    const q = pts[i];
+    if (q.off || q.name === cur.name || [...shownLabels].some(j => pts[j].name === q.name)) continue;
+    const box = labelBox(i);
+    if (keepBoxes.some(k => hit(k, box))) continue;
+    keepBoxes.push(box);
+    shownLabels.add(i);
+  }
+  const crowded = (i: number) => !shownLabels.has(i);
 
   return (
     <div ref={boxRef} className="relative w-full h-full bg-[#081623] overflow-hidden">
@@ -157,7 +180,7 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
           return (
             <g key={i} opacity={past ? 1 : 0.45}>
               <circle cx={q.p[0]} cy={q.p[1]} r={(past ? 4.5 : 3.5) * s} fill={past ? '#e6b95c' : '#8a7a63'} stroke="#120e0b" strokeWidth={1.2 * s} />
-              {past && q.name !== cur.name && (
+              {past && q.name !== cur.name && !crowded(i) && (
                 <text
                   x={q.p[0]}
                   y={q.p[1] - 8 * s}
@@ -252,9 +275,18 @@ const ChapterImage: React.FC<{ imageKey?: string; caption?: string }> = ({ image
  * 人生の物語：章ごとに人生を語り、地図で足どりを追いかける。
  * その時期に作った曲を並べ、録音があればその場で聴ける。
  */
-export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> = ({ composer, onClose }) => {
+export const StoryModal: React.FC<{ composer: Composer; onClose: () => void; /** 指定すると、その曲の物語を表示する */ work?: Composition; /** 重なり順（曲の解説の上に開くとき） */ zClass?: string }> = ({
+  composer,
+  onClose,
+  work,
+  zClass = 'z-[60]'
+}) => {
   useBackClose(true, onClose);
-  const story = useMemo(() => getStory(composer), [composer]);
+  const story = useMemo(() => (work && getWorkStory(work, composer)) || getStory(composer), [composer, work]);
+  const isWork = !!work && !!getWorkStory(work, composer);
+  const settings = useSettings();
+  const rateRef = useRef(settings.speechRate);
+  rateRef.current = settings.speechRate;
   const chapters = story.chapters;
   const [index, setIndex] = useState(0);
   const [auto, setAuto] = useState(false);
@@ -313,7 +345,7 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
       const u = new SpeechSynthesisUtterance(item.text.replace(/[『』「」]/g, ''));
       u.lang = 'ja-JP';
       if (voice) u.voice = voice;
-      u.rate = 1.0;
+      u.rate = rateRef.current;
       u.onstart = () => token === speakToken.current && setReadingAt(item.at);
       u.onend = next;
       u.onerror = next;
@@ -372,7 +404,13 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
   if (!cur) return null;
 
   const ageText =
-    cur.year > composer.deathYear
+    isWork && cur.year < composer.birthYear
+      ? ''
+      : isWork && cur.year > composer.deathYear
+      ? `${composer.shortName}の没後${cur.year - composer.deathYear}年`
+      : isWork
+      ? `${composer.shortName} ${Math.max(0, cur.year - composer.birthYear)}歳`
+      : cur.year > composer.deathYear
       ? `没後${cur.year - composer.deathYear}年`
       : cur.end > cur.year
         ? `${Math.max(0, cur.year - composer.birthYear)}〜${Math.min(cur.end, composer.deathYear) - composer.birthYear}歳`
@@ -382,10 +420,12 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] bg-[#0d0a08] flex flex-col text-[#f5ebd9]"
+      className={`fixed inset-0 ${zClass} bg-[#0d0a08] flex flex-col text-[#f5ebd9]`}
       style={{ paddingBottom: 'var(--player-h, 0px)' }}
       role="dialog"
-      aria-label={`${composer.name}の人生の物語`}
+      // 下に重なっている画面（曲の解説など）へクリックが伝わって、閉じてしまわないように
+      onClick={e => e.stopPropagation()}
+      aria-label={isWork ? `${work!.title}の物語` : `${composer.name}の人生の物語`}
     >
       {/* 見出し */}
       <header className="shrink-0 flex items-center gap-3 px-3 sm:px-5 py-2 border-b border-[#2e2924] bg-[#17130f]">
@@ -393,15 +433,25 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
         <div className="min-w-0 flex-1">
           <div className="text-[11px] text-[#c99738] font-bold flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5" />
-            人生の物語{story.written ? '' : '（記録から作成）'}
+            {isWork ? '名曲の物語' : `人生の物語${story.written ? '' : '（記録から作成）'}`}
           </div>
           <div className="text-sm sm:text-base font-bold truncate">
-            {composer.name}
+            {isWork ? work!.title : composer.name}
             <span className="ml-2 text-[11px] font-normal text-[#b5aa9b] font-mono">
-              {composer.birthYear}〜{composer.deathYear}
+              {isWork ? composer.shortName : `${composer.birthYear}〜${composer.deathYear}`}
             </span>
           </div>
         </div>
+        {isWork && hasAudio(work!) && (
+          <button
+            onClick={() => playTrack(work!, composer)}
+            className="shrink-0 h-8 px-2.5 rounded-full bg-[#c99738] text-[#161412] text-xs font-bold flex items-center gap-1"
+            aria-label={currentTrack?.work.id === work!.id && isPlaying ? 'この曲を一時停止' : 'この曲を聴く'}
+          >
+            {currentTrack?.work.id === work!.id && isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+            <span className="hidden sm:inline">曲を聴く</span>
+          </button>
+        )}
         <span className="text-xs font-mono text-[#b5aa9b] shrink-0">
           {index + 1} / {chapters.length}
         </span>
@@ -420,7 +470,7 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
           <article key={index} className="p-4 sm:p-6 space-y-4 animate-in fade-in duration-500">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="px-2 py-0.5 rounded bg-[#c99738]/20 text-[#e6b95c] font-bold font-mono">{yearRange}</span>
-              <span className="px-2 py-0.5 rounded bg-[#241f19] text-[#d9cfbd]">{ageText}</span>
+              {ageText && <span className="px-2 py-0.5 rounded bg-[#241f19] text-[#d9cfbd]">{ageText}</span>}
               <span className="px-2 py-0.5 rounded bg-[#241f19] text-[#d9cfbd]">
                 {cur.place.ja}
                 {cur.isTrip ? '（旅）' : ''}
@@ -547,6 +597,19 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void }> =
           >
             {speaking ? <Square className="w-3.5 h-3.5 fill-current" /> : <Volume2 className="w-4 h-4" />}
             <span>{speaking ? '停止' : '読み上げ'}</span>
+          </button>
+        )}
+        {canSpeak && (
+          <button
+            onClick={() => {
+              const i = SPEECH_RATES.indexOf(settings.speechRate);
+              updateSettings({ speechRate: SPEECH_RATES[(i + 1) % SPEECH_RATES.length] });
+            }}
+            className="h-10 px-1.5 rounded-lg border border-[#3a2f20] text-[11px] font-mono font-bold text-[#d9cfbd] min-w-[2.6rem]"
+            aria-label={`読み上げの速さ：${settings.speechRate}倍（押すと変わります）`}
+            title="読み上げの速さ（押すたびに変わります。設定メニューでも変えられます）"
+          >
+            {settings.speechRate}×
           </button>
         )}
 

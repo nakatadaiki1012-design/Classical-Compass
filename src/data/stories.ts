@@ -6,9 +6,10 @@ import { getComposerEvents } from './chronicle';
 import { WRITTEN_STORIES, StoryAside } from './storiesWritten';
 import { WRITTEN_STORIES_2 } from './storiesWritten2';
 import { WRITTEN_STORIES_3 } from './storiesWritten3';
+import { WRITTEN_STORIES_4 } from './storiesWritten4';
 import { STORY_ASIDES } from './storiesAsides';
 
-const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2, ...WRITTEN_STORIES_3 };
+const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2, ...WRITTEN_STORIES_3, ...WRITTEN_STORIES_4 };
 import { imageKeyFor } from './imageHints';
 
 /** 人生の物語の1章 */

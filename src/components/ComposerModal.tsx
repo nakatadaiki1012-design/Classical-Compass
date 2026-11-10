@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { hasWrittenStory } from '../data/storiesWritten';
+import { hasWorkStory } from '../data/workStories';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
@@ -226,6 +227,9 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
                         <span className="text-[11px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#141210] text-[#c99738] font-semibold">
                           {work.genreJa} · {work.year}年
                         </span>
+                        {hasWorkStory(work.id) && (
+                          <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-[#c99738] text-[#161412] font-bold">📖 物語あり</span>
+                        )}
                         <h4 className="text-sm font-bold text-[#f5ebd9] mt-1.5 leading-snug">
                           {work.title}
                         </h4>

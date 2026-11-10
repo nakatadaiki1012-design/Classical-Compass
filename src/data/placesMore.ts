@@ -144,5 +144,16 @@ export const PLACES_MORE: Record<string, Place> = {
   ivanovka: { ja: 'イワノフカ（妻の実家の領地）', lon: 41.6, lat: 52.4, country: 'ロシア' },
   stgermain: { ja: 'サン＝ジェルマン＝アン＝レー', lon: 2.09, lat: 48.9, country: 'フランス' },
   endenich: { ja: 'エンデニヒ（ボン近郊の療養所）', lon: 7.07, lat: 50.72, country: 'ドイツ' },
-  taketa: { ja: '竹田（大分県）', lon: 131.4, lat: 32.97, country: '日本' }
+  taketa: { ja: '竹田（大分県）', lon: 131.4, lat: 32.97, country: '日本' },
+  bando: { ja: '板東俘虜収容所（徳島県鳴門）', lon: 134.5, lat: 34.16, country: '日本' },
+  sendai: { ja: '仙台', lon: 140.87, lat: 38.27, country: '日本' },
+  sarajevo: { ja: 'サラエボ', lon: 18.41, lat: 43.86, country: 'ボスニア・ヘルツェゴビナ' },
+  stjeandeluz: { ja: 'サン＝ジャン＝ド＝リュズ', lon: -1.66, lat: 43.39, country: 'フランス' },
+  moon: { ja: '月（アポロ11号）', lon: 180, lat: 0, country: '宇宙' },
+  ciboure: { ja: 'シブール（バスク地方）', lon: -1.67, lat: 43.38, country: 'フランス' },
+  verdun: { ja: 'ヴェルダン', lon: 5.38, lat: 49.16, country: 'フランス' },
+  staffa: { ja: 'スタファ島（ヘブリディーズ諸島）', lon: -6.34, lat: 56.43, country: 'イギリス' },
+  charleston: { ja: 'チャールストン（サウスカロライナ州）', lon: -79.93, lat: 32.78, country: 'アメリカ' },
+  pisa: { ja: 'ピサ', lon: 10.4, lat: 43.72, country: 'イタリア' },
+  turin: { ja: 'トリノ', lon: 7.69, lat: 45.07, country: 'イタリア' }
 };

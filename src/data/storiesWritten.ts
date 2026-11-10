@@ -657,4 +657,4 @@ export const WRITTEN_STORIES: Record<string, WrittenChapter[]> = {
 export const hasWrittenStory = (composerId: string) => !!WRITTEN_STORIES[composerId] || HAS_MORE.has(composerId);
 
 /** 第2弾（storiesWritten2.ts）で書いた作曲家（読み込みの循環を避けるため、ここでは名前だけ） */
-const HAS_MORE = new Set(['brahms', 'liszt', 'wagner', 'haydn', 'schumann', 'verdi', 'dvorak', 'debussy', 'mahler', 'rachmaninoff', 'taki-rentaro']);
+const HAS_MORE = new Set(['brahms', 'liszt', 'wagner', 'haydn', 'schumann', 'verdi', 'dvorak', 'debussy', 'mahler', 'rachmaninoff', 'taki-rentaro', 'mendelssohn', 'clara-schumann', 'puccini', 'ravel', 'satie', 'gershwin']);

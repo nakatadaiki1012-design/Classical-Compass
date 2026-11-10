@@ -14,6 +14,7 @@ import { COMPOSERS } from '../src/data/composers';
 import { ERAS } from '../src/data/eras';
 import { RECORDINGS } from '../src/data/recordings';
 import { WORK_LEGACY } from '../src/data/workLegacy';
+import { WORK_STORIES } from '../src/data/workStories';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -57,6 +58,10 @@ for (const [workId, r] of Object.entries(RECORDINGS)) {
 // 「音楽史の中での役割」（data/workLegacy.ts）が、実在する作品に結びついているか
 for (const workId of Object.keys(WORK_LEGACY)) {
   if (!workIds.has(workId)) errors.push(`音楽史の役割 "${workId}" に対応する作品がない`);
+}
+// 名曲の物語（data/workStories.ts）が、実在する作品に結びついているか
+for (const workId of Object.keys(WORK_STORIES)) {
+  if (!workIds.has(workId)) errors.push(`名曲の物語 "${workId}" に対応する作品がない`);
 }
 
 if (warnings.length) {

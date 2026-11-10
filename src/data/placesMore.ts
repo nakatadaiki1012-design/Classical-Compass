@@ -171,5 +171,9 @@ export const PLACES_MORE: Record<string, Place> = {
   otofuke: { ja: '音更（北海道十勝）', lon: 143.2, lat: 42.99, country: '日本' },
   sapporo: { ja: '札幌', lon: 141.35, lat: 43.06, country: '日本' },
   akkeshi: { ja: '厚岸（北海道）', lon: 144.85, lat: 43.04, country: '日本' },
-  perm: { ja: 'ペルミ（当時のモロトフ）', lon: 56.25, lat: 58.0, country: 'ロシア' }
+  perm: { ja: 'ペルミ（当時のモロトフ）', lon: 56.25, lat: 58.0, country: 'ロシア' },
+  thehague: { ja: 'ハーグ', lon: 4.3, lat: 52.08, country: 'オランダ' },
+  chelsea: { ja: 'チェルシー（ロンドン）', lon: -0.17, lat: 51.49, country: 'イギリス' },
+  zellerfeld: { ja: 'ツェラーフェルト（ハルツ山地）', lon: 10.34, lat: 51.81, country: 'ドイツ' },
+  koli: { ja: 'カレリア地方', lon: 30.0, lat: 62.0, country: 'フィンランド' }
 };

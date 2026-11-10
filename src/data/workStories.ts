@@ -2,6 +2,7 @@ import { Composer, Composition } from '../types';
 import { PLACES } from './places';
 import type { WrittenChapter } from './storiesWritten';
 import type { Story, StoryChapter } from './stories';
+import { WORK_STORIES_2 } from './workStories2';
 
 /**
  * 「名曲の物語」：曲が生まれ、広まり、今に伝わるまでの物語。
@@ -10,7 +11,7 @@ import type { Story, StoryChapter } from './stories';
  *  'grieg' = ドヴォルザーク『新世界より』ラルゴ, 'stravinsky' = ラヴェル『ボレロ』,
  *  'ravel' = ドビュッシー『月の光』）
  */
-export const WORK_STORIES: Record<string, WrittenChapter[]> = {
+const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   // ---------- パッヘルベル『カノン』 ----------
   'pachelbel-canon': [
     {
@@ -466,6 +467,9 @@ export const WORK_STORIES: Record<string, WrittenChapter[]> = {
     }
   ]
 };
+
+/** すべての名曲の物語 */
+export const WORK_STORIES: Record<string, WrittenChapter[]> = { ...WORK_STORIES_1, ...WORK_STORIES_2 };
 
 /** その曲の物語（なければ null） */
 export function getWorkStory(work: Composition, composer: Composer): Story | null {

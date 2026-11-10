@@ -155,5 +155,9 @@ export const PLACES_MORE: Record<string, Place> = {
   staffa: { ja: 'スタファ島（ヘブリディーズ諸島）', lon: -6.34, lat: 56.43, country: 'イギリス' },
   charleston: { ja: 'チャールストン（サウスカロライナ州）', lon: -79.93, lat: 32.78, country: 'アメリカ' },
   pisa: { ja: 'ピサ', lon: 10.4, lat: 43.72, country: 'イタリア' },
-  turin: { ja: 'トリノ', lon: 7.69, lat: 45.07, country: 'イタリア' }
+  turin: { ja: 'トリノ', lon: 7.69, lat: 45.07, country: 'イタリア' },
+  woodstock: { ja: 'ウッドストック（ニューヨーク州）', lon: -74.12, lat: 42.04, country: 'アメリカ' },
+  kariya: { ja: '刈谷（愛知県）', lon: 137.0, lat: 34.99, country: '日本' },
+  troldhaugen: { ja: 'トロルドハウゲン（ベルゲン郊外）', lon: 5.33, lat: 60.33, country: 'ノルウェー' },
+  powick: { ja: 'パウィック（ウースター近郊）', lon: -2.24, lat: 52.17, country: 'イギリス' }
 };

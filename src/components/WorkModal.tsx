@@ -1,6 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { hasWorkStory } from '../data/workStories';
+
+// 名曲の物語（地図の国境データが大きいので、開いたときに読み込む）
+const StoryModal = lazy(() => import('./StoryModal').then(m => ({ default: m.StoryModal })));
 import { createPortal } from 'react-dom';
-import { ChevronRight, ExternalLink, Film, Headphones, Landmark, Loader2, MapPin, Pause, Play, Sparkles, X } from 'lucide-react';
+import { BookOpen, ChevronRight, ExternalLink, Film, Headphones, Landmark, Loader2, MapPin, Pause, Play, Sparkles, X } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { formatDuration, getRecording, recordingPageUrl } from '../utils/recordings';
 import { Composer, Composition } from '../types';
@@ -35,6 +39,7 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
   const trivia = getWorkTrivia(composer.id, work);
   const guide = getWorkGuide(composer.id, work);
   const legacy = getWorkLegacy(work.id);
+  const [storyOpen, setStoryOpen] = useState(false);
   const media = getWorkMedia(composer.id, work);
   const links = getFreeMediaLinks(composer, work);
   const rec = getRecording(work.id);
@@ -114,6 +119,20 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
                 </div>
               </div>
             </div>
+          )}
+
+          {hasWorkStory(work.id) && (
+            <button
+              onClick={() => setStoryOpen(true)}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3 bg-gradient-to-r from-[#c99738] to-[#e6b95c] text-[#161412] text-left shadow-lg hover:brightness-110 active:scale-[0.99]"
+            >
+              <BookOpen className="w-5 h-5 shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-bold">この曲の物語を読む</span>
+                <span className="block text-[11px] opacity-80">誕生から今まで・地図と読み上げ付き</span>
+              </span>
+              <ChevronRight className="w-4 h-4 shrink-0" />
+            </button>
           )}
 
           <section className="space-y-2">
@@ -233,6 +252,11 @@ export const WorkModal: React.FC<WorkModalProps> = ({ work, composer, onClose, o
           )}
         </div>
       </article>
+      {storyOpen && (
+        <Suspense fallback={null}>
+          <StoryModal composer={composer} work={work} zClass="z-[75]" onClose={() => setStoryOpen(false)} />
+        </Suspense>
+      )}
     </div>,
     document.body
   );

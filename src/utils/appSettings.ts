@@ -6,10 +6,12 @@ export interface AppSettings {
   font: 'default' | 'gothic' | 'mincho' | 'maru' | 'ud';
   size: 's' | 'm' | 'l';
   colorBy: 'era' | 'country';
+  /** 物語の読み上げの速さ（1 = ふつう） */
+  speechRate: number;
 }
 
 const KEY = 'cc-settings-v1';
-const DEFAULTS: AppSettings = { theme: 'light', font: 'default', size: 'm', colorBy: 'era' };
+const DEFAULTS: AppSettings = { theme: 'light', font: 'default', size: 'm', colorBy: 'era', speechRate: 1.5 };
 
 const load = (): AppSettings => {
   try {

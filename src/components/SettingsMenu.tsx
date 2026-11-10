@@ -38,6 +38,9 @@ function Choice<K extends keyof AppSettings>({
   );
 }
 
+/** 読み上げの速さの選択肢 */
+export const SPEECH_RATES = [1, 1.25, 1.5, 1.75, 2];
+
 /** ヘッダーの「表示設定」：テーマ・フォント・文字の大きさ・年表の色分け */
 export const SettingsMenu: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -91,6 +94,11 @@ export const SettingsMenu: React.FC = () => {
           <Row label="年表の色分け">
             <Choice field="colorBy" value="era" label="時代ごと" />
             <Choice field="colorBy" value="country" label="国ごと（現在の国）" />
+          </Row>
+          <Row label="物語の読み上げの速さ">
+            {SPEECH_RATES.map(r => (
+              <Choice key={r} field="speechRate" value={r} label={`${r}倍`} />
+            ))}
           </Row>
         </div>
       )}

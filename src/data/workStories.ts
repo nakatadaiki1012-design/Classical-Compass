@@ -3,6 +3,7 @@ import { PLACES } from './places';
 import type { WrittenChapter } from './storiesWritten';
 import type { Story, StoryChapter } from './stories';
 import { WORK_STORIES_2 } from './workStories2';
+import { WORK_STORIES_3 } from './workStories3';
 
 /**
  * 「名曲の物語」：曲が生まれ、広まり、今に伝わるまでの物語。
@@ -469,7 +470,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
 };
 
 /** すべての名曲の物語 */
-export const WORK_STORIES: Record<string, WrittenChapter[]> = { ...WORK_STORIES_1, ...WORK_STORIES_2 };
+export const WORK_STORIES: Record<string, WrittenChapter[]> = { ...WORK_STORIES_1, ...WORK_STORIES_2, ...WORK_STORIES_3 };
 
 /** その曲の物語（なければ null） */
 export function getWorkStory(work: Composition, composer: Composer): Story | null {

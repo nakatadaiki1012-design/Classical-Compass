@@ -8,9 +8,10 @@ import { WRITTEN_STORIES_2 } from './storiesWritten2';
 import { WRITTEN_STORIES_3 } from './storiesWritten3';
 import { WRITTEN_STORIES_4 } from './storiesWritten4';
 import { WRITTEN_STORIES_5 } from './storiesWritten5';
+import { WRITTEN_STORIES_6 } from './storiesWritten6';
 import { STORY_ASIDES } from './storiesAsides';
 
-const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2, ...WRITTEN_STORIES_3, ...WRITTEN_STORIES_4, ...WRITTEN_STORIES_5 };
+const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2, ...WRITTEN_STORIES_3, ...WRITTEN_STORIES_4, ...WRITTEN_STORIES_5, ...WRITTEN_STORIES_6 };
 import { imageKeyFor } from './imageHints';
 
 /** 人生の物語の1章 */

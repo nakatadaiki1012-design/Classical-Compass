@@ -159,5 +159,13 @@ export const PLACES_MORE: Record<string, Place> = {
   woodstock: { ja: 'ウッドストック（ニューヨーク州）', lon: -74.12, lat: 42.04, country: 'アメリカ' },
   kariya: { ja: '刈谷（愛知県）', lon: 137.0, lat: 34.99, country: '日本' },
   troldhaugen: { ja: 'トロルドハウゲン（ベルゲン郊外）', lon: 5.33, lat: 60.33, country: 'ノルウェー' },
-  powick: { ja: 'パウィック（ウースター近郊）', lon: -2.24, lat: 52.17, country: 'イギリス' }
+  powick: { ja: 'パウィック（ウースター近郊）', lon: -2.24, lat: 52.17, country: 'イギリス' },
+  offenbach: { ja: 'オッフェンバッハ（フランクフルト近郊）', lon: 8.76, lat: 50.1, country: 'ドイツ' },
+  philadelphia: { ja: 'フィラデルフィア', lon: -75.16, lat: 39.95, country: 'アメリカ' },
+  liverpool: { ja: 'リヴァプール', lon: -2.98, lat: 53.41, country: 'イギリス' },
+  sanfrancisco: { ja: 'サンフランシスコ', lon: -122.42, lat: 37.77, country: 'アメリカ' },
+  tatsuno: { ja: '龍野（兵庫県）', lon: 134.55, lat: 34.86, country: '日本' },
+  hakodate: { ja: '函館（トラピスト修道院）', lon: 140.73, lat: 41.77, country: '日本' },
+  okayama: { ja: '岡山', lon: 133.92, lat: 34.66, country: '日本' },
+  dalian: { ja: '大連（満州）', lon: 121.6, lat: 38.91, country: '中国' }
 };

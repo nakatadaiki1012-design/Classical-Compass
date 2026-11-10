@@ -134,5 +134,15 @@ export const PLACES_MORE: Record<string, Place> = {
   heiligenstadt: { ja: 'ハイリゲンシュタット（ウィーン郊外）', lon: 16.35, lat: 48.26, country: 'オーストリア' },
   teplitz: { ja: 'テプリッツ（温泉地）', lon: 13.82, lat: 50.64, country: 'ボヘミア' },
   kamenka: { ja: 'カーメンカ（妹の領地）', lon: 32.1, lat: 49.03, country: 'ウクライナ' },
-  potsdam: { ja: 'ポツダム', lon: 13.06, lat: 52.4, country: 'ドイツ' }
+  potsdam: { ja: 'ポツダム', lon: 13.06, lat: 52.4, country: 'ドイツ' },
+  bremen: { ja: 'ブレーメン', lon: 8.8, lat: 53.08, country: 'ドイツ' },
+  detmold: { ja: 'デトモルト', lon: 8.88, lat: 51.94, country: 'ドイツ' },
+  tribschen: { ja: 'トリープシェン（ルツェルン湖畔）', lon: 8.32, lat: 47.04, country: 'スイス' },
+  spillville: { ja: 'スピルヴィル（アイオワ州）', lon: -91.95, lat: 43.2, country: 'アメリカ' },
+  toblach: { ja: 'トーブラッハ（ドロミテ山中）', lon: 12.22, lat: 46.73, country: 'イタリア（当時オーストリア）' },
+  steinbach: { ja: 'シュタインバッハ（アッター湖畔）', lon: 13.55, lat: 47.83, country: 'オーストリア' },
+  ivanovka: { ja: 'イワノフカ（妻の実家の領地）', lon: 41.6, lat: 52.4, country: 'ロシア' },
+  stgermain: { ja: 'サン＝ジェルマン＝アン＝レー', lon: 2.09, lat: 48.9, country: 'フランス' },
+  endenich: { ja: 'エンデニヒ（ボン近郊の療養所）', lon: 7.07, lat: 50.72, country: 'ドイツ' },
+  taketa: { ja: '竹田（大分県）', lon: 131.4, lat: 32.97, country: '日本' }
 };

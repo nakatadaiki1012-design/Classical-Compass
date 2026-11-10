@@ -7,6 +7,10 @@ export interface Place {
 }
 
 import { PLACES_MORE } from './placesMore';
+import { PLACES_STORIES_10 } from './placesStories10';
+import { PLACES_STORIES_11 } from './placesStories11';
+import { PLACES_STORIES_12 } from './placesStories12';
+import { PLACES_STORIES_13 } from './placesStories13';
 
 const BASE_PLACES: Record<string, Place> = {
   // イタリア
@@ -118,4 +122,11 @@ const BASE_PLACES: Record<string, Place> = {
 };
 
 /** 作曲家の滞在地・旅行先（追加分も含む全体） */
-export const PLACES: Record<string, Place> = { ...BASE_PLACES, ...PLACES_MORE };
+export const PLACES: Record<string, Place> = {
+  ...BASE_PLACES,
+  ...PLACES_MORE,
+  ...PLACES_STORIES_10,
+  ...PLACES_STORIES_11,
+  ...PLACES_STORIES_12,
+  ...PLACES_STORIES_13
+};

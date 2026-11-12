@@ -1,8 +1,7 @@
 import type { WrittenChapter } from './storiesWritten';
 
 /**
- * 名曲の物語 第5弾。キーは作品の id
- * （'mendelssohn' = ショパン「ノクターン 作品9の2」、'liszt' = シューマン「トロイメライ」）
+ * 名曲の物語 第5弾。キーは作品の id。
  */
 export const WORK_STORIES_5: Record<string, WrittenChapter[]> = {
   // ---------- ショパン『子犬のワルツ』 ----------
@@ -33,7 +32,7 @@ export const WORK_STORIES_5: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ショパン「ノクターン 作品9の2」 ----------
-  mendelssohn: [
+  'chopin-nocturne-op9-2': [
     {
       year: 1812,
       end: 1836,
@@ -134,7 +133,7 @@ export const WORK_STORIES_5: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- シューマン「トロイメライ」 ----------
-  liszt: [
+  'schumann-traumerei': [
     {
       year: 1838,
       place: 'leipzig',

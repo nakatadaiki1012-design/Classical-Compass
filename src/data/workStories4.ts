@@ -1,12 +1,11 @@
 import type { WrittenChapter } from './storiesWritten';
 
 /**
- * 名曲の物語 第4弾。キーは作品の id
- * （'handel' = バッハ「G線上のアリア」、'tchaikovsky' = ブラームス『ハンガリー舞曲』第5番）
+ * 名曲の物語 第4弾。キーは作品の id。
  */
 export const WORK_STORIES_4: Record<string, WrittenChapter[]> = {
   // ---------- バッハ「G線上のアリア」 ----------
-  handel: [
+  'bach-air': [
     {
       year: 1730,
       place: 'leipzig',
@@ -172,7 +171,7 @@ export const WORK_STORIES_4: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ブラームス『ハンガリー舞曲』第5番 ----------
-  tchaikovsky: [
+  'brahms-hungarian5': [
     {
       year: 1853,
       place: 'hannover',

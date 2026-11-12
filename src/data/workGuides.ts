@@ -4,7 +4,7 @@ import { Composition } from '../types';
  * 「聴きどころ」ガイド。作曲家のid と、作品名に含まれる言葉で探す。
  * ここにない曲には、ジャンルごとの一般的な聴き方を出す。
  */
-const GUIDES: { composer: string; match: string; text: string }[] = [
+export const GUIDES: { composer: string; match: string; text: string }[] = [
   { composer: 'vivaldi', match: '春', text: '冒頭の明るい主題は、春の訪れを祝う合奏。そのあとソロ・ヴァイオリンが小鳥のさえずりを、続いて弦楽器が小川のせせらぎと、雷鳴を表現する。楽譜に添えられた詩と照らして聴くと、情景がよく分かる。' },
   { composer: 'vivaldi', match: '冬', text: '細かく震えるような弦の響きは、寒さで歯がガチガチ鳴る様子。ヴァイオリンの激しい音の走りは、凍った道を走って転ぶ場面を描いている。' },
   { composer: 'bach', match: 'G線', text: '長くゆったり伸びる旋律を、一本のヴァイオリンの低い弦（G線）だけで弾けるように編曲されたのがこの名前の由来。下で歩くように進む低音と、上の旋律との組み合わせを味わいたい。' },

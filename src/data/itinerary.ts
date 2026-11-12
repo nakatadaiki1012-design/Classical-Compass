@@ -1,12 +1,18 @@
 import { PLACES, Place } from './places';
 import { ITINERARY_RAW as ITINERARY_BASE } from './itineraryData';
 import { ITINERARY_RAW_MORE } from './itineraryDataMore';
-
-const ITINERARY_RAW = { ...ITINERARY_BASE, ...ITINERARY_RAW_MORE };
 import { Composer } from '../types';
+import { mergeParts } from './mergeParts';
 import { isOffMapLonLat } from './mapProjection';
 
 export { MAP_BOUNDS } from './mapProjection';
+
+/** 滞在記録（ファイルごと）。新しいファイルを作ったら、ここに1行足す */
+export const ITINERARY_PARTS = {
+  'itineraryData.ts': ITINERARY_BASE,
+  'itineraryDataMore.ts': ITINERARY_RAW_MORE
+};
+export const ITINERARY_RAW = mergeParts(ITINERARY_PARTS);
 
 export const isOffMap = (place: { lon: number; lat: number }): boolean => isOffMapLonLat(place.lon, place.lat);
 

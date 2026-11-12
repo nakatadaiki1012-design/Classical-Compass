@@ -1,12 +1,11 @@
 import type { WrittenChapter } from './storiesWritten';
 
 /**
- * 名曲の物語 第2弾。キーは作品の id
- * （'bach' = ヴィヴァルディ『四季』より「春」、'schubert' = ベートーヴェン『運命』）
+ * 名曲の物語 第2弾。キーは作品の id。
  */
 export const WORK_STORIES_2: Record<string, WrittenChapter[]> = {
   // ---------- ヴィヴァルディ『四季』 ----------
-  bach: [
+  'vivaldi-spring': [
     {
       year: 1725,
       place: 'venice',
@@ -41,7 +40,7 @@ export const WORK_STORIES_2: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ベートーヴェン『運命』 ----------
-  schubert: [
+  'beethoven-sym5': [
     {
       year: 1804,
       end: 1808,

@@ -12,6 +12,7 @@ import {
 } from './chronicleData';
 import { CHRONICLE_RAW_MORE } from './chronicleDataMore';
 import { Composer, Composition } from '../types';
+import { mergeParts, Parts } from './mergeParts';
 
 /** 年表・地図に出す「できごと」1件 */
 export type YearEventKind = 'birth' | 'death' | 'work' | 'episode' | 'world';
@@ -32,7 +33,12 @@ export interface YearEvent {
 }
 
 /** 追加データ（試聴なしの主要作品とエピソード）。作曲家IDごと */
-const ALL_RAW: Record<string, RawEntry[]> = { ...CHRONICLE_RAW, ...CHRONICLE_RAW_LATE, ...CHRONICLE_RAW_MORE };
+export const CHRONICLE_PARTS: Parts<RawEntry[]> = {
+  'chronicleData.ts (CHRONICLE_RAW)': CHRONICLE_RAW,
+  'chronicleData.ts (CHRONICLE_RAW_LATE)': CHRONICLE_RAW_LATE,
+  'chronicleDataMore.ts': CHRONICLE_RAW_MORE
+};
+const ALL_RAW: Record<string, RawEntry[]> = mergeParts(CHRONICLE_PARTS);
 
 /** 作曲家1人分のできごと（誕生・没年・作品・エピソード）を年順に返す */
 /** 題名の比較用に、かっこ・記号・「頃」などを取り除く */

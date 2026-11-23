@@ -10,7 +10,12 @@ export const STORY_ILLUSTRATIONS: string[] = [
   'beethoven-moonlight-3',
   'beethoven-ode-to-joy-4',
   'beethoven-sym5-2',
-  'cage-433-2'
+  'cage-433-2',
+  'chopin-minute-1',
+  'dvorak-largo-5',
+  'grieg-mountainking-2',
+  'handel-water-3',
+  'holst-planets-1'
 ];
 
 const SET = new Set(STORY_ILLUSTRATIONS);

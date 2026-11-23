@@ -32,6 +32,8 @@ import { GUIDES } from '../src/data/workGuides';
 import { MEDIA, EXTRA_TRIVIA } from '../src/data/workExtras';
 import { findDuplicateKeys, mergeParts, Parts } from '../src/data/mergeParts';
 import type { WrittenChapter } from '../src/data/storiesWritten';
+import { STORY_ILLUSTRATIONS, parseIllustration } from '../src/data/storyIllustrations';
+import fs from 'node:fs';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -131,6 +133,18 @@ for (const key of Object.keys(STORY_ASIDES)) {
   if (!allStories[cid]?.some(c => c.title === title)) errors.push(`物語の囲み "${key}" に対応する章がない（題名を変えた？）`);
 }
 for (const c of COMPOSERS) if (!allStories[c.id]) warnings.push(`${c.name}（${c.id}）: 手で書いた人生の物語がない（記録から自動で組み立てる）`);
+
+// ---------- 物語の挿し絵（AI生成） ----------
+for (const name of STORY_ILLUSTRATIONS) {
+  const { storyId, chapter } = parseIllustration(name);
+  const list = WORK_STORIES[storyId] ?? allStories[storyId];
+  if (!list) errors.push(`挿し絵 "${name}": 物語 "${storyId}" がない`);
+  else if (!(chapter >= 1 && chapter <= list.length)) errors.push(`挿し絵 "${name}": 第${chapter}章がない（全${list.length}章）`);
+  if (!fs.existsSync(`public/story-images/${name}.webp`)) errors.push(`挿し絵 "${name}": 画像 public/story-images/${name}.webp がない`);
+}
+for (const f of fs.readdirSync('public/story-images')) {
+  if (!STORY_ILLUSTRATIONS.includes(f.replace(/\.webp$/, ''))) warnings.push(`挿し絵の画像 ${f} が storyIllustrations.ts に登録されていない（表示されない）`);
+}
 
 // ---------- 作曲家 id で結びつくデータ ----------
 const needComposer = (label: string, id: string) => {

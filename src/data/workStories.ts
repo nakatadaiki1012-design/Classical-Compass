@@ -3,6 +3,7 @@ import { PLACES } from './places';
 import type { WrittenChapter } from './storiesWritten';
 import type { Story, StoryChapter } from './stories';
 import { mergeParts, Parts } from './mergeParts';
+import { illustrationFor } from './storyIllustrations';
 import { WORK_STORIES_2 } from './workStories2';
 import { WORK_STORIES_3 } from './workStories3';
 import { WORK_STORIES_4 } from './workStories4';
@@ -489,7 +490,7 @@ export function getWorkStory(work: Composition, composer: Composer): Story | nul
   if (!list) return null;
   void composer;
   const chapters: StoryChapter[] = list
-    .map(c => {
+    .map((c, i) => {
       const place = PLACES[c.place];
       if (!place) return null;
       return {
@@ -500,6 +501,7 @@ export function getWorkStory(work: Composition, composer: Composer): Story | nul
         text: c.text,
         image: c.image,
         caption: c.caption,
+        illustration: illustrationFor(work.id, i),
         aside: c.aside,
         works: []
       } as StoryChapter;

@@ -4,7 +4,7 @@ import { Composition } from '../types';
  * 曲にまつわる「どこで使われているか」（映画・番組・行事など）と、追加の蘊蓄。
  * 作曲家のid と、作品名に含まれる言葉で探す。
  */
-const MEDIA: { composer: string; match: string; items: string[] }[] = [
+export const MEDIA: { composer: string; match: string; items: string[] }[] = [
   { composer: 'bach', match: 'G線', items: ['映画『セブン』（1995）：図書館の場面で流れる'] },
   { composer: 'bach', match: 'トッカータ', items: ['ディズニー映画『ファンタジア』（1940）：冒頭の曲（ストコフスキー編曲）'] },
   { composer: 'beethoven', match: '運命', items: ['第二次世界大戦中、英国BBCは冒頭の「ダダダダーン」を、モールス信号の「V（勝利）」（・・・ー）に重ねて、放送の合図に使った'] },
@@ -51,7 +51,7 @@ const MEDIA: { composer: string; match: string; items: string[] }[] = [
   { composer: 'takemitsu', match: '', items: ['武満徹は映画音楽の大家でもあり、『砂の女』『他人の顔』『乱』『黒い雨』など100本近い映画の音楽を手がけた'] }
 ];
 
-const EXTRA_TRIVIA: { composer: string; match: string; text: string }[] = [
+export const EXTRA_TRIVIA: { composer: string; match: string; text: string }[] = [
   { composer: 'telemann', match: '食卓', text: '1733年に、予約購読者を募って出版された。購読者はヨーロッパ中に約200人いて、その中にヘンデルもいたと伝わる。「食卓の音楽」とは、宴会のBGMという意味。' },
   { composer: 'telemann', match: 'ヴィオラ', text: 'ヴィオラが独奏する協奏曲としては、現存する最も古い部類とされる。ヴィオラは地味な楽器と見られがちだが、この曲で、のびやかな音色を堂々と聴かせる。' },
   { composer: 'strauss-jr', match: 'ドナウ', text: '最初は男声合唱曲として書かれ、初演は不評だった。のちに管弦楽版に直され、1867年のパリ万博で大評判になり、世界的な曲になった。' },

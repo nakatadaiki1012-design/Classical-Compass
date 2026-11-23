@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getAssetUrl } from '../utils/assets';
 import { createPortal } from 'react-dom';
 import { BookOpen, ChevronLeft, ChevronRight, Globe2, Lightbulb, Loader2, Pause, Play, PlayCircle, Square, Volume2, X } from 'lucide-react';
 import { Composer, Composition } from '../types';
@@ -252,6 +253,25 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
 };
 
 /** 章の写真（ウィキペディアの記事の代表画像）。取れなければ何も出さない */
+/** AI で生成した挿し絵（public/story-images） */
+const ChapterIllustration: React.FC<{ name: string; title: string }> = ({ name, title }) => {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [name]);
+  if (failed) return null;
+  return (
+    <figure className="rounded-xl overflow-hidden border border-[#3a2f20] bg-[#110d0a]">
+      <img
+        src={getAssetUrl(`story-images/${name}.webp`)}
+        alt={title}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="w-full aspect-[4/3] max-h-80 object-cover bg-black/30"
+      />
+      <figcaption className="px-3 py-1.5 text-[11px] text-[#b5aa9b]">イメージ図（AI生成）</figcaption>
+    </figure>
+  );
+};
+
 const ChapterImage: React.FC<{ imageKey?: string; caption?: string }> = ({ imageKey, caption }) => {
   const url = useWikiImage(imageKey || '');
   const [failed, setFailed] = useState(false);
@@ -478,7 +498,11 @@ export const StoryModal: React.FC<{ composer: Composer; onClose: () => void; /**
             </div>
             <h2 className="text-xl sm:text-2xl font-classical-display font-bold leading-snug">{cur.title}</h2>
 
-            <ChapterImage imageKey={cur.image} caption={cur.caption} />
+            {cur.illustration ? (
+              <ChapterIllustration name={cur.illustration} title={cur.title} />
+            ) : (
+              <ChapterImage imageKey={cur.image} caption={cur.caption} />
+            )}
 
             <p className="text-[15px] leading-[1.9] text-[#e3d9c6]">
               {splitSentences(cur.text).map((t, i) => (

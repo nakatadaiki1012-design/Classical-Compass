@@ -68,7 +68,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'bach',
+        id: 'vivaldi-spring',
         title: '協奏曲集『四季』より「春」第1楽章',
         originalTitle: 'Le quattro stagioni: La primavera (Allegro)',
         year: 1723,
@@ -194,7 +194,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'handel',
+        id: 'bach-air',
         title: '管弦楽組曲第3番より「G線上のアリア」',
         originalTitle: 'Air aus der Orchestersuite Nr. 3 D-Dur, BWV 1068',
         year: 1730,
@@ -298,7 +298,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'haydn',
+        id: 'handel-hallelujah',
         title: 'オラトリオ『メサイア』より「ハレルヤ・コーラス」',
         originalTitle: 'Messiah: Hallelujah Chorus, HWV 56',
         year: 1741,
@@ -388,7 +388,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'mozart',
+        id: 'haydn-surprise',
         title: '交響曲第94番 ト長調『驚愕』第2楽章',
         originalTitle: 'Symphonie Nr. 94 G-Dur "Mit dem Paukenschlag" (Andante)',
         year: 1791,
@@ -498,7 +498,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'beethoven',
+        id: 'mozart-eine-kleine',
         title: 'アイネ・クライネ・ナハトムジーク 第1楽章',
         originalTitle: 'Eine kleine Nachtmusik, K. 525 (Allegro)',
         year: 1787,
@@ -624,7 +624,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'schubert',
+        id: 'beethoven-sym5',
         title: '交響曲第5番 ハ短調『運命』第1楽章',
         originalTitle: 'Symphonie Nr. 5 c-Moll, Op. 67 (Allegro con brio)',
         year: 1808,
@@ -768,7 +768,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'chopin',
+        id: 'schubert-ave-maria',
         title: 'エレンの歌第3番（アヴェ・マリア）',
         originalTitle: 'Ellens Gesang III (Ave Maria), Op. 52-6, D 839',
         year: 1825,
@@ -854,7 +854,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'mendelssohn',
+        id: 'chopin-nocturne-op9-2',
         title: '夜想曲（ノクターン）変ホ長調 作品9の2',
         originalTitle: 'Nocturne in E-flat major, Op. 9, No. 2',
         year: 1832,
@@ -971,7 +971,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'schumann',
+        id: 'mendelssohn-wedding-march',
         title: '劇音楽『夏の夜の夢』より「結婚行進曲」',
         originalTitle: 'Ein Sommernachtstraum: Hochzeitsmarsch, Op. 61-9',
         year: 1842,
@@ -1047,7 +1047,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'liszt',
+        id: 'schumann-traumerei',
         title: '『子供の情景』より「トロイメライ（夢）」',
         originalTitle: 'Kinderszenen: Träumerei, Op. 15, No. 7',
         year: 1838,
@@ -1143,7 +1143,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'verdi',
+        id: 'liszt-liebestraum3',
         title: '愛の夢 第3番 変イ長調',
         originalTitle: 'Liebesträume Nr. 3, S. 541/3 (O lieb, so lang du lieben kannst)',
         year: 1850,
@@ -1218,7 +1218,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'wagner',
+        id: 'verdi-brindisi',
         title: '歌劇『椿姫』より「乾杯の歌（乾杯！）」',
         originalTitle: 'La traviata: Libiamo ne\' lieti calici (Brindisi)',
         year: 1853,
@@ -1290,7 +1290,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'brahms',
+        id: 'wagner-valkyries',
         title: '楽劇『ヴァルキューレ』より「ワルキューレの騎行」',
         originalTitle: 'Die Walküre: Ritt der Walküren',
         year: 1870,
@@ -1374,7 +1374,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'tchaikovsky',
+        id: 'brahms-hungarian5',
         title: 'ハンガリー舞曲 第5番 嬰ヘ短調',
         originalTitle: 'Ungarische Tänze Nr. 5 in fis-Moll',
         year: 1869,
@@ -1465,7 +1465,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'dvorak',
+        id: 'tchaikovsky-swan-lake',
         title: 'バレエ『白鳥の湖』より「情景」',
         originalTitle: 'Swan Lake: Scène (Moderato), Op. 20',
         year: 1876,
@@ -1562,7 +1562,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'grieg',
+        id: 'dvorak-largo',
         title: '交響曲第9番 ホ短調『新世界より』第2楽章 ラルゴ（家路）',
         originalTitle: 'Symphonie Nr. 9 e-Moll "Aus der Neuen Welt", Op. 95 (Largo)',
         year: 1893,
@@ -1631,7 +1631,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'mahler',
+        id: 'grieg-morning',
         title: '劇音楽『ペール・ギュント』より「朝の気分」',
         originalTitle: 'Peer Gynt Suite No. 1, Op. 46: Morning Mood',
         year: 1875,
@@ -1705,7 +1705,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'sibelius',
+        id: 'mahler-adagietto',
         title: '交響曲第5番 嬰ハ短調より 第4楽章 アダージェット',
         originalTitle: 'Symphonie Nr. 5: IV. Adagietto (Sehr langsam)',
         year: 1902,
@@ -1773,7 +1773,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'rachmaninoff',
+        id: 'sibelius-finlandia',
         title: '交響詩『フィンランディア』より讃歌',
         originalTitle: 'Finlandia, Op. 26: Finlandia Hymn',
         year: 1899,
@@ -1843,7 +1843,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'debussy',
+        id: 'rachmaninoff-pc2',
         title: 'ピアノ協奏曲第2番 ハ短調 第1楽章 主題',
         originalTitle: 'Piano Concerto No. 2 in C minor, Op. 18 (Moderato)',
         year: 1901,
@@ -1918,7 +1918,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'ravel',
+        id: 'debussy-clair-de-lune',
         title: '『ベルガマスク組曲』より「月の光」',
         originalTitle: 'Suite bergamasque: Clair de lune',
         year: 1890,
@@ -1985,7 +1985,7 @@ const BASE_COMPOSERS: Composer[] = [
 ],
     works: [
       {
-        id: 'stravinsky',
+        id: 'ravel-bolero',
         title: 'ボレロ',
         originalTitle: 'Boléro',
         year: 1928,

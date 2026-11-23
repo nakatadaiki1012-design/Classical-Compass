@@ -2,6 +2,8 @@ import { Composer, Composition } from '../types';
 import { PLACES } from './places';
 import type { WrittenChapter } from './storiesWritten';
 import type { Story, StoryChapter } from './stories';
+import { mergeParts, Parts } from './mergeParts';
+import { illustrationFor } from './storyIllustrations';
 import { WORK_STORIES_2 } from './workStories2';
 import { WORK_STORIES_3 } from './workStories3';
 import { WORK_STORIES_4 } from './workStories4';
@@ -10,10 +12,7 @@ import { WORK_STORIES_6 } from './workStories6';
 
 /**
  * 「名曲の物語」：曲が生まれ、広まり、今に伝わるまでの物語。
- * キーは作品の id（※古いデータの一部は、作品 id が別の作曲家名になっている：
- *  'haydn' = ヘンデル『メサイア』, 'dvorak' = チャイコフスキー『白鳥の湖』,
- *  'grieg' = ドヴォルザーク『新世界より』ラルゴ, 'stravinsky' = ラヴェル『ボレロ』,
- *  'ravel' = ドビュッシー『月の光』）
+ * キーは作品の id（composers.ts / moreComposers.ts / extraWorks.ts の作品）。
  */
 const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   // ---------- パッヘルベル『カノン』 ----------
@@ -60,7 +59,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ヘンデル『メサイア』 ----------
-  haydn: [
+  'handel-hallelujah': [
     {
       year: 1741,
       place: 'london',
@@ -249,7 +248,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- チャイコフスキー『白鳥の湖』 ----------
-  dvorak: [
+  'tchaikovsky-swan-lake': [
     {
       year: 1871,
       place: 'kamenka',
@@ -330,7 +329,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ドヴォルザーク『新世界より』ラルゴ ----------
-  grieg: [
+  'dvorak-largo': [
     {
       year: 1892,
       place: 'new-york',
@@ -367,7 +366,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ラヴェル『ボレロ』 ----------
-  stravinsky: [
+  'ravel-bolero': [
     {
       year: 1928,
       place: 'stjeandeluz',
@@ -400,7 +399,7 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- ドビュッシー『月の光』 ----------
-  ravel: [
+  'debussy-clair-de-lune': [
     {
       year: 1869,
       place: 'paris',
@@ -472,8 +471,18 @@ const WORK_STORIES_1: Record<string, WrittenChapter[]> = {
   ]
 };
 
+/** 名曲の物語（ファイルごと）。新しいファイルを作ったら、ここに1行足す */
+export const WORK_STORY_PARTS: Parts<WrittenChapter[]> = {
+  'workStories.ts': WORK_STORIES_1,
+  'workStories2.ts': WORK_STORIES_2,
+  'workStories3.ts': WORK_STORIES_3,
+  'workStories4.ts': WORK_STORIES_4,
+  'workStories5.ts': WORK_STORIES_5,
+  'workStories6.ts': WORK_STORIES_6
+};
+
 /** すべての名曲の物語 */
-export const WORK_STORIES: Record<string, WrittenChapter[]> = { ...WORK_STORIES_1, ...WORK_STORIES_2, ...WORK_STORIES_3, ...WORK_STORIES_4, ...WORK_STORIES_5, ...WORK_STORIES_6 };
+export const WORK_STORIES: Record<string, WrittenChapter[]> = mergeParts(WORK_STORY_PARTS);
 
 /** その曲の物語（なければ null） */
 export function getWorkStory(work: Composition, composer: Composer): Story | null {
@@ -481,7 +490,7 @@ export function getWorkStory(work: Composition, composer: Composer): Story | nul
   if (!list) return null;
   void composer;
   const chapters: StoryChapter[] = list
-    .map(c => {
+    .map((c, i) => {
       const place = PLACES[c.place];
       if (!place) return null;
       return {
@@ -492,6 +501,7 @@ export function getWorkStory(work: Composition, composer: Composer): Story | nul
         text: c.text,
         image: c.image,
         caption: c.caption,
+        illustration: illustrationFor(work.id, i),
         aside: c.aside,
         works: []
       } as StoryChapter;

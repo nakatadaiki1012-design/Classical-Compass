@@ -3,7 +3,8 @@ import { PLACES, Place } from './places';
 import { getStays } from './itinerary';
 import { LIFE_EPISODES } from './lifeEpisodes';
 import { getComposerEvents } from './chronicle';
-import { WRITTEN_STORIES, StoryAside } from './storiesWritten';
+import { WRITTEN_STORIES, StoryAside, WrittenChapter } from './storiesWritten';
+import { mergeParts, Parts } from './mergeParts';
 import { WRITTEN_STORIES_2 } from './storiesWritten2';
 import { WRITTEN_STORIES_3 } from './storiesWritten3';
 import { WRITTEN_STORIES_4 } from './storiesWritten4';
@@ -17,14 +18,27 @@ import { WRITTEN_STORIES_11 } from './storiesWritten11';
 import { WRITTEN_STORIES_12 } from './storiesWritten12';
 import { WRITTEN_STORIES_13 } from './storiesWritten13';
 import { STORY_ASIDES } from './storiesAsides';
-
-const ALL_WRITTEN = { ...WRITTEN_STORIES, ...WRITTEN_STORIES_2, ...WRITTEN_STORIES_3, ...WRITTEN_STORIES_4, ...WRITTEN_STORIES_5, ...WRITTEN_STORIES_6, ...WRITTEN_STORIES_7, ...WRITTEN_STORIES_8, ...WRITTEN_STORIES_9,
-  ...WRITTEN_STORIES_10,
-  ...WRITTEN_STORIES_11,
-  ...WRITTEN_STORIES_12,
-  ...WRITTEN_STORIES_13
-};
 import { imageKeyFor } from './imageHints';
+import { illustrationFor } from './storyIllustrations';
+
+/** 手で書いた人生の物語（ファイルごと）。新しいファイルを作ったら、ここに1行足す */
+export const STORY_PARTS: Parts<WrittenChapter[]> = {
+  'storiesWritten.ts': WRITTEN_STORIES,
+  'storiesWritten2.ts': WRITTEN_STORIES_2,
+  'storiesWritten3.ts': WRITTEN_STORIES_3,
+  'storiesWritten4.ts': WRITTEN_STORIES_4,
+  'storiesWritten5.ts': WRITTEN_STORIES_5,
+  'storiesWritten6.ts': WRITTEN_STORIES_6,
+  'storiesWritten7.ts': WRITTEN_STORIES_7,
+  'storiesWritten8.ts': WRITTEN_STORIES_8,
+  'storiesWritten9.ts': WRITTEN_STORIES_9,
+  'storiesWritten10.ts': WRITTEN_STORIES_10,
+  'storiesWritten11.ts': WRITTEN_STORIES_11,
+  'storiesWritten12.ts': WRITTEN_STORIES_12,
+  'storiesWritten13.ts': WRITTEN_STORIES_13
+};
+
+const ALL_WRITTEN = mergeParts(STORY_PARTS);
 
 /** 人生の物語の1章 */
 export interface StoryChapter {
@@ -36,6 +50,8 @@ export interface StoryChapter {
   /** 写真の手がかり（'英語版の記事名|日本語版の記事名'） */
   image?: string;
   caption?: string;
+  /** AI で生成した挿し絵の名前（public/story-images/<名前>.webp） */
+  illustration?: string;
   /** 人柄・作風のルーツなどの囲み */
   aside?: StoryAside;
   /** この期間に作曲した曲 */
@@ -60,7 +76,7 @@ const fromWritten = (composer: Composer): Story | null => {
   // 章の期間が重なるときは、曲は最初の章にだけ入れる
   const taken = new Set<string>();
   const chapters = list
-    .map(c => {
+    .map((c, i) => {
       const place = PLACES[c.place];
       if (!place) return null;
       const end = c.end ?? c.year;
@@ -72,6 +88,7 @@ const fromWritten = (composer: Composer): Story | null => {
         text: c.text,
         image: c.image,
         caption: c.caption,
+        illustration: illustrationFor(composer.id, i),
         aside: c.aside ?? STORY_ASIDES[`${composer.id}:${c.title}`],
         // 死後の章（復活など）には曲を並べない
         works: c.year > composer.deathYear ? [] : worksIn(composer, c.year, end).filter(w => !taken.has(w.id) && taken.add(w.id))

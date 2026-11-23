@@ -1,5 +1,4 @@
 import React, { Suspense, lazy } from 'react';
-import { hasWrittenStory } from '../data/storiesWritten';
 import { hasWorkStory } from '../data/workStories';
 import { Composer } from '../types';
 import { getEraById } from '../data/eras';
@@ -154,7 +153,7 @@ export const ComposerModal: React.FC<ComposerModalProps> = ({
               >
                 <BookOpen className="w-4 h-4" />
                 人生を物語で読む
-                <span className="text-[10px] font-normal opacity-80">{hasWrittenStory(composer.id) ? '地図つき' : '地図つき・記録から'}</span>
+                <span className="text-[10px] font-normal opacity-80">地図・読み上げつき</span>
               </button>
 
               {composer.historicalQuote && (

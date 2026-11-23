@@ -1,8 +1,7 @@
 import type { WrittenChapter } from './storiesWritten';
 
 /**
- * 名曲の物語 第3弾。キーは作品の id
- * （'beethoven' = モーツァルト『アイネ・クライネ・ナハトムジーク』）
+ * 名曲の物語 第3弾。キーは作品の id。
  */
 export const WORK_STORIES_3: Record<string, WrittenChapter[]> = {
   // ---------- バッハ『トッカータとフーガ ニ短調』 ----------
@@ -46,7 +45,7 @@ export const WORK_STORIES_3: Record<string, WrittenChapter[]> = {
   ],
 
   // ---------- モーツァルト『アイネ・クライネ・ナハトムジーク』 ----------
-  beethoven: [
+  'mozart-eine-kleine': [
     {
       year: 1787,
       place: 'vienna',

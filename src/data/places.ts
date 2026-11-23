@@ -7,6 +7,7 @@ export interface Place {
 }
 
 import { PLACES_MORE } from './placesMore';
+import { mergeParts, Parts } from './mergeParts';
 import { PLACES_STORIES_10 } from './placesStories10';
 import { PLACES_STORIES_11 } from './placesStories11';
 import { PLACES_STORIES_12 } from './placesStories12';
@@ -121,12 +122,15 @@ const BASE_PLACES: Record<string, Place> = {
   tokyo: { ja: '東京', lon: 139.69, lat: 35.68, country: '日本' }
 };
 
-/** 作曲家の滞在地・旅行先（追加分も含む全体） */
-export const PLACES: Record<string, Place> = {
-  ...BASE_PLACES,
-  ...PLACES_MORE,
-  ...PLACES_STORIES_10,
-  ...PLACES_STORIES_11,
-  ...PLACES_STORIES_12,
-  ...PLACES_STORIES_13
+/** 場所のデータ（ファイルごと）。新しい場所のファイルを作ったら、ここに1行足す */
+export const PLACE_PARTS: Parts<Place> = {
+  'places.ts': BASE_PLACES,
+  'placesMore.ts': PLACES_MORE,
+  'placesStories10.ts': PLACES_STORIES_10,
+  'placesStories11.ts': PLACES_STORIES_11,
+  'placesStories12.ts': PLACES_STORIES_12,
+  'placesStories13.ts': PLACES_STORIES_13
 };
+
+/** 作曲家の滞在地・旅行先（追加分も含む全体） */
+export const PLACES: Record<string, Place> = mergeParts(PLACE_PARTS);

@@ -16,6 +16,7 @@ export const STORY_ILLUSTRATIONS: string[] = [
   'grieg-mountainking-2',
   'handel-water-3',
   'holst-planets-1',
+  'smetana-moldau-2',
   'taki-koujou-1',
   'tchaikovsky-sugarplum-2',
   'yamada-akatonbo-1'

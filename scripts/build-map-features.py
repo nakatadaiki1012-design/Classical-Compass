@@ -1,10 +1,9 @@
 """
-地図の背景に重ねる「川・湖・山脈・地名」を作り、src/data/europeFeatures.ts に書き出す。
+地図の背景に重ねる「川・湖・地名」を作り、src/data/europeFeatures.ts に書き出す。
 元データは Natural Earth（パブリックドメイン）の GeoJSON。投影は src/data/mapProjection.ts と同じ。
 
 使い方:  python3 scripts/build-map-features.py <Natural Earth の geojson を置いたフォルダ>
-必要なファイル: ne_50m_rivers_lake_centerlines / ne_10m_rivers_lake_centerlines / ne_50m_lakes /
-                ne_50m_geography_regions_polys / ne_10m_geography_regions_polys （それぞれ .geojson）
+必要なファイル: ne_50m_rivers_lake_centerlines / ne_10m_rivers_lake_centerlines / ne_50m_lakes （それぞれ .geojson）
 """
 import json, math, sys
 
@@ -127,21 +126,6 @@ for f in load('ne_50m_lakes'):
             if all(inside(p) for p in ln):
                 lakes.append(path(ln, 0.3, True))
 
-# ---------- 山脈 ----------
-MOUNTAINS = {'ALPS', 'PYRENEES', 'CARPATHIAN MOUNTAINS', 'APPENNINI', 'Dinaric Alps', 'Balkan Mts.', 'KJØLEN MOUNTAINS',
-             'Cord. Cantábrica', 'CAUCASUS MTS.', 'PONTIC MOUNTAINS', 'S. Nevada', 'Sierra Morena'}
-MOUNTAINS |= {'Tatra Mts.', 'Transylvanian Alps', 'Harz', 'Vosges', 'Sudetes Mts.', 'Erzgebirge', 'Jura', 'Massif Central'}
-mountains = []
-seen_mtn = set()
-for f in load('ne_50m_geography_regions_polys') + load('ne_10m_geography_regions_polys'):
-    p = f['properties']
-    name = p.get('NAME', p.get('name'))
-    if name in MOUNTAINS and name not in seen_mtn:
-        seen_mtn.add(name)
-        for ln in lines(f['geometry']):
-            for part in clip(ln):
-                mountains.append(path(part, 0.8, True))
-
 # ---------- 地名（kind: c=国, s=海, m=山脈, r=川 / lv: 1=いつも, 2=少し拡大, 3=さらに拡大） ----------
 LABELS = [
     # 国（今の国境の名前）
@@ -164,7 +148,7 @@ LABELS = [
     ('s', 2, 'ビスケー湾', -4.6, 45.3), ('s', 2, 'エーゲ海', 25.0, 38.6), ('s', 2, 'ティレニア海', 12.2, 39.9),
     ('s', 3, 'イギリス海峡', -1.6, 50.1),
     # 山脈
-    ('m', 2, 'アルプス山脈', 9.6, 46.35), ('m', 2, 'ピレネー山脈', 0.6, 42.65), ('m', 2, 'カルパティア山脈', 24.6, 47.6),
+    ('m', 3, 'アルプス山脈', 9.6, 46.35), ('m', 3, 'ピレネー山脈', 0.6, 42.65), ('m', 3, 'カルパティア山脈', 24.6, 47.6),
     ('m', 3, 'アペニン山脈', 13.4, 42.4), ('m', 3, 'ディナル・アルプス', 18.2, 43.6), ('m', 3, 'バルカン山脈', 25.0, 42.75),
     ('m', 3, 'スカンディナヴィア山脈', 9.0, 61.6),
     # 川
@@ -183,7 +167,7 @@ for kind, lv, ja, lon, lat in LABELS:
     labels.append(f'{{k:"{kind}",lv:{lv},t:"{ja}",x:{fmt(x)},y:{fmt(y)}}}')
 
 out = f'''/**
- * 地図の背景に重ねる「川・湖・山脈・地名」。scripts/build-map-features.py が作るので、手で書き換えない。
+ * 地図の背景に重ねる「川・湖・地名」。scripts/build-map-features.py が作るので、手で書き換えない。
  * 元データは Natural Earth（パブリックドメイン）。投影は mapProjection.ts と同じ（960×696）。
  */
 export interface MapLabel {{
@@ -202,12 +186,10 @@ export const RIVERS_MAJOR = {json.dumps(''.join(rivers[1]))};
 export const RIVERS_MINOR = {json.dumps(''.join(rivers[2]))};
 /** 湖 */
 export const LAKES = {json.dumps(''.join(lakes))};
-/** 山脈のおおよその範囲 */
-export const MOUNTAINS = {json.dumps(''.join(mountains))};
 
 export const MAP_LABELS: MapLabel[] = [
   {(',' + chr(10) + '  ').join(labels)}
 ];
 '''
 open('src/data/europeFeatures.ts', 'w').write(out)
-print('rivers', len(''.join(rivers[1])), len(''.join(rivers[2])), 'lakes', len(''.join(lakes)), 'mountains', len(''.join(mountains)), 'total', len(out))
+print('rivers', len(''.join(rivers[1])), len(''.join(rivers[2])), 'lakes', len(''.join(lakes)), 'total', len(out))

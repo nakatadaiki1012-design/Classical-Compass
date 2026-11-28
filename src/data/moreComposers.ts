@@ -1414,7 +1414,7 @@ const SEEDS: ComposerSeed[] = [
     deathEp: '1992年4月、パリ近郊で亡くなった。83歳。',
     milestones: [[1931, 'ラ・トリニテ教会のオルガン奏者に'], [1941, '捕虜収容所で『時の終わりのための四重奏曲』を初演'], [1949, '『トゥーランガリラ交響曲』']],
     works: [
-      ['messiaen-quatuor', '『時の終わりのための四重奏曲』', 'Quatuor pour la fin du temps', 1941, 'Chamber', '室内楽', 'goerlitz', '捕虜収容所で、ヴァイオリン・クラリネット・チェロ・ピアノの仲間とともに書き、5000人の捕虜の前で初演された。'],
+      ['messiaen-quatuor', '『時の終わりのための四重奏曲』', 'Quatuor pour la fin du temps', 1941, 'Chamber', '室内楽', 'goerlitz', '捕虜収容所で、ヴァイオリン・クラリネット・チェロ・ピアノの仲間とともに書き、凍える冬に捕虜と看守たちの前で初演された。'],
       ['messiaen-turangalila', '『トゥーランガリラ交響曲』', 'Turangalîla-symphonie', 1949, 'Symphony', '交響曲', 'paris', 'インド神話と愛をテーマにした壮大な交響曲。電子楽器オンド・マルトノが使われる。']
     ]
   },

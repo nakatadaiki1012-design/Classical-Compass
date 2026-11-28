@@ -9,6 +9,9 @@ import { WORK_STORIES_3 } from './workStories3';
 import { WORK_STORIES_4 } from './workStories4';
 import { WORK_STORIES_5 } from './workStories5';
 import { WORK_STORIES_6 } from './workStories6';
+import { WORK_STORIES_7 } from './workStories7';
+import { WORK_STORIES_8 } from './workStories8';
+import { WORK_STORIES_9 } from './workStories9';
 
 /**
  * 「名曲の物語」：曲が生まれ、広まり、今に伝わるまでの物語。
@@ -478,7 +481,10 @@ export const WORK_STORY_PARTS: Parts<WrittenChapter[]> = {
   'workStories3.ts': WORK_STORIES_3,
   'workStories4.ts': WORK_STORIES_4,
   'workStories5.ts': WORK_STORIES_5,
-  'workStories6.ts': WORK_STORIES_6
+  'workStories6.ts': WORK_STORIES_6,
+  'workStories7.ts': WORK_STORIES_7,
+  'workStories8.ts': WORK_STORIES_8,
+  'workStories9.ts': WORK_STORIES_9
 };
 
 /** すべての名曲の物語 */

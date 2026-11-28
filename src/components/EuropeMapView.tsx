@@ -4,6 +4,7 @@ import { COMPOSERS, getVisibleComposers } from '../data/composers';
 import { EUROPEAN_CITIES } from '../data/cities';
 import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
+import { MapBackdrop } from './MapBackdrop';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
 import { useBackClose } from '../utils/backStack';
@@ -937,6 +938,9 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
                 </path>
               ))}
             </g>
+
+            {/* 川・湖・山脈・国や海の名前 */}
+            <MapBackdrop sc={sc} labelSc={Math.min(boost, 1.5) / k} k={k} />
 
             {/* European Cities Reference Dots & Names */}
             {Object.values(EUROPEAN_CITIES).map(city => {

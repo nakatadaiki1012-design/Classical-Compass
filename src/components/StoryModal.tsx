@@ -5,6 +5,7 @@ import { BookOpen, ChevronLeft, ChevronRight, Globe2, Lightbulb, Loader2, Pause,
 import { Composer, Composition } from '../types';
 import { getStory, StoryChapter } from '../data/stories';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
+import { MapBackdrop } from './MapBackdrop';
 import { SVG_H, SVG_W, isOffMapLonLat, projectGeoToSvg } from '../data/mapProjection';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
@@ -157,6 +158,7 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
         {EUROPE_COUNTRY_PATHS.map((c, i) => (
           <path key={i} d={c.d} fill="#2a2219" stroke="#5a4a37" strokeWidth={0.9 * s} />
         ))}
+        <MapBackdrop sc={s} labelSc={Math.min(boost, 1.5) / cam.k} k={cam.k} idPrefix="story" />
 
         {/* これまでの足どり */}
         {route.length >= 2 && (

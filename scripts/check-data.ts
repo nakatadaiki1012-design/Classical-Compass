@@ -34,7 +34,6 @@ import { findDuplicateKeys, mergeParts, Parts } from '../src/data/mergeParts';
 import type { WrittenChapter } from '../src/data/storiesWritten';
 import { STORY_ILLUSTRATIONS, parseIllustration } from '../src/data/storyIllustrations';
 import fs from 'node:fs';
-import { HISTORICAL_BORDER_YEARS } from '../src/data/historicalBorderYears';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -145,16 +144,6 @@ for (const name of STORY_ILLUSTRATIONS) {
 }
 for (const f of fs.readdirSync('public/story-images')) {
   if (!STORY_ILLUSTRATIONS.includes(f.replace(/\.webp$/, ''))) warnings.push(`挿し絵の画像 ${f} が storyIllustrations.ts に登録されていない（表示されない）`);
-}
-
-// ---------- 当時の国境（public/borders） ----------
-for (const y of HISTORICAL_BORDER_YEARS) {
-  const f = `public/borders/${y}.json`;
-  if (!fs.existsSync(f)) errors.push(`当時の国境 ${y}年: ${f} がない`);
-  else {
-    const b = JSON.parse(fs.readFileSync(f, 'utf8'));
-    if (b.y !== y || typeof b.d !== 'string' || !Array.isArray(b.l)) errors.push(`当時の国境 ${y}年: データの形がおかしい`);
-  }
 }
 
 // ---------- 作曲家 id で結びつくデータ ----------

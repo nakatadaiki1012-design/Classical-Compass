@@ -6,7 +6,6 @@ import { Composer, Composition } from '../types';
 import { getStory, StoryChapter } from '../data/stories';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { MapBackdrop } from './MapBackdrop';
-import { useHistoricalBorders } from '../utils/useHistoricalBorders';
 import { SVG_H, SVG_W, isOffMapLonLat, projectGeoToSvg } from '../data/mapProjection';
 import { getEraById } from '../data/eras';
 import { ComposerPortrait } from './ComposerPortrait';
@@ -63,8 +62,6 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
   );
   const cur = pts[index];
   const era = getEraById(composer.era);
-  // その章の年ごろの国境（金色の線）
-  const history = useHistoricalBorders(chapters[index]?.year ?? composer.birthYear);
 
   // カメラの目標：今の場所を中心に、ひとつ前の場所も入るくらいの拡大率
   const target = useMemo((): Cam => {
@@ -161,7 +158,7 @@ const StoryMap: React.FC<{ composer: Composer; chapters: StoryChapter[]; index: 
         {EUROPE_COUNTRY_PATHS.map((c, i) => (
           <path key={i} d={c.d} fill="#2a2219" stroke="#5a4a37" strokeWidth={0.9 * s} />
         ))}
-        <MapBackdrop sc={s} labelSc={Math.min(boost, 1.5) / cam.k} k={cam.k} history={history} />
+        <MapBackdrop sc={s} labelSc={Math.min(boost, 1.5) / cam.k} k={cam.k} />
 
         {/* これまでの足どり */}
         {route.length >= 2 && (

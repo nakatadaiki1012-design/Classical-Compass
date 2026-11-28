@@ -77,5 +77,4 @@ npm run lint
 MIT License
 
 ### 地図データ
-- 国境（今）・川・湖：[Natural Earth](https://www.naturalearthdata.com/)（パブリックドメイン）
-- 当時の国境（`public/borders/`）：[historical-basemaps](https://github.com/aourednik/historical-basemaps)（Andre Ourednik ほか）を加工したもの。**このデータは GPL-3.0** です（詳しくは `public/borders/LICENSE.txt`）。作り直しは `scripts/build-historical-borders.py`。
+- 国境・川・湖：[Natural Earth](https://www.naturalearthdata.com/)（パブリックドメイン）

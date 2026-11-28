@@ -5,7 +5,6 @@ import { EUROPEAN_CITIES } from '../data/cities';
 import { ERAS, getEraById } from '../data/eras';
 import { EUROPE_COUNTRY_PATHS } from '../data/europePaths';
 import { MapBackdrop } from './MapBackdrop';
-import { useHistoricalBorders } from '../utils/useHistoricalBorders';
 import { ComposerPortrait } from './ComposerPortrait';
 import { MapPersonPopup } from './MapPersonPopup';
 import { useBackClose } from '../utils/backStack';
@@ -74,24 +73,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
   const [expandedCluster, setExpandedCluster] = useState<string | null>(null);
   useEffect(() => setExpandedCluster(null), [currentYear]);
 
-  // 当時の国境（金色の線と国名）を出すか。見る人ごとに覚えておく
-  const [showHistory, setShowHistory] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('cc-map-history') !== '0';
-    } catch {
-      return true;
-    }
-  });
-  const toggleHistory = () =>
-    setShowHistory(v => {
-      try {
-        localStorage.setItem('cc-map-history', v ? '0' : '1');
-      } catch {
-        /* 保存できなくても動く */
-      }
-      return !v;
-    });
-  const history = useHistoricalBorders(currentYear, showHistory);
   useBackClose(showStories, () => setShowStories(false));
   useBackClose(!!selectedComposerId, () => setSelectedComposerId(null));
 
@@ -960,7 +941,7 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
             </g>
 
             {/* 川・湖・山脈・国や海の名前 */}
-            <MapBackdrop sc={sc} labelSc={Math.min(boost, 1.5) / k} k={k} history={history} />
+            <MapBackdrop sc={sc} labelSc={Math.min(boost, 1.5) / k} k={k} />
 
             {/* European Cities Reference Dots & Names */}
             {Object.values(EUROPEAN_CITIES).map(city => {
@@ -1328,21 +1309,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
 
           <ComposerHoverCard ref={hoverCardRef} />
 
-          {/* 国境の見分け方 */}
-          {history && (
-            <div className="absolute right-2 bottom-2 z-10 pointer-events-none rounded-md bg-[#14110e]/80 border border-[#3d362e] px-2 py-1 text-[10px] leading-snug text-[#c9bfb0]">
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block w-4 h-[2px] rounded bg-[#c99738]" />
-                <span>
-                  <span className="text-[#e6b95c] font-bold">{history.y < 0 ? `紀元前${-history.y}` : history.y}年ごろ</span>の国境・国名
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block w-4 h-[1px] bg-[#7a6a55]" />
-                <span>今の国境・国名</span>
-              </div>
-            </div>
-          )}
 
           {/* 拡大・縮小のボタン */}
           <div className="absolute left-2 top-2 flex flex-col gap-1 z-10">
@@ -1369,19 +1335,6 @@ export const EuropeMapView: React.FC<EuropeMapViewProps> = ({ onSelectComposer, 
               人に
               <br />
               合わせる
-            </button>
-            <button
-              onClick={toggleHistory}
-              className={`w-8 py-1 rounded border text-[9px] leading-tight font-bold hover:bg-[#382f23] ${
-                showHistory ? 'bg-[#3a2d1c]/95 border-[#c99738] text-[#e6b95c]' : 'bg-[#241f19]/90 border-[#3d362e] text-[#8f8475]'
-              }`}
-              aria-pressed={showHistory}
-              aria-label="当時の国境を表示する"
-              title="当時の国境（金色の線）を表示する／しない"
-            >
-              当時の
-              <br />
-              国境
             </button>
             {k > 1 && (
               <button

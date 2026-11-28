@@ -61,6 +61,29 @@ def lines_of(g):
     return []
 
 
+# ---------- 今の国境（地図に描いている europePaths.ts の線そのもの） ----------
+import re
+SNAP = 4.0  # 今の国境からこれ以内（地図上の点の数）を通る昔の国境は、今の国境の線に置きかえる
+
+
+def modern_borders():
+    src = open(os.path.join(ROOT, 'src', 'data', 'europePaths.ts')).read()
+    polys = []
+    for d in re.findall(r'"d":"([^"]+)"', src):
+        for ring in re.findall(r'M([^MZ]+)Z?', d):
+            pts = [tuple(map(float, p.split())) for p in ring.split('L') if p.strip()]
+            if len(pts) >= 3:
+                g = Polygon(pts)
+                polys.append(g if g.is_valid else g.buffer(0))
+    countries = [p for p in polys if not p.is_empty]
+    land = unary_union([c.buffer(0) for c in countries])
+    lines = unary_union([c.boundary for c in countries]).difference(land.boundary.buffer(1.0))
+    return lines
+
+
+MODERN = modern_borders()
+MODERN_ZONE = MODERN.buffer(SNAP)
+
 years = []
 for f in os.listdir(SRC):
     if f.startswith('world_') and f.endswith('.geojson'):
@@ -89,6 +112,10 @@ for y, f in years:
     land = unary_union([s.buffer(0) for s in states.values()])
     borders = unary_union([s.boundary for s in states.values()]).difference(land.boundary.buffer(3.5))
     d = ''
+    # 今の国境とほぼ同じところは、今の国境の線をそのまま使う（2本の線がずれて並ばないように）
+    far = borders.difference(MODERN_ZONE)
+    same = MODERN.intersection(borders.buffer(SNAP))
+    borders = unary_union([g for g in (far, same) if not g.is_empty])
     merged = linemerge(lines_of(borders)) if not borders.is_empty else borders
     for ln in lines_of(merged):
         ln = ln.simplify(0.5)

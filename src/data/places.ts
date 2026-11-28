@@ -15,6 +15,9 @@ import { PLACES_STORIES_13 } from './placesStories13';
 import { PLACES_STORIES_14 } from './placesStories14';
 import { PLACES_STORIES_15 } from './placesStories15';
 import { PLACES_STORIES_16 } from './placesStories16';
+import { PLACES_STORIES_17 } from './placesStories17';
+import { PLACES_STORIES_18 } from './placesStories18';
+import { PLACES_STORIES_19 } from './placesStories19';
 
 const BASE_PLACES: Record<string, Place> = {
   // イタリア
@@ -135,7 +138,10 @@ export const PLACE_PARTS: Parts<Place> = {
   'placesStories13.ts': PLACES_STORIES_13,
   'placesStories14.ts': PLACES_STORIES_14,
   'placesStories15.ts': PLACES_STORIES_15,
-  'placesStories16.ts': PLACES_STORIES_16
+  'placesStories16.ts': PLACES_STORIES_16,
+  'placesStories17.ts': PLACES_STORIES_17,
+  'placesStories18.ts': PLACES_STORIES_18,
+  'placesStories19.ts': PLACES_STORIES_19
 };
 
 /** 作曲家の滞在地・旅行先（追加分も含む全体） */
